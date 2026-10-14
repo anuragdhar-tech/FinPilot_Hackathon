@@ -1,5 +1,6 @@
 """The single place an LLM client is created. Everything goes through Mesh API."""
 import os
+from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
 
@@ -36,9 +37,30 @@ def get_model(agent: str) -> str:
     return model
 
 
-def chat(agent: str, messages: list[dict], **kwargs) -> str:
-    """One chat completion for the given agent; returns the text."""
+@dataclass(frozen=True)
+class Completion:
+    text: str
+    model: str  # model that actually answered (Mesh may report a dated snapshot)
+    prompt_tokens: int
+    completion_tokens: int
+    fallback_triggered: bool  # Mesh-specific usage field; True means Mesh swapped models
+
+
+def complete(agent: str, messages: list[dict], **kwargs) -> Completion:
+    """One chat completion for the given agent, with token usage for agent_events and eval cost."""
     resp = get_client().chat.completions.create(
         model=get_model(agent), messages=messages, **kwargs
     )
-    return resp.choices[0].message.content or ""
+    usage = resp.usage
+    return Completion(
+        text=resp.choices[0].message.content or "",
+        model=resp.model or get_model(agent),
+        prompt_tokens=usage.prompt_tokens if usage else 0,
+        completion_tokens=usage.completion_tokens if usage else 0,
+        fallback_triggered=bool(getattr(usage, "fallback_triggered", False)),
+    )
+
+
+def chat(agent: str, messages: list[dict], **kwargs) -> str:
+    """One chat completion for the given agent; returns the text."""
+    return complete(agent, messages, **kwargs).text

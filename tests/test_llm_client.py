@@ -32,3 +32,19 @@ def test_missing_env_file_message(monkeypatch, tmp_path):
     monkeypatch.delenv("ADVISOR_MODEL", raising=False)
     with pytest.raises(RuntimeError, match="no .env found, copy .env.example"):
         client.get_model("advisor")
+
+
+def test_complete_returns_usage(monkeypatch):
+    from types import SimpleNamespace
+
+    resp = SimpleNamespace(
+        choices=[SimpleNamespace(message=SimpleNamespace(content="pong"))],
+        model="gpt-4o-mini-2024-07-18",
+        usage=SimpleNamespace(prompt_tokens=86, completion_tokens=14, fallback_triggered=False),
+    )
+    fake = SimpleNamespace(chat=SimpleNamespace(completions=SimpleNamespace(create=lambda **kw: resp)))
+    monkeypatch.setattr(client, "get_client", lambda: fake)
+    monkeypatch.setenv("CATEGORIZER_MODEL", "openai/gpt-4o-mini")
+    out = client.complete("categorizer", [{"role": "user", "content": "ping"}])
+    assert (out.text, out.prompt_tokens, out.completion_tokens) == ("pong", 86, 14)
+    assert out.model == "gpt-4o-mini-2024-07-18" and out.fallback_triggered is False
