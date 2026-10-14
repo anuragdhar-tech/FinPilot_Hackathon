@@ -4,6 +4,7 @@ import { AppShell } from './components/AppShell'
 import { Placeholder } from './components/Placeholder'
 import { UserProvider } from './context/UserProvider'
 import { Loading } from './components/State'
+import { EvalPage } from './pages/EvalPage'
 import { RunDetailPage } from './pages/RunDetailPage'
 import { RunsPage } from './pages/RunsPage'
 import { TransactionsPage } from './pages/TransactionsPage'
@@ -28,7 +29,7 @@ export default function App() {
             />
             <Route path="transactions" element={<TransactionsPage />} />
             <Route path="upload" element={<UploadPage />} />
-            <Route path="eval" element={<Placeholder title="Eval" />} />
+            <Route path="eval" element={<EvalPage />} />
             <Route path="simulator" element={<Placeholder title="Simulator" />} />
             <Route path="goals" element={<Placeholder title="Goals" />} />
             <Route path="recommendations" element={<Placeholder title="Recommendations" />} />
