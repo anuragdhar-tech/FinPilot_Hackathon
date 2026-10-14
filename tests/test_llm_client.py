@@ -25,3 +25,10 @@ def test_missing_model_raises(monkeypatch):
     monkeypatch.delenv("ADVISOR_MODEL", raising=False)
     with pytest.raises(RuntimeError):
         client.get_model("advisor")
+
+
+def test_missing_env_file_message(monkeypatch, tmp_path):
+    monkeypatch.setattr(client, "ENV_PATH", tmp_path / ".env")
+    monkeypatch.delenv("ADVISOR_MODEL", raising=False)
+    with pytest.raises(RuntimeError, match="no .env found, copy .env.example"):
+        client.get_model("advisor")
