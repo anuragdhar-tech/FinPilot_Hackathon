@@ -1,41 +1,41 @@
 {
   "summary": {
-    "run_at": "2026-10-14T21:27:34+00:00",
-    "git_sha": "09a0d96-dirty",
+    "run_at": "2026-10-14T23:05:30+00:00",
+    "git_sha": "c4e4ec0",
     "dataset": "synthetic",
     "seed": 42,
     "models": {
       "categorizer": "openai/gpt-4o-mini"
     },
     "categorization": {
-      "accuracy": 0.9301,
-      "lenient_accuracy": 0.9301,
-      "macro_f1": 0.9018,
+      "accuracy": 0.9417,
+      "lenient_accuracy": 0.9491,
+      "macro_f1": 0.9062,
       "top_confusions": [
-        {
-          "true": "income",
-          "predicted": "transfers",
-          "count": 19
-        },
-        {
-          "true": "shopping",
-          "predicted": "other",
-          "count": 19
-        },
         {
           "true": "dining",
           "predicted": "food_delivery",
+          "count": 22
+        },
+        {
+          "true": "groceries",
+          "predicted": "shopping",
           "count": 18
         },
         {
           "true": "utilities",
           "predicted": "other",
-          "count": 17
+          "count": 14
         },
         {
-          "true": "housing",
-          "predicted": "health",
-          "count": 11
+          "true": "shopping",
+          "predicted": "entertainment",
+          "count": 13
+        },
+        {
+          "true": "income",
+          "predicted": "transfers",
+          "count": 12
         }
       ],
       "n": 1904,
@@ -44,44 +44,44 @@
       "per_category": {
         "dining": {
           "precision": 1.0,
-          "recall": 0.9213,
-          "f1": 0.959,
+          "recall": 0.9329,
+          "f1": 0.9653,
           "support": 343
         },
         "entertainment": {
-          "precision": 1.0,
-          "recall": 0.8913,
-          "f1": 0.9425,
+          "precision": 0.8,
+          "recall": 1.0,
+          "f1": 0.8889,
           "support": 92
         },
         "fees": {
-          "precision": 1.0,
+          "precision": 0.8,
           "recall": 1.0,
-          "f1": 1.0,
+          "f1": 0.8889,
           "support": 4
         },
         "fitness": {
-          "precision": 0.9231,
+          "precision": 1.0,
           "recall": 1.0,
-          "f1": 0.96,
+          "f1": 1.0,
           "support": 36
         },
         "food_delivery": {
-          "precision": 0.9211,
-          "recall": 0.9859,
-          "f1": 0.9524,
+          "precision": 0.9064,
+          "recall": 1.0,
+          "f1": 0.9509,
           "support": 213
         },
         "groceries": {
-          "precision": 0.9658,
-          "recall": 0.9576,
-          "f1": 0.9617,
+          "precision": 0.9689,
+          "recall": 0.9237,
+          "f1": 0.9458,
           "support": 236
         },
         "health": {
-          "precision": 0.8382,
-          "recall": 0.9661,
-          "f1": 0.8976,
+          "precision": 0.9219,
+          "recall": 1.0,
+          "f1": 0.9593,
           "support": 59
         },
         "housing": {
@@ -91,33 +91,33 @@
           "support": 48
         },
         "income": {
-          "precision": 0.9912,
-          "recall": 0.855,
-          "f1": 0.918,
+          "precision": 1.0,
+          "recall": 0.9084,
+          "f1": 0.952,
           "support": 131
         },
         "other": {
-          "precision": 0.2674,
-          "recall": 1.0,
-          "f1": 0.422,
+          "precision": 0.3611,
+          "recall": 0.5652,
+          "f1": 0.4407,
           "support": 23
         },
         "shopping": {
-          "precision": 0.9611,
-          "recall": 0.9081,
-          "f1": 0.9338,
+          "precision": 0.9333,
+          "recall": 0.9265,
+          "f1": 0.9299,
           "support": 272
         },
         "transfers": {
-          "precision": 0.7077,
-          "recall": 0.9787,
-          "f1": 0.8214,
+          "precision": 0.7966,
+          "recall": 1.0,
+          "f1": 0.8868,
           "support": 47
         },
         "transport": {
           "precision": 1.0,
-          "recall": 0.9754,
-          "f1": 0.9876,
+          "recall": 0.993,
+          "f1": 0.9965,
           "support": 285
         },
         "travel": {
@@ -128,36 +128,43 @@
         },
         "utilities": {
           "precision": 1.0,
-          "recall": 0.8426,
-          "f1": 0.9146,
+          "recall": 0.8704,
+          "f1": 0.9307,
           "support": 108
         }
       },
       "per_persona": {
-        "maya_renter": 0.9198,
-        "ortiz_family": 0.9315,
-        "sam_freelancer": 0.9406
+        "maya_renter": 0.9539,
+        "ortiz_family": 0.9237,
+        "sam_freelancer": 0.9474
       }
     }
   },
   "details": {
     "mode": "no_cache",
-    "prompt_version": "cat-v1",
+    "prompt_version": "cat-v2",
+    "subset": "full",
+    "misalignment": {
+      "echo_rejected": 0,
+      "echo_checked": 1904,
+      "echo_rejection_rate": 0.0
+    },
+    "cache_confirmation": null,
     "per_persona": {
       "maya_renter": {
         "n": 673,
-        "strict": 0.9198,
-        "lenient": 0.9198
+        "strict": 0.9539,
+        "lenient": 0.9539
       },
       "ortiz_family": {
         "n": 642,
-        "strict": 0.9315,
-        "lenient": 0.9315
+        "strict": 0.9237,
+        "lenient": 0.9455
       },
       "sam_freelancer": {
         "n": 589,
-        "strict": 0.9406,
-        "lenient": 0.9406
+        "strict": 0.9474,
+        "lenient": 0.9474
       }
     },
     "source_split": {
@@ -169,110 +176,80 @@
       },
       "from_llm": {
         "n": 1904,
-        "strict": 0.9301,
-        "lenient": 0.9301
+        "strict": 0.9417,
+        "lenient": 0.9491
       }
     },
     "confusions": [
       {
-        "true": "income",
-        "predicted": "transfers",
-        "count": 19,
-        "lenient_ok": 0
-      },
-      {
-        "true": "shopping",
-        "predicted": "other",
-        "count": 19,
-        "lenient_ok": 0
-      },
-      {
         "true": "dining",
         "predicted": "food_delivery",
+        "count": 22,
+        "lenient_ok": 0
+      },
+      {
+        "true": "groceries",
+        "predicted": "shopping",
         "count": 18,
         "lenient_ok": 0
       },
       {
         "true": "utilities",
         "predicted": "other",
-        "count": 17,
+        "count": 14,
         "lenient_ok": 0
+      },
+      {
+        "true": "shopping",
+        "predicted": "entertainment",
+        "count": 13,
+        "lenient_ok": 12
+      },
+      {
+        "true": "income",
+        "predicted": "transfers",
+        "count": 12,
+        "lenient_ok": 0
+      },
+      {
+        "true": "other",
+        "predicted": "entertainment",
+        "count": 10,
+        "lenient_ok": 0
+      },
+      {
+        "true": "housing",
+        "predicted": "other",
+        "count": 7,
+        "lenient_ok": 0
+      },
+      {
+        "true": "shopping",
+        "predicted": "groceries",
+        "count": 7,
+        "lenient_ok": 2
       },
       {
         "true": "housing",
         "predicted": "health",
-        "count": 11,
-        "lenient_ok": 0
-      },
-      {
-        "true": "entertainment",
-        "predicted": "other",
-        "count": 10,
-        "lenient_ok": 0
-      },
-      {
-        "true": "groceries",
-        "predicted": "shopping",
-        "count": 10,
+        "count": 5,
         "lenient_ok": 0
       },
       {
         "true": "dining",
         "predicted": "other",
-        "count": 8,
+        "count": 1,
         "lenient_ok": 0
       },
       {
-        "true": "shopping",
-        "predicted": "groceries",
-        "count": 5,
+        "true": "transport",
+        "predicted": "fees",
+        "count": 1,
         "lenient_ok": 0
       },
       {
         "true": "transport",
         "predicted": "other",
-        "count": 5,
-        "lenient_ok": 0
-      },
-      {
-        "true": "food_delivery",
-        "predicted": "other",
-        "count": 3,
-        "lenient_ok": 0
-      },
-      {
-        "true": "health",
-        "predicted": "groceries",
-        "count": 2,
-        "lenient_ok": 0
-      },
-      {
-        "true": "transport",
-        "predicted": "fitness",
-        "count": 2,
-        "lenient_ok": 0
-      },
-      {
-        "true": "dining",
-        "predicted": "groceries",
-        "count": 1,
-        "lenient_ok": 0
-      },
-      {
-        "true": "housing",
-        "predicted": "other",
-        "count": 1,
-        "lenient_ok": 0
-      },
-      {
-        "true": "shopping",
-        "predicted": "fitness",
-        "count": 1,
-        "lenient_ok": 0
-      },
-      {
-        "true": "transfers",
-        "predicted": "income",
         "count": 1,
         "lenient_ok": 0
       }
@@ -280,32 +257,32 @@
     "calibration": [
       {
         "bucket": "[0.00, 0.50)",
-        "n": 0,
-        "accuracy": null,
-        "mean_confidence": null
+        "n": 7,
+        "accuracy": 0.1429,
+        "mean_confidence": 0.4
       },
       {
         "bucket": "[0.50, 0.70)",
-        "n": 20,
-        "accuracy": 0.1,
+        "n": 29,
+        "accuracy": 0.4483,
         "mean_confidence": 0.5
       },
       {
         "bucket": "[0.70, 0.80)",
-        "n": 1,
-        "accuracy": 0.0,
+        "n": 3,
+        "accuracy": 1.0,
         "mean_confidence": 0.7
       },
       {
         "bucket": "[0.80, 0.90)",
-        "n": 4,
-        "accuracy": 0.25,
+        "n": 1,
+        "accuracy": 1.0,
         "mean_confidence": 0.8
       },
       {
         "bucket": "[0.90, 0.95)",
-        "n": 1879,
-        "accuracy": 0.9409,
+        "n": 1864,
+        "accuracy": 0.9523,
         "mean_confidence": 0.9
       },
       {
@@ -325,14 +302,14 @@
     "conflicting_cache_keys": [],
     "usage": {
       "llm_batches": 77,
-      "prompt_tokens": 109654,
-      "completion_tokens": 51356,
-      "retry_attempts": 1,
+      "prompt_tokens": 111744,
+      "completion_tokens": 75054,
+      "retry_attempts": 0,
       "batches_with_failures": 0,
       "mesh_fallbacks": 0,
-      "wall_seconds": 130.6,
+      "wall_seconds": 176.9,
       "estimated_cost": {
-        "usd": 0.04726,
+        "usd": 0.06179,
         "note": "Estimated at OpenAI list prices (USD per 1M tokens) for the configured model; Mesh BYOK fees, if any, are not included. Check the OpenAI pricing page before quoting.",
         "prices_as_of": "2026-10-15"
       }
@@ -340,144 +317,40 @@
     "example_misses": [
       {
         "persona": "sam_freelancer",
-        "external_id": "0021ca47c0",
-        "description": "SPOTIFY USA",
-        "amount_cents": -1199,
-        "merchant": "Spotify",
-        "truth": "entertainment",
+        "external_id": "a21d3d3002",
+        "description": "ADOBE *CREATIVE CLD WM5RXE4J3",
+        "amount_cents": -5999,
+        "merchant": "Adobe",
+        "truth": "other",
         "acceptable": [
-          "entertainment"
-        ],
-        "pred": "other",
-        "confidence": 0.9,
-        "from_cache": false,
-        "rationale": "Spotify for music subscription."
-      },
-      {
-        "persona": "sam_freelancer",
-        "external_id": "297d18aa62",
-        "description": "STRIPE TRANSFER ST-6TVY7CP4QM",
-        "amount_cents": 187325,
-        "merchant": "Stripe",
-        "truth": "income",
-        "acceptable": [
-          "income"
-        ],
-        "pred": "transfers",
-        "confidence": 0.9,
-        "from_cache": false,
-        "rationale": "Stripe transfer."
-      },
-      {
-        "persona": "maya_renter",
-        "external_id": "8502b606a1",
-        "description": "LEMONADE INSURANCE CO",
-        "amount_cents": -1250,
-        "merchant": "Lemonade",
-        "truth": "housing",
-        "acceptable": [
-          "housing"
-        ],
-        "pred": "health",
-        "confidence": 0.9,
-        "from_cache": false,
-        "rationale": "Lemonade Insurance is health insurance."
-      },
-      {
-        "persona": "ortiz_family",
-        "external_id": "c98a7d7bbb",
-        "description": "WALMART.COM IZTKHEM63",
-        "amount_cents": -7316,
-        "merchant": "Walmart",
-        "truth": "shopping",
-        "acceptable": [
+          "other",
           "shopping"
         ],
-        "pred": "groceries",
+        "pred": "entertainment",
         "confidence": 0.9,
         "from_cache": false,
-        "rationale": "Walmart is a grocery store."
+        "rationale": "ADOBE indicates a subscription for creative software."
+      },
+      {
+        "persona": "ortiz_family",
+        "external_id": "d11ca2d787",
+        "description": "COSTCO WHSE #7574 ROUND ROCK",
+        "amount_cents": -14444,
+        "merchant": "Costco",
+        "truth": "groceries",
+        "acceptable": [
+          "groceries"
+        ],
+        "pred": "shopping",
+        "confidence": 0.9,
+        "from_cache": false,
+        "rationale": "COSTCO is a retail store."
       },
       {
         "persona": "sam_freelancer",
-        "external_id": "c3bc5ca5a5",
+        "external_id": "55f9127e8f",
         "description": "TST* HALAL CART BOULDER CO",
-        "amount_cents": -5103,
-        "merchant": "Local restaurant",
-        "truth": "dining",
-        "acceptable": [
-          "dining"
-        ],
-        "pred": "food_delivery",
-        "confidence": 0.9,
-        "from_cache": false,
-        "rationale": "HALAL CART is a food delivery service."
-      },
-      {
-        "persona": "sam_freelancer",
-        "external_id": "99f4f91721",
-        "description": "VISIBLE SERVICE ZVCML9KGCY",
-        "amount_cents": -2500,
-        "merchant": "Visible",
-        "truth": "utilities",
-        "acceptable": [
-          "utilities"
-        ],
-        "pred": "other",
-        "confidence": 0.9,
-        "from_cache": false,
-        "rationale": "Visible is a phone service."
-      },
-      {
-        "persona": "sam_freelancer",
-        "external_id": "8fddc68514",
-        "description": "VISIBLE SERVICE Z2AWXO392",
-        "amount_cents": -2500,
-        "merchant": "Visible",
-        "truth": "utilities",
-        "acceptable": [
-          "utilities"
-        ],
-        "pred": "other",
-        "confidence": 0.9,
-        "from_cache": false,
-        "rationale": "VISIBLE SERVICE for phone plan."
-      },
-      {
-        "persona": "ortiz_family",
-        "external_id": "1c47fcc90b",
-        "description": "CHIPOTLE ONLINE 1077",
-        "amount_cents": -3751,
-        "merchant": "Chipotle",
-        "truth": "dining",
-        "acceptable": [
-          "dining"
-        ],
-        "pred": "food_delivery",
-        "confidence": 0.9,
-        "from_cache": false,
-        "rationale": "CHIPOTLE ONLINE is food delivery."
-      },
-      {
-        "persona": "sam_freelancer",
-        "external_id": "cef6063620",
-        "description": "SPOTIFY USA",
-        "amount_cents": -1199,
-        "merchant": "Spotify",
-        "truth": "entertainment",
-        "acceptable": [
-          "entertainment"
-        ],
-        "pred": "other",
-        "confidence": 0.9,
-        "from_cache": false,
-        "rationale": "Spotify is a software subscription."
-      },
-      {
-        "persona": "ortiz_family",
-        "external_id": "559f2a6c67",
-        "description": "PURCHASE AUTHORIZED ON 07/18 SQ *HALAL CART",
-        "amount_cents": -5322,
+        "amount_cents": -5003,
         "merchant": "Local restaurant",
         "truth": "dining",
         "acceptable": [
@@ -487,115 +360,21 @@
         "confidence": 0.9,
         "from_cache": false,
         "rationale": "Halal Cart indicates food delivery service."
-      }
-    ],
-    "misses": [
+      },
       {
-        "persona": "maya_renter",
-        "external_id": "0d6eb29e99",
-        "description": "SPOTIFY USA",
-        "amount_cents": -1199,
-        "merchant": "Spotify",
-        "truth": "entertainment",
+        "persona": "ortiz_family",
+        "external_id": "9428d7efd3",
+        "description": "COSTCO WHOLESALE #4172",
+        "amount_cents": -18569,
+        "merchant": "Costco",
+        "truth": "groceries",
         "acceptable": [
-          "entertainment"
+          "groceries"
         ],
-        "pred": "other",
+        "pred": "shopping",
         "confidence": 0.9,
         "from_cache": false,
-        "rationale": "Spotify is a software subscription."
-      },
-      {
-        "persona": "maya_renter",
-        "external_id": "bf63ca494c",
-        "description": "LEMONADE INSURANCE CO",
-        "amount_cents": -1250,
-        "merchant": "Lemonade",
-        "truth": "housing",
-        "acceptable": [
-          "housing"
-        ],
-        "pred": "health",
-        "confidence": 0.9,
-        "from_cache": false,
-        "rationale": "Lemonade Insurance is health insurance."
-      },
-      {
-        "persona": "maya_renter",
-        "external_id": "e5ced3cc64",
-        "description": "PGANDE WEB ONLINE 10186876",
-        "amount_cents": -6428,
-        "merchant": "PG&E",
-        "truth": "utilities",
-        "acceptable": [
-          "utilities"
-        ],
-        "pred": "other",
-        "confidence": 0.5,
-        "from_cache": false,
-        "rationale": "Merchant unclear, possibly software or service."
-      },
-      {
-        "persona": "maya_renter",
-        "external_id": "12b9f4f8fb",
-        "description": "UBER *ONE MEMBERSHIP",
-        "amount_cents": -999,
-        "merchant": "Uber One",
-        "truth": "transport",
-        "acceptable": [
-          "food_delivery",
-          "transport"
-        ],
-        "pred": "fitness",
-        "confidence": 0.9,
-        "from_cache": false,
-        "rationale": "Uber One membership is for transport."
-      },
-      {
-        "persona": "maya_renter",
-        "external_id": "c459194628",
-        "description": "LEMONADE INSURANCE CO",
-        "amount_cents": -1250,
-        "merchant": "Lemonade",
-        "truth": "housing",
-        "acceptable": [
-          "housing"
-        ],
-        "pred": "health",
-        "confidence": 0.9,
-        "from_cache": false,
-        "rationale": "Lemonade Insurance is health insurance."
-      },
-      {
-        "persona": "maya_renter",
-        "external_id": "be1f6de7e0",
-        "description": "PGANDE WEB ONLINE 11186876",
-        "amount_cents": -8114,
-        "merchant": "PG&E",
-        "truth": "utilities",
-        "acceptable": [
-          "utilities"
-        ],
-        "pred": "other",
-        "confidence": 0.5,
-        "from_cache": false,
-        "rationale": "Merchant unclear, likely a subscription."
-      },
-      {
-        "persona": "maya_renter",
-        "external_id": "91940eee39",
-        "description": "UBER *ONE MEMBERSHIP",
-        "amount_cents": -999,
-        "merchant": "Uber One",
-        "truth": "transport",
-        "acceptable": [
-          "food_delivery",
-          "transport"
-        ],
-        "pred": "fitness",
-        "confidence": 0.9,
-        "from_cache": false,
-        "rationale": "Uber membership is for transport service."
+        "rationale": "Costco is a retail store, classified as shopping."
       },
       {
         "persona": "maya_renter",
@@ -607,736 +386,10 @@
         "acceptable": [
           "housing"
         ],
-        "pred": "health",
-        "confidence": 0.9,
-        "from_cache": false,
-        "rationale": "Lemonade Insurance is health insurance."
-      },
-      {
-        "persona": "maya_renter",
-        "external_id": "6d4a2124e2",
-        "description": "PGANDE WEB ONLINE 12186876",
-        "amount_cents": -9151,
-        "merchant": "PG&E",
-        "truth": "utilities",
-        "acceptable": [
-          "utilities"
-        ],
-        "pred": "other",
-        "confidence": 0.5,
-        "from_cache": false,
-        "rationale": "Merchant unclear, fits none of the categories."
-      },
-      {
-        "persona": "maya_renter",
-        "external_id": "1bf3ed89e1",
-        "description": "SPOTIFY USA",
-        "amount_cents": -1199,
-        "merchant": "Spotify",
-        "truth": "entertainment",
-        "acceptable": [
-          "entertainment"
-        ],
         "pred": "other",
         "confidence": 0.9,
         "from_cache": false,
-        "rationale": "Spotify is a software subscription."
-      },
-      {
-        "persona": "maya_renter",
-        "external_id": "8502b606a1",
-        "description": "LEMONADE INSURANCE CO",
-        "amount_cents": -1250,
-        "merchant": "Lemonade",
-        "truth": "housing",
-        "acceptable": [
-          "housing"
-        ],
-        "pred": "health",
-        "confidence": 0.9,
-        "from_cache": false,
-        "rationale": "Lemonade Insurance is health insurance."
-      },
-      {
-        "persona": "maya_renter",
-        "external_id": "bb7b8428ab",
-        "description": "PGANDE WEB ONLINE 01186876",
-        "amount_cents": -8946,
-        "merchant": "PG&E",
-        "truth": "utilities",
-        "acceptable": [
-          "utilities"
-        ],
-        "pred": "other",
-        "confidence": 0.5,
-        "from_cache": false,
-        "rationale": "PGANDE WEB is unclear, likely a subscription."
-      },
-      {
-        "persona": "maya_renter",
-        "external_id": "a19a91ed38",
-        "description": "DOORDASH DASHPASS 855-973-1040",
-        "amount_cents": -999,
-        "merchant": "DashPass",
-        "truth": "food_delivery",
-        "acceptable": [
-          "food_delivery"
-        ],
-        "pred": "other",
-        "confidence": 0.5,
-        "from_cache": false,
-        "rationale": "DOORDASH DASHPASS is a delivery membership."
-      },
-      {
-        "persona": "maya_renter",
-        "external_id": "7270fb8e12",
-        "description": "UBER *ONE MEMBERSHIP",
-        "amount_cents": -999,
-        "merchant": "Uber One",
-        "truth": "transport",
-        "acceptable": [
-          "food_delivery",
-          "transport"
-        ],
-        "pred": "other",
-        "confidence": 0.9,
-        "from_cache": false,
-        "rationale": "Uber membership is a service."
-      },
-      {
-        "persona": "maya_renter",
-        "external_id": "1281df2c01",
-        "description": "LEMONADE INSURANCE CO",
-        "amount_cents": -1250,
-        "merchant": "Lemonade",
-        "truth": "housing",
-        "acceptable": [
-          "housing"
-        ],
-        "pred": "health",
-        "confidence": 0.9,
-        "from_cache": false,
-        "rationale": "Insurance company indicates health insurance."
-      },
-      {
-        "persona": "maya_renter",
-        "external_id": "e6de88d294",
-        "description": "PGANDE WEB ONLINE 02186876",
-        "amount_cents": -9113,
-        "merchant": "PG&E",
-        "truth": "utilities",
-        "acceptable": [
-          "utilities"
-        ],
-        "pred": "other",
-        "confidence": 0.5,
-        "from_cache": false,
-        "rationale": "Merchant unclear, likely a subscription or service."
-      },
-      {
-        "persona": "maya_renter",
-        "external_id": "e09e8e8cf3",
-        "description": "PURCHASE AUTHORIZED ON 02/20 SQ *BLUE BTL COF 6979",
-        "amount_cents": -646,
-        "merchant": "Blue Bottle Coffee",
-        "truth": "dining",
-        "acceptable": [
-          "dining"
-        ],
-        "pred": "other",
-        "confidence": 0.5,
-        "from_cache": false,
-        "rationale": "Merchant unclear, likely a coffee shop."
-      },
-      {
-        "persona": "maya_renter",
-        "external_id": "ef58192ea2",
-        "description": "SQ *BLUE BTL COF 6979",
-        "amount_cents": -618,
-        "merchant": "Blue Bottle Coffee",
-        "truth": "dining",
-        "acceptable": [
-          "dining"
-        ],
-        "pred": "other",
-        "confidence": 0.5,
-        "from_cache": false,
-        "rationale": "Merchant unclear, likely a coffee shop."
-      },
-      {
-        "persona": "maya_renter",
-        "external_id": "7f1eefee3a",
-        "description": "SQ *BLUE BTL COF 6979",
-        "amount_cents": -494,
-        "merchant": "Blue Bottle Coffee",
-        "truth": "dining",
-        "acceptable": [
-          "dining"
-        ],
-        "pred": "other",
-        "confidence": 0.5,
-        "from_cache": false,
-        "rationale": "Merchant unclear, likely a coffee shop."
-      },
-      {
-        "persona": "maya_renter",
-        "external_id": "893b1d49b3",
-        "description": "SQ *BLUE BTL COF 6979",
-        "amount_cents": -789,
-        "merchant": "Blue Bottle Coffee",
-        "truth": "dining",
-        "acceptable": [
-          "dining"
-        ],
-        "pred": "other",
-        "confidence": 0.5,
-        "from_cache": false,
-        "rationale": "Merchant unclear, likely a coffee shop."
-      },
-      {
-        "persona": "maya_renter",
-        "external_id": "9400970838",
-        "description": "Spotify PRN5ZUCTXO8",
-        "amount_cents": -1299,
-        "merchant": "Spotify",
-        "truth": "entertainment",
-        "acceptable": [
-          "entertainment"
-        ],
-        "pred": "other",
-        "confidence": 0.9,
-        "from_cache": false,
-        "rationale": "Spotify is a software subscription."
-      },
-      {
-        "persona": "maya_renter",
-        "external_id": "de7ba622c8",
-        "description": "LEMONADE I* LGZOD0KM7 NY",
-        "amount_cents": -1250,
-        "merchant": "Lemonade",
-        "truth": "housing",
-        "acceptable": [
-          "housing"
-        ],
-        "pred": "other",
-        "confidence": 0.9,
-        "from_cache": false,
-        "rationale": "Lemonade is a software subscription."
-      },
-      {
-        "persona": "maya_renter",
-        "external_id": "b690995bb5",
-        "description": "PGANDE WEB ONLINE 03186876",
-        "amount_cents": -7944,
-        "merchant": "PG&E",
-        "truth": "utilities",
-        "acceptable": [
-          "utilities"
-        ],
-        "pred": "other",
-        "confidence": 0.5,
-        "from_cache": false,
-        "rationale": "Merchant unclear, category judgment call."
-      },
-      {
-        "persona": "maya_renter",
-        "external_id": "98436f28e8",
-        "description": "DOORDASH DASHPASS 855-973-1040",
-        "amount_cents": -999,
-        "merchant": "DashPass",
-        "truth": "food_delivery",
-        "acceptable": [
-          "food_delivery"
-        ],
-        "pred": "other",
-        "confidence": 0.5,
-        "from_cache": false,
-        "rationale": "Doordash membership, category judgment call."
-      },
-      {
-        "persona": "maya_renter",
-        "external_id": "7fe2714976",
-        "description": "LEMONADE INSURANCE CO",
-        "amount_cents": -1250,
-        "merchant": "Lemonade",
-        "truth": "housing",
-        "acceptable": [
-          "housing"
-        ],
-        "pred": "health",
-        "confidence": 0.9,
-        "from_cache": false,
-        "rationale": "Insurance for health coverage."
-      },
-      {
-        "persona": "maya_renter",
-        "external_id": "7d6630a288",
-        "description": "PGANDE WEB ONLINE 04186876",
-        "amount_cents": -7412,
-        "merchant": "PG&E",
-        "truth": "utilities",
-        "acceptable": [
-          "utilities"
-        ],
-        "pred": "other",
-        "confidence": 0.5,
-        "from_cache": false,
-        "rationale": "Merchant unclear, possibly a service."
-      },
-      {
-        "persona": "maya_renter",
-        "external_id": "567ecaf6e2",
-        "description": "SQ *BLUE BTL COF 6979",
-        "amount_cents": -527,
-        "merchant": "Blue Bottle Coffee",
-        "truth": "dining",
-        "acceptable": [
-          "dining"
-        ],
-        "pred": "other",
-        "confidence": 0.5,
-        "from_cache": false,
-        "rationale": "Merchant unclear, possibly a coffee shop."
-      },
-      {
-        "persona": "maya_renter",
-        "external_id": "762cb51521",
-        "description": "VENMO *GQS4TIBQ4B",
-        "amount_cents": 3944,
-        "merchant": "Venmo",
-        "truth": "transfers",
-        "acceptable": [
-          "transfers"
-        ],
-        "pred": "income",
-        "confidence": 0.9,
-        "from_cache": false,
-        "rationale": "Venmo payment received."
-      },
-      {
-        "persona": "maya_renter",
-        "external_id": "547e219120",
-        "description": "SPOTIFY USA",
-        "amount_cents": -1299,
-        "merchant": "Spotify",
-        "truth": "entertainment",
-        "acceptable": [
-          "entertainment"
-        ],
-        "pred": "other",
-        "confidence": 0.9,
-        "from_cache": false,
-        "rationale": "Spotify is a software subscription."
-      },
-      {
-        "persona": "maya_renter",
-        "external_id": "547dbbb3e7",
-        "description": "UBER ONE V5WBCP6M HELP.UBER.COM",
-        "amount_cents": -999,
-        "merchant": "Uber One",
-        "truth": "transport",
-        "acceptable": [
-          "food_delivery",
-          "transport"
-        ],
-        "pred": "other",
-        "confidence": 0.9,
-        "from_cache": false,
-        "rationale": "Uber One is a membership service."
-      },
-      {
-        "persona": "maya_renter",
-        "external_id": "b825f52a75",
-        "description": "LEMONADE INSURANCE CO",
-        "amount_cents": -1250,
-        "merchant": "Lemonade",
-        "truth": "housing",
-        "acceptable": [
-          "housing"
-        ],
-        "pred": "health",
-        "confidence": 0.9,
-        "from_cache": false,
-        "rationale": "Lemonade Insurance is health insurance."
-      },
-      {
-        "persona": "maya_renter",
-        "external_id": "f29caecff7",
-        "description": "TST* THAI BASIL SAN FRANCISCO CA",
-        "amount_cents": -3607,
-        "merchant": "Local restaurant",
-        "truth": "dining",
-        "acceptable": [
-          "dining"
-        ],
-        "pred": "food_delivery",
-        "confidence": 0.9,
-        "from_cache": false,
-        "rationale": "Grubhub indicates a food delivery service."
-      },
-      {
-        "persona": "maya_renter",
-        "external_id": "33fb2aac1e",
-        "description": "PGANDE WEB ONLINE 05186876",
-        "amount_cents": -5562,
-        "merchant": "PG&E",
-        "truth": "utilities",
-        "acceptable": [
-          "utilities"
-        ],
-        "pred": "other",
-        "confidence": 0.7,
-        "from_cache": false,
-        "rationale": "Merchant unclear, likely a software subscription."
-      },
-      {
-        "persona": "maya_renter",
-        "external_id": "fe95cb8dc1",
-        "description": "SQ *THAI BASIL",
-        "amount_cents": -4637,
-        "merchant": "Local restaurant",
-        "truth": "dining",
-        "acceptable": [
-          "dining"
-        ],
-        "pred": "food_delivery",
-        "confidence": 0.9,
-        "from_cache": false,
-        "rationale": "SQ indicates a delivery platform."
-      },
-      {
-        "persona": "maya_renter",
-        "external_id": "7ccdce6fc5",
-        "description": "SPOTIFY USA",
-        "amount_cents": -1299,
-        "merchant": "Spotify",
-        "truth": "entertainment",
-        "acceptable": [
-          "entertainment"
-        ],
-        "pred": "other",
-        "confidence": 0.9,
-        "from_cache": false,
-        "rationale": "Spotify subscription service."
-      },
-      {
-        "persona": "maya_renter",
-        "external_id": "d2839d316c",
-        "description": "UBER ONE OZ7TDN72XU HELP.UBER.COM",
-        "amount_cents": -999,
-        "merchant": "Uber One",
-        "truth": "transport",
-        "acceptable": [
-          "food_delivery",
-          "transport"
-        ],
-        "pred": "other",
-        "confidence": 0.9,
-        "from_cache": false,
-        "rationale": "Uber One membership."
-      },
-      {
-        "persona": "maya_renter",
-        "external_id": "1761dc71ac",
-        "description": "NETFLIX.COM",
-        "amount_cents": -1549,
-        "merchant": "Netflix",
-        "truth": "entertainment",
-        "acceptable": [
-          "entertainment"
-        ],
-        "pred": "other",
-        "confidence": 0.9,
-        "from_cache": false,
-        "rationale": "Netflix subscription service."
-      },
-      {
-        "persona": "maya_renter",
-        "external_id": "39f6fc154a",
-        "description": "LEMONADE INSURANCE CO",
-        "amount_cents": -1250,
-        "merchant": "Lemonade",
-        "truth": "housing",
-        "acceptable": [
-          "housing"
-        ],
-        "pred": "health",
-        "confidence": 0.9,
-        "from_cache": false,
-        "rationale": "LEMONADE INSURANCE CO indicates health insurance."
-      },
-      {
-        "persona": "maya_renter",
-        "external_id": "1e37c053d1",
-        "description": "PGANDE WEB ONLINE 06186876",
-        "amount_cents": -5275,
-        "merchant": "PG&E",
-        "truth": "utilities",
-        "acceptable": [
-          "utilities"
-        ],
-        "pred": "other",
-        "confidence": 0.9,
-        "from_cache": false,
-        "rationale": "PGANDE WEB indicates an online service."
-      },
-      {
-        "persona": "maya_renter",
-        "external_id": "d83e9cb61a",
-        "description": "SQ *BLUE BTL COF 6979",
-        "amount_cents": -506,
-        "merchant": "Blue Bottle Coffee",
-        "truth": "dining",
-        "acceptable": [
-          "dining"
-        ],
-        "pred": "other",
-        "confidence": 0.9,
-        "from_cache": false,
-        "rationale": "BLUE BTL COF indicates a coffee purchase."
-      },
-      {
-        "persona": "maya_renter",
-        "external_id": "80fe977b14",
-        "description": "UBER *ONE MEMBERSHIP",
-        "amount_cents": -999,
-        "merchant": "Uber One",
-        "truth": "transport",
-        "acceptable": [
-          "food_delivery",
-          "transport"
-        ],
-        "pred": "other",
-        "confidence": 0.9,
-        "from_cache": false,
-        "rationale": "UBER *ONE indicates a rideshare membership."
-      },
-      {
-        "persona": "maya_renter",
-        "external_id": "b9909026ef",
-        "description": "TST* HALAL CART SAN FRANCISCO CA",
-        "amount_cents": -3205,
-        "merchant": "Local restaurant",
-        "truth": "dining",
-        "acceptable": [
-          "dining"
-        ],
-        "pred": "food_delivery",
-        "confidence": 0.9,
-        "from_cache": false,
-        "rationale": "Halal Cart indicates food delivery."
-      },
-      {
-        "persona": "maya_renter",
-        "external_id": "d182291a42",
-        "description": "LEMONADE INSURANCE CO",
-        "amount_cents": -1250,
-        "merchant": "Lemonade",
-        "truth": "housing",
-        "acceptable": [
-          "housing"
-        ],
-        "pred": "health",
-        "confidence": 0.9,
-        "from_cache": false,
-        "rationale": "Lemonade Insurance indicates health insurance."
-      },
-      {
-        "persona": "maya_renter",
-        "external_id": "61cc33ed49",
-        "description": "PGANDE WEB ONLINE 07186876",
-        "amount_cents": -4251,
-        "merchant": "PG&E",
-        "truth": "utilities",
-        "acceptable": [
-          "utilities"
-        ],
-        "pred": "other",
-        "confidence": 0.5,
-        "from_cache": false,
-        "rationale": "Merchant unclear, not fitting other categories."
-      },
-      {
-        "persona": "maya_renter",
-        "external_id": "daa76c3463",
-        "description": "UBER *ONE MEMBERSHIP",
-        "amount_cents": -999,
-        "merchant": "Uber One",
-        "truth": "transport",
-        "acceptable": [
-          "food_delivery",
-          "transport"
-        ],
-        "pred": "other",
-        "confidence": 0.9,
-        "from_cache": false,
-        "rationale": "Uber membership is a service subscription."
-      },
-      {
-        "persona": "maya_renter",
-        "external_id": "66550c82f0",
-        "description": "LEMONADE INSURANCE CO",
-        "amount_cents": -1250,
-        "merchant": "Lemonade",
-        "truth": "housing",
-        "acceptable": [
-          "housing"
-        ],
-        "pred": "health",
-        "confidence": 0.9,
-        "from_cache": false,
-        "rationale": "Insurance for health, categorized as health."
-      },
-      {
-        "persona": "maya_renter",
-        "external_id": "43e5a154af",
-        "description": "PGANDE WEB ONLINE 08186876",
-        "amount_cents": -4964,
-        "merchant": "PG&E",
-        "truth": "utilities",
-        "acceptable": [
-          "utilities"
-        ],
-        "pred": "other",
-        "confidence": 0.5,
-        "from_cache": false,
-        "rationale": "Merchant unclear, categorized as other."
-      },
-      {
-        "persona": "maya_renter",
-        "external_id": "6e67ce12d6",
-        "description": "DOORDASH DASHPASS 855-973-1040",
-        "amount_cents": -999,
-        "merchant": "DashPass",
-        "truth": "food_delivery",
-        "acceptable": [
-          "food_delivery"
-        ],
-        "pred": "other",
-        "confidence": 0.5,
-        "from_cache": false,
-        "rationale": "Dasher membership unclear, categorized as other."
-      },
-      {
-        "persona": "maya_renter",
-        "external_id": "43595ea7a8",
-        "description": "CHECKCARD 0829 SWEETGREEN OAKLAND",
-        "amount_cents": -1745,
-        "merchant": "Sweetgreen",
-        "truth": "dining",
-        "acceptable": [
-          "dining"
-        ],
-        "pred": "groceries",
-        "confidence": 0.9,
-        "from_cache": false,
-        "rationale": "Sweetgreen is a restaurant purchase."
-      },
-      {
-        "persona": "maya_renter",
-        "external_id": "5c274a909e",
-        "description": "SPOTIFY USA",
-        "amount_cents": -1299,
-        "merchant": "Spotify",
-        "truth": "entertainment",
-        "acceptable": [
-          "entertainment"
-        ],
-        "pred": "other",
-        "confidence": 0.9,
-        "from_cache": false,
-        "rationale": "Spotify is a subscription service."
-      },
-      {
-        "persona": "maya_renter",
-        "external_id": "e69c95d294",
-        "description": "LEMONADE INSURANCE CO",
-        "amount_cents": -1250,
-        "merchant": "Lemonade",
-        "truth": "housing",
-        "acceptable": [
-          "housing"
-        ],
-        "pred": "health",
-        "confidence": 0.9,
-        "from_cache": false,
-        "rationale": "LEMONADE INSURANCE CO is health insurance."
-      },
-      {
-        "persona": "maya_renter",
-        "external_id": "a250f64b0d",
-        "description": "PGANDE WEB ONLINE 09186876",
-        "amount_cents": -6181,
-        "merchant": "PG&E",
-        "truth": "utilities",
-        "acceptable": [
-          "utilities"
-        ],
-        "pred": "other",
-        "confidence": 0.8,
-        "from_cache": false,
-        "rationale": "PGANDE WEB ONLINE is unclear, categorized as other."
-      },
-      {
-        "persona": "maya_renter",
-        "external_id": "f2c89e4090",
-        "description": "SQ *BLUE BTL COF 6979",
-        "amount_cents": -697,
-        "merchant": "Blue Bottle Coffee",
-        "truth": "dining",
-        "acceptable": [
-          "dining"
-        ],
-        "pred": "other",
-        "confidence": 0.8,
-        "from_cache": false,
-        "rationale": "SQ *BLUE BTL COF is unclear, categorized as other."
-      },
-      {
-        "persona": "maya_renter",
-        "external_id": "f4bdb9e789",
-        "description": "PURCHASE AUTHORIZED ON 09/30 SQ *BLUE BTL COF 6979",
-        "amount_cents": -586,
-        "merchant": "Blue Bottle Coffee",
-        "truth": "dining",
-        "acceptable": [
-          "dining"
-        ],
-        "pred": "other",
-        "confidence": 0.8,
-        "from_cache": false,
-        "rationale": "SQ *BLUE BTL COF is unclear, categorized as other."
-      },
-      {
-        "persona": "ortiz_family",
-        "external_id": "caf327fef8",
-        "description": "Amazon Prime*QS4N7KBB9S",
-        "amount_cents": -1499,
-        "merchant": "Amazon Prime",
-        "truth": "shopping",
-        "acceptable": [
-          "entertainment",
-          "shopping"
-        ],
-        "pred": "other",
-        "confidence": 0.9,
-        "from_cache": false,
-        "rationale": "Amazon Prime subscription."
-      },
-      {
-        "persona": "ortiz_family",
-        "external_id": "95032965a3",
-        "description": "PURCHASE AUTHORIZED ON 10/07 SQ *CURRY HOUSE",
-        "amount_cents": -4167,
-        "merchant": "Local restaurant",
-        "truth": "dining",
-        "acceptable": [
-          "dining"
-        ],
-        "pred": "food_delivery",
-        "confidence": 0.9,
-        "from_cache": false,
-        "rationale": "Curry House order via delivery platform."
+        "rationale": "Lemonade is an insurance company."
       },
       {
         "persona": "ortiz_family",
@@ -1355,19 +408,578 @@
       },
       {
         "persona": "ortiz_family",
-        "external_id": "28a83959b9",
-        "description": "WALMART+ MEMBERSHIP KFM3SHKWFL",
-        "amount_cents": -1295,
-        "merchant": "Walmart+",
+        "external_id": "e2adc6b9e8",
+        "description": "COSTCO WHOLESALE #4172",
+        "amount_cents": -19011,
+        "merchant": "Costco",
+        "truth": "groceries",
+        "acceptable": [
+          "groceries"
+        ],
+        "pred": "shopping",
+        "confidence": 0.9,
+        "from_cache": false,
+        "rationale": "COSTCO is a retail store."
+      },
+      {
+        "persona": "ortiz_family",
+        "external_id": "e4c1dfb604",
+        "description": "COSTCO WHSE #7574 ROUND ROCK TX",
+        "amount_cents": -25576,
+        "merchant": "Costco",
+        "truth": "groceries",
+        "acceptable": [
+          "groceries"
+        ],
+        "pred": "shopping",
+        "confidence": 0.9,
+        "from_cache": false,
+        "rationale": "Costco is a retail store."
+      },
+      {
+        "persona": "ortiz_family",
+        "external_id": "5dd6814e32",
+        "description": "WAL-MART #2558 AUSTIN TX",
+        "amount_cents": -9178,
+        "merchant": "Walmart",
         "truth": "shopping",
         "acceptable": [
-          "groceries",
           "shopping"
+        ],
+        "pred": "groceries",
+        "confidence": 0.9,
+        "from_cache": false,
+        "rationale": "Walmart is a grocery store, classified as groceries."
+      },
+      {
+        "persona": "sam_freelancer",
+        "external_id": "0632e34f92",
+        "description": "ADOBE *CREATIVE CLD 0UX1TXWWWN",
+        "amount_cents": -5999,
+        "merchant": "Adobe",
+        "truth": "other",
+        "acceptable": [
+          "other",
+          "shopping"
+        ],
+        "pred": "entertainment",
+        "confidence": 0.9,
+        "from_cache": false,
+        "rationale": "Adobe Creative Cloud is a subscription service."
+      }
+    ],
+    "misses": [
+      {
+        "persona": "maya_renter",
+        "external_id": "bf63ca494c",
+        "description": "LEMONADE INSURANCE CO",
+        "amount_cents": -1250,
+        "merchant": "Lemonade",
+        "truth": "housing",
+        "acceptable": [
+          "housing"
+        ],
+        "pred": "health",
+        "confidence": 0.9,
+        "from_cache": false,
+        "rationale": "Lemonade provides insurance, classified as health."
+      },
+      {
+        "persona": "maya_renter",
+        "external_id": "e5ced3cc64",
+        "description": "PGANDE WEB ONLINE 10186876",
+        "amount_cents": -6428,
+        "merchant": "PG&E",
+        "truth": "utilities",
+        "acceptable": [
+          "utilities"
+        ],
+        "pred": "other",
+        "confidence": 0.4,
+        "from_cache": false,
+        "rationale": "Merchant unclear, cannot categorize."
+      },
+      {
+        "persona": "maya_renter",
+        "external_id": "970d5b8181",
+        "description": "SQ *THAI BASIL",
+        "amount_cents": -6068,
+        "merchant": "Local restaurant",
+        "truth": "dining",
+        "acceptable": [
+          "dining"
+        ],
+        "pred": "food_delivery",
+        "confidence": 0.9,
+        "from_cache": false,
+        "rationale": "Thai Basil is a restaurant with delivery."
+      },
+      {
+        "persona": "maya_renter",
+        "external_id": "c459194628",
+        "description": "LEMONADE INSURANCE CO",
+        "amount_cents": -1250,
+        "merchant": "Lemonade",
+        "truth": "housing",
+        "acceptable": [
+          "housing"
+        ],
+        "pred": "health",
+        "confidence": 0.9,
+        "from_cache": false,
+        "rationale": "Lemonade provides insurance services."
+      },
+      {
+        "persona": "maya_renter",
+        "external_id": "be1f6de7e0",
+        "description": "PGANDE WEB ONLINE 11186876",
+        "amount_cents": -8114,
+        "merchant": "PG&E",
+        "truth": "utilities",
+        "acceptable": [
+          "utilities"
+        ],
+        "pred": "other",
+        "confidence": 0.5,
+        "from_cache": false,
+        "rationale": "Merchant unclear, cannot categorize."
+      },
+      {
+        "persona": "maya_renter",
+        "external_id": "02e80833a9",
+        "description": "LEMONADE INSURANCE CO",
+        "amount_cents": -1250,
+        "merchant": "Lemonade",
+        "truth": "housing",
+        "acceptable": [
+          "housing"
         ],
         "pred": "other",
         "confidence": 0.9,
         "from_cache": false,
-        "rationale": "Walmart membership is a subscription."
+        "rationale": "Lemonade is an insurance company."
+      },
+      {
+        "persona": "maya_renter",
+        "external_id": "6d4a2124e2",
+        "description": "PGANDE WEB ONLINE 12186876",
+        "amount_cents": -9151,
+        "merchant": "PG&E",
+        "truth": "utilities",
+        "acceptable": [
+          "utilities"
+        ],
+        "pred": "other",
+        "confidence": 0.5,
+        "from_cache": false,
+        "rationale": "Merchant unclear, classified as other."
+      },
+      {
+        "persona": "maya_renter",
+        "external_id": "8502b606a1",
+        "description": "LEMONADE INSURANCE CO",
+        "amount_cents": -1250,
+        "merchant": "Lemonade",
+        "truth": "housing",
+        "acceptable": [
+          "housing"
+        ],
+        "pred": "health",
+        "confidence": 0.9,
+        "from_cache": false,
+        "rationale": "LEMONADE indicates health insurance."
+      },
+      {
+        "persona": "maya_renter",
+        "external_id": "bb7b8428ab",
+        "description": "PGANDE WEB ONLINE 01186876",
+        "amount_cents": -8946,
+        "merchant": "PG&E",
+        "truth": "utilities",
+        "acceptable": [
+          "utilities"
+        ],
+        "pred": "other",
+        "confidence": 0.4,
+        "from_cache": false,
+        "rationale": "Merchant unclear, cannot categorize."
+      },
+      {
+        "persona": "maya_renter",
+        "external_id": "1281df2c01",
+        "description": "LEMONADE INSURANCE CO",
+        "amount_cents": -1250,
+        "merchant": "Lemonade",
+        "truth": "housing",
+        "acceptable": [
+          "housing"
+        ],
+        "pred": "other",
+        "confidence": 0.5,
+        "from_cache": false,
+        "rationale": "Insurance company, but no specific category."
+      },
+      {
+        "persona": "maya_renter",
+        "external_id": "e6de88d294",
+        "description": "PGANDE WEB ONLINE 02186876",
+        "amount_cents": -9113,
+        "merchant": "PG&E",
+        "truth": "utilities",
+        "acceptable": [
+          "utilities"
+        ],
+        "pred": "other",
+        "confidence": 0.5,
+        "from_cache": false,
+        "rationale": "Merchant unclear, no specific category."
+      },
+      {
+        "persona": "maya_renter",
+        "external_id": "de7ba622c8",
+        "description": "LEMONADE I* LGZOD0KM7 NY",
+        "amount_cents": -1250,
+        "merchant": "Lemonade",
+        "truth": "housing",
+        "acceptable": [
+          "housing"
+        ],
+        "pred": "other",
+        "confidence": 0.5,
+        "from_cache": false,
+        "rationale": "Lemonade unclear, classified as other."
+      },
+      {
+        "persona": "maya_renter",
+        "external_id": "b690995bb5",
+        "description": "PGANDE WEB ONLINE 03186876",
+        "amount_cents": -7944,
+        "merchant": "PG&E",
+        "truth": "utilities",
+        "acceptable": [
+          "utilities"
+        ],
+        "pred": "other",
+        "confidence": 0.4,
+        "from_cache": false,
+        "rationale": "Merchant unclear, cannot classify."
+      },
+      {
+        "persona": "maya_renter",
+        "external_id": "7fe2714976",
+        "description": "LEMONADE INSURANCE CO",
+        "amount_cents": -1250,
+        "merchant": "Lemonade",
+        "truth": "housing",
+        "acceptable": [
+          "housing"
+        ],
+        "pred": "other",
+        "confidence": 0.5,
+        "from_cache": false,
+        "rationale": "Insurance company, but unclear category."
+      },
+      {
+        "persona": "maya_renter",
+        "external_id": "7d6630a288",
+        "description": "PGANDE WEB ONLINE 04186876",
+        "amount_cents": -7412,
+        "merchant": "PG&E",
+        "truth": "utilities",
+        "acceptable": [
+          "utilities"
+        ],
+        "pred": "other",
+        "confidence": 0.5,
+        "from_cache": false,
+        "rationale": "Merchant unclear, category judgment call."
+      },
+      {
+        "persona": "maya_renter",
+        "external_id": "567ecaf6e2",
+        "description": "SQ *BLUE BTL COF 6979",
+        "amount_cents": -527,
+        "merchant": "Blue Bottle Coffee",
+        "truth": "dining",
+        "acceptable": [
+          "dining"
+        ],
+        "pred": "other",
+        "confidence": 0.5,
+        "from_cache": false,
+        "rationale": "Merchant unclear, category judgment call."
+      },
+      {
+        "persona": "maya_renter",
+        "external_id": "b825f52a75",
+        "description": "LEMONADE INSURANCE CO",
+        "amount_cents": -1250,
+        "merchant": "Lemonade",
+        "truth": "housing",
+        "acceptable": [
+          "housing"
+        ],
+        "pred": "other",
+        "confidence": 0.5,
+        "from_cache": false,
+        "rationale": "Insurance company, but unclear category."
+      },
+      {
+        "persona": "maya_renter",
+        "external_id": "33fb2aac1e",
+        "description": "PGANDE WEB ONLINE 05186876",
+        "amount_cents": -5562,
+        "merchant": "PG&E",
+        "truth": "utilities",
+        "acceptable": [
+          "utilities"
+        ],
+        "pred": "other",
+        "confidence": 0.4,
+        "from_cache": false,
+        "rationale": "Merchant unclear, category not fitting any defined."
+      },
+      {
+        "persona": "maya_renter",
+        "external_id": "fe95cb8dc1",
+        "description": "SQ *THAI BASIL",
+        "amount_cents": -4637,
+        "merchant": "Local restaurant",
+        "truth": "dining",
+        "acceptable": [
+          "dining"
+        ],
+        "pred": "food_delivery",
+        "confidence": 0.9,
+        "from_cache": false,
+        "rationale": "Thai Basil is a restaurant on Doordash, classified as food_delivery."
+      },
+      {
+        "persona": "maya_renter",
+        "external_id": "4ed5f44d5d",
+        "description": "SQ *BURGER BARN",
+        "amount_cents": -5182,
+        "merchant": "Local restaurant",
+        "truth": "dining",
+        "acceptable": [
+          "dining"
+        ],
+        "pred": "food_delivery",
+        "confidence": 0.9,
+        "from_cache": false,
+        "rationale": "Burger Barn is a restaurant on a delivery platform, classified as food_delivery."
+      },
+      {
+        "persona": "maya_renter",
+        "external_id": "d2839d316c",
+        "description": "UBER ONE OZ7TDN72XU HELP.UBER.COM",
+        "amount_cents": -999,
+        "merchant": "Uber One",
+        "truth": "transport",
+        "acceptable": [
+          "food_delivery",
+          "transport"
+        ],
+        "pred": "other",
+        "confidence": 0.5,
+        "from_cache": false,
+        "rationale": "UBER ONE is unclear, not a specific service."
+      },
+      {
+        "persona": "maya_renter",
+        "external_id": "39f6fc154a",
+        "description": "LEMONADE INSURANCE CO",
+        "amount_cents": -1250,
+        "merchant": "Lemonade",
+        "truth": "housing",
+        "acceptable": [
+          "housing"
+        ],
+        "pred": "health",
+        "confidence": 0.9,
+        "from_cache": false,
+        "rationale": "LEMONADE INSURANCE CO for insurance payment."
+      },
+      {
+        "persona": "maya_renter",
+        "external_id": "1e37c053d1",
+        "description": "PGANDE WEB ONLINE 06186876",
+        "amount_cents": -5275,
+        "merchant": "PG&E",
+        "truth": "utilities",
+        "acceptable": [
+          "utilities"
+        ],
+        "pred": "other",
+        "confidence": 0.5,
+        "from_cache": false,
+        "rationale": "Merchant unclear, categorized as other."
+      },
+      {
+        "persona": "maya_renter",
+        "external_id": "b9909026ef",
+        "description": "TST* HALAL CART SAN FRANCISCO CA",
+        "amount_cents": -3205,
+        "merchant": "Local restaurant",
+        "truth": "dining",
+        "acceptable": [
+          "dining"
+        ],
+        "pred": "food_delivery",
+        "confidence": 0.9,
+        "from_cache": false,
+        "rationale": "Halal Cart indicates a delivery platform."
+      },
+      {
+        "persona": "maya_renter",
+        "external_id": "d182291a42",
+        "description": "LEMONADE INSURANCE CO",
+        "amount_cents": -1250,
+        "merchant": "Lemonade",
+        "truth": "housing",
+        "acceptable": [
+          "housing"
+        ],
+        "pred": "other",
+        "confidence": 0.5,
+        "from_cache": false,
+        "rationale": "Insurance is unclear without specific service."
+      },
+      {
+        "persona": "maya_renter",
+        "external_id": "61cc33ed49",
+        "description": "PGANDE WEB ONLINE 07186876",
+        "amount_cents": -4251,
+        "merchant": "PG&E",
+        "truth": "utilities",
+        "acceptable": [
+          "utilities"
+        ],
+        "pred": "other",
+        "confidence": 0.4,
+        "from_cache": false,
+        "rationale": "Merchant unclear, cannot categorize."
+      },
+      {
+        "persona": "maya_renter",
+        "external_id": "66550c82f0",
+        "description": "LEMONADE INSURANCE CO",
+        "amount_cents": -1250,
+        "merchant": "Lemonade",
+        "truth": "housing",
+        "acceptable": [
+          "housing"
+        ],
+        "pred": "health",
+        "confidence": 0.9,
+        "from_cache": false,
+        "rationale": "Insurance for health indicates health category."
+      },
+      {
+        "persona": "maya_renter",
+        "external_id": "43e5a154af",
+        "description": "PGANDE WEB ONLINE 08186876",
+        "amount_cents": -4964,
+        "merchant": "PG&E",
+        "truth": "utilities",
+        "acceptable": [
+          "utilities"
+        ],
+        "pred": "other",
+        "confidence": 0.5,
+        "from_cache": false,
+        "rationale": "Merchant unclear, categorized as other."
+      },
+      {
+        "persona": "maya_renter",
+        "external_id": "ed70e2aa3d",
+        "description": "SQ *HALAL CART",
+        "amount_cents": -5482,
+        "merchant": "Local restaurant",
+        "truth": "dining",
+        "acceptable": [
+          "dining"
+        ],
+        "pred": "food_delivery",
+        "confidence": 0.9,
+        "from_cache": false,
+        "rationale": "SQ *HALAL CART indicates food delivery service."
+      },
+      {
+        "persona": "maya_renter",
+        "external_id": "e69c95d294",
+        "description": "LEMONADE INSURANCE CO",
+        "amount_cents": -1250,
+        "merchant": "Lemonade",
+        "truth": "housing",
+        "acceptable": [
+          "housing"
+        ],
+        "pred": "other",
+        "confidence": 0.5,
+        "from_cache": false,
+        "rationale": "Insurance company, but not clearly fitting a category."
+      },
+      {
+        "persona": "maya_renter",
+        "external_id": "a250f64b0d",
+        "description": "PGANDE WEB ONLINE 09186876",
+        "amount_cents": -6181,
+        "merchant": "PG&E",
+        "truth": "utilities",
+        "acceptable": [
+          "utilities"
+        ],
+        "pred": "other",
+        "confidence": 0.5,
+        "from_cache": false,
+        "rationale": "Merchant unclear, categorized as other."
+      },
+      {
+        "persona": "ortiz_family",
+        "external_id": "caf327fef8",
+        "description": "Amazon Prime*QS4N7KBB9S",
+        "amount_cents": -1499,
+        "merchant": "Amazon Prime",
+        "truth": "shopping",
+        "acceptable": [
+          "entertainment",
+          "shopping"
+        ],
+        "pred": "entertainment",
+        "confidence": 0.9,
+        "from_cache": false,
+        "rationale": "Amazon Prime is a streaming service."
+      },
+      {
+        "persona": "ortiz_family",
+        "external_id": "95032965a3",
+        "description": "PURCHASE AUTHORIZED ON 10/07 SQ *CURRY HOUSE",
+        "amount_cents": -4167,
+        "merchant": "Local restaurant",
+        "truth": "dining",
+        "acceptable": [
+          "dining"
+        ],
+        "pred": "food_delivery",
+        "confidence": 0.9,
+        "from_cache": false,
+        "rationale": "Curry House indicates food delivery."
+      },
+      {
+        "persona": "ortiz_family",
+        "external_id": "d537af4fae",
+        "description": "WALMART.COM BC6J0TVD",
+        "amount_cents": -6063,
+        "merchant": "Walmart",
+        "truth": "shopping",
+        "acceptable": [
+          "shopping"
+        ],
+        "pred": "groceries",
+        "confidence": 0.9,
+        "from_cache": false,
+        "rationale": "Walmart is a grocery store."
       },
       {
         "persona": "ortiz_family",
@@ -1386,6 +998,21 @@
       },
       {
         "persona": "ortiz_family",
+        "external_id": "8352bb73da",
+        "description": "PURCHASE AUTHORIZED ON 10/25 Amazon.com*060GFLIX1",
+        "amount_cents": -6600,
+        "merchant": "Amazon",
+        "truth": "shopping",
+        "acceptable": [
+          "shopping"
+        ],
+        "pred": "entertainment",
+        "confidence": 0.9,
+        "from_cache": false,
+        "rationale": "Amazon indicates a streaming service purchase."
+      },
+      {
+        "persona": "ortiz_family",
         "external_id": "aefaa12d4a",
         "description": "Amazon Prime*O2LUQH19CH",
         "amount_cents": -1499,
@@ -1395,10 +1022,10 @@
           "entertainment",
           "shopping"
         ],
-        "pred": "other",
+        "pred": "entertainment",
         "confidence": 0.9,
         "from_cache": false,
-        "rationale": "Amazon Prime is a subscription service."
+        "rationale": "Amazon Prime indicates a streaming service membership."
       },
       {
         "persona": "ortiz_family",
@@ -1413,7 +1040,7 @@
         "pred": "food_delivery",
         "confidence": 0.9,
         "from_cache": false,
-        "rationale": "CHIPOTLE ONLINE indicates food delivery."
+        "rationale": "CHIPOTLE indicates a food delivery order."
       },
       {
         "persona": "ortiz_family",
@@ -1428,7 +1055,7 @@
         "pred": "shopping",
         "confidence": 0.9,
         "from_cache": false,
-        "rationale": "Costco for retail purchase."
+        "rationale": "COSTCO WHOLESALE for retail shopping."
       },
       {
         "persona": "ortiz_family",
@@ -1443,23 +1070,7 @@
         "pred": "shopping",
         "confidence": 0.9,
         "from_cache": false,
-        "rationale": "Costco for retail purchase."
-      },
-      {
-        "persona": "ortiz_family",
-        "external_id": "242aadb257",
-        "description": "WALMART+ MEMBERSHIP RZ1MXL6SA",
-        "amount_cents": -1295,
-        "merchant": "Walmart+",
-        "truth": "shopping",
-        "acceptable": [
-          "groceries",
-          "shopping"
-        ],
-        "pred": "other",
-        "confidence": 0.9,
-        "from_cache": false,
-        "rationale": "Walmart+ membership."
+        "rationale": "COSTCO WHOLESALE for retail shopping."
       },
       {
         "persona": "ortiz_family",
@@ -1472,25 +1083,25 @@
           "entertainment",
           "shopping"
         ],
-        "pred": "other",
+        "pred": "entertainment",
         "confidence": 0.9,
         "from_cache": false,
-        "rationale": "Amazon Prime is a subscription service."
+        "rationale": "Amazon Prime is a streaming service, classified as entertainment."
       },
       {
         "persona": "ortiz_family",
-        "external_id": "29cfdc7ddc",
-        "description": "CHECKCARD 1216 SQ *PHO 88",
-        "amount_cents": -2908,
-        "merchant": "Local restaurant",
-        "truth": "dining",
+        "external_id": "33be2059fe",
+        "description": "GEICO *AUTO V7RDE7CC",
+        "amount_cents": -18240,
+        "merchant": "GEICO",
+        "truth": "transport",
         "acceptable": [
-          "dining"
+          "transport"
         ],
-        "pred": "food_delivery",
+        "pred": "fees",
         "confidence": 0.9,
         "from_cache": false,
-        "rationale": "Pho 88 is a restaurant with delivery."
+        "rationale": "Auto insurance payment, classified as fees."
       },
       {
         "persona": "ortiz_family",
@@ -1505,7 +1116,7 @@
         "pred": "groceries",
         "confidence": 0.9,
         "from_cache": false,
-        "rationale": "Walmart is a grocery store."
+        "rationale": "WALMART.COM indicates grocery shopping."
       },
       {
         "persona": "ortiz_family",
@@ -1520,7 +1131,7 @@
         "pred": "groceries",
         "confidence": 0.9,
         "from_cache": false,
-        "rationale": "Walmart is a grocery store."
+        "rationale": "WALMART.COM indicates grocery shopping."
       },
       {
         "persona": "ortiz_family",
@@ -1533,10 +1144,25 @@
           "groceries",
           "shopping"
         ],
-        "pred": "other",
+        "pred": "groceries",
         "confidence": 0.9,
         "from_cache": false,
-        "rationale": "Walmart+ is a membership service."
+        "rationale": "WALMART+ indicates grocery membership."
+      },
+      {
+        "persona": "ortiz_family",
+        "external_id": "8ce38d39db",
+        "description": "CHIPOTLE ONLINE 6560",
+        "amount_cents": -3342,
+        "merchant": "Chipotle",
+        "truth": "dining",
+        "acceptable": [
+          "dining"
+        ],
+        "pred": "food_delivery",
+        "confidence": 0.9,
+        "from_cache": false,
+        "rationale": "Chipotle indicates food delivery service."
       },
       {
         "persona": "ortiz_family",
@@ -1549,10 +1175,10 @@
           "entertainment",
           "shopping"
         ],
-        "pred": "other",
+        "pred": "entertainment",
         "confidence": 0.9,
         "from_cache": false,
-        "rationale": "Amazon Prime is a subscription service."
+        "rationale": "Amazon Prime is a streaming service."
       },
       {
         "persona": "ortiz_family",
@@ -1571,21 +1197,6 @@
       },
       {
         "persona": "ortiz_family",
-        "external_id": "7ec396a1f5",
-        "description": "SQ *PHO 88",
-        "amount_cents": -4466,
-        "merchant": "Local restaurant",
-        "truth": "dining",
-        "acceptable": [
-          "dining"
-        ],
-        "pred": "food_delivery",
-        "confidence": 0.9,
-        "from_cache": false,
-        "rationale": "Pho 88 is a restaurant via SQ."
-      },
-      {
-        "persona": "ortiz_family",
         "external_id": "69435161a8",
         "description": "COSTCO WHSE #7574 ROUND ROCK",
         "amount_cents": -22362,
@@ -1597,7 +1208,7 @@
         "pred": "shopping",
         "confidence": 0.9,
         "from_cache": false,
-        "rationale": "Costco is a retail store."
+        "rationale": "COSTCO is a retail store."
       },
       {
         "persona": "ortiz_family",
@@ -1612,7 +1223,7 @@
         "pred": "shopping",
         "confidence": 0.9,
         "from_cache": false,
-        "rationale": "Costco is a retail store."
+        "rationale": "COSTCO is a retail store."
       },
       {
         "persona": "ortiz_family",
@@ -1625,10 +1236,10 @@
           "entertainment",
           "shopping"
         ],
-        "pred": "other",
+        "pred": "entertainment",
         "confidence": 0.9,
         "from_cache": false,
-        "rationale": "Amazon Prime is a subscription service."
+        "rationale": "Amazon Prime is a streaming service."
       },
       {
         "persona": "ortiz_family",
@@ -1643,23 +1254,7 @@
         "pred": "groceries",
         "confidence": 0.9,
         "from_cache": false,
-        "rationale": "WAL-MART is a grocery store."
-      },
-      {
-        "persona": "ortiz_family",
-        "external_id": "768fa510e0",
-        "description": "WALMART+ MEMBERSHIP PO5LYV37",
-        "amount_cents": -1295,
-        "merchant": "Walmart+",
-        "truth": "shopping",
-        "acceptable": [
-          "groceries",
-          "shopping"
-        ],
-        "pred": "other",
-        "confidence": 0.9,
-        "from_cache": false,
-        "rationale": "WALMART+ MEMBERSHIP is a store membership."
+        "rationale": "Walmart is a grocery store, classified as groceries."
       },
       {
         "persona": "ortiz_family",
@@ -1674,7 +1269,22 @@
         "pred": "food_delivery",
         "confidence": 0.9,
         "from_cache": false,
-        "rationale": "CHIPOTLE ONLINE is food delivery."
+        "rationale": "Chipotle online order is food delivery."
+      },
+      {
+        "persona": "ortiz_family",
+        "external_id": "9428d7efd3",
+        "description": "COSTCO WHOLESALE #4172",
+        "amount_cents": -18569,
+        "merchant": "Costco",
+        "truth": "groceries",
+        "acceptable": [
+          "groceries"
+        ],
+        "pred": "shopping",
+        "confidence": 0.9,
+        "from_cache": false,
+        "rationale": "Costco is a retail store, classified as shopping."
       },
       {
         "persona": "ortiz_family",
@@ -1687,26 +1297,25 @@
           "entertainment",
           "shopping"
         ],
-        "pred": "other",
+        "pred": "entertainment",
         "confidence": 0.9,
         "from_cache": false,
-        "rationale": "Amazon Prime is a subscription service."
+        "rationale": "Amazon Prime is a streaming service, classified as entertainment."
       },
       {
         "persona": "ortiz_family",
-        "external_id": "92740b71ab",
-        "description": "WALMART+ MEMBERSHIP TN004HZP",
-        "amount_cents": -1295,
-        "merchant": "Walmart+",
-        "truth": "shopping",
+        "external_id": "b5380c4e3a",
+        "description": "COSTCO WHOLESALE #4172",
+        "amount_cents": -14053,
+        "merchant": "Costco",
+        "truth": "groceries",
         "acceptable": [
-          "groceries",
-          "shopping"
+          "groceries"
         ],
-        "pred": "other",
+        "pred": "shopping",
         "confidence": 0.9,
         "from_cache": false,
-        "rationale": "WALMART+ MEMBERSHIP is a store membership."
+        "rationale": "Costco is a retail store, classified as shopping."
       },
       {
         "persona": "ortiz_family",
@@ -1721,7 +1330,7 @@
         "pred": "shopping",
         "confidence": 0.9,
         "from_cache": false,
-        "rationale": "Costco purchase, categorized as shopping."
+        "rationale": "Costco purchase, classified as shopping."
       },
       {
         "persona": "ortiz_family",
@@ -1734,10 +1343,10 @@
           "entertainment",
           "shopping"
         ],
-        "pred": "other",
+        "pred": "entertainment",
         "confidence": 0.9,
         "from_cache": false,
-        "rationale": "Amazon Prime subscription, categorized as other."
+        "rationale": "Amazon Prime membership, classified as entertainment."
       },
       {
         "persona": "ortiz_family",
@@ -1750,10 +1359,40 @@
           "groceries",
           "shopping"
         ],
-        "pred": "fitness",
+        "pred": "groceries",
         "confidence": 0.9,
         "from_cache": false,
-        "rationale": "WALMART+ membership, categorized as fitness."
+        "rationale": "WALMART+ indicates grocery membership."
+      },
+      {
+        "persona": "ortiz_family",
+        "external_id": "5b4444391b",
+        "description": "CHECKCARD 0430 CHIPOTLE ONLINE 1077",
+        "amount_cents": -2385,
+        "merchant": "Chipotle",
+        "truth": "dining",
+        "acceptable": [
+          "dining"
+        ],
+        "pred": "food_delivery",
+        "confidence": 0.9,
+        "from_cache": false,
+        "rationale": "CHIPOTLE with online indicates food delivery."
+      },
+      {
+        "persona": "ortiz_family",
+        "external_id": "97c6648b2e",
+        "description": "CHIPOTLE ONLINE 1077",
+        "amount_cents": -2794,
+        "merchant": "Chipotle",
+        "truth": "dining",
+        "acceptable": [
+          "dining"
+        ],
+        "pred": "food_delivery",
+        "confidence": 0.9,
+        "from_cache": false,
+        "rationale": "CHIPOTLE with online indicates food delivery."
       },
       {
         "persona": "ortiz_family",
@@ -1766,10 +1405,10 @@
           "entertainment",
           "shopping"
         ],
-        "pred": "other",
+        "pred": "entertainment",
         "confidence": 0.9,
         "from_cache": false,
-        "rationale": "Amazon Prime subscription fee."
+        "rationale": "Amazon Prime is a streaming service."
       },
       {
         "persona": "ortiz_family",
@@ -1784,7 +1423,7 @@
         "pred": "shopping",
         "confidence": 0.9,
         "from_cache": false,
-        "rationale": "Costco is a retail warehouse."
+        "rationale": "Costco is a retail store."
       },
       {
         "persona": "ortiz_family",
@@ -1799,7 +1438,7 @@
         "pred": "shopping",
         "confidence": 0.9,
         "from_cache": false,
-        "rationale": "Costco is a retail warehouse."
+        "rationale": "Costco is a retail store."
       },
       {
         "persona": "ortiz_family",
@@ -1814,7 +1453,7 @@
         "pred": "food_delivery",
         "confidence": 0.9,
         "from_cache": false,
-        "rationale": "Curry House via SQ indicates delivery."
+        "rationale": "Curry House is a restaurant with delivery."
       },
       {
         "persona": "ortiz_family",
@@ -1829,7 +1468,7 @@
         "pred": "shopping",
         "confidence": 0.9,
         "from_cache": false,
-        "rationale": "COSTCO WHOLESALE is a retail store."
+        "rationale": "COSTCO is a retail store."
       },
       {
         "persona": "ortiz_family",
@@ -1842,26 +1481,55 @@
           "entertainment",
           "shopping"
         ],
-        "pred": "other",
+        "pred": "entertainment",
         "confidence": 0.9,
         "from_cache": false,
-        "rationale": "Amazon Prime subscription."
+        "rationale": "Amazon Prime for streaming service."
       },
       {
         "persona": "ortiz_family",
-        "external_id": "e2ef230947",
-        "description": "WALMART+ MEMBERSHIP TFCSD5AYE5",
-        "amount_cents": -1295,
-        "merchant": "Walmart+",
-        "truth": "shopping",
+        "external_id": "6362534157",
+        "description": "PURCHASE AUTHORIZED ON 06/13 COSTCO WHSE #7574 ROUND ROCK TX",
+        "amount_cents": -17386,
+        "merchant": "Costco",
+        "truth": "groceries",
         "acceptable": [
-          "groceries",
-          "shopping"
+          "groceries"
         ],
-        "pred": "other",
+        "pred": "shopping",
         "confidence": 0.9,
         "from_cache": false,
-        "rationale": "Walmart+ is a membership service."
+        "rationale": "Costco for retail purchase."
+      },
+      {
+        "persona": "ortiz_family",
+        "external_id": "c43050b174",
+        "description": "PURCHASE AUTHORIZED ON 06/19 COSTCO WHSE #7574 ROUND ROCK TX",
+        "amount_cents": -19529,
+        "merchant": "Costco",
+        "truth": "groceries",
+        "acceptable": [
+          "groceries"
+        ],
+        "pred": "shopping",
+        "confidence": 0.9,
+        "from_cache": false,
+        "rationale": "Costco is a retail shopping store."
+      },
+      {
+        "persona": "ortiz_family",
+        "external_id": "4accd04f6d",
+        "description": "COSTCO WHOLESALE #4172",
+        "amount_cents": -15061,
+        "merchant": "Costco",
+        "truth": "groceries",
+        "acceptable": [
+          "groceries"
+        ],
+        "pred": "shopping",
+        "confidence": 0.9,
+        "from_cache": false,
+        "rationale": "Costco is a retail shopping store."
       },
       {
         "persona": "ortiz_family",
@@ -1874,17 +1542,17 @@
           "entertainment",
           "shopping"
         ],
-        "pred": "other",
+        "pred": "entertainment",
         "confidence": 0.9,
         "from_cache": false,
-        "rationale": "Amazon Prime is a subscription service."
+        "rationale": "Amazon Prime is a streaming service."
       },
       {
         "persona": "ortiz_family",
-        "external_id": "559f2a6c67",
-        "description": "PURCHASE AUTHORIZED ON 07/18 SQ *HALAL CART",
-        "amount_cents": -5322,
-        "merchant": "Local restaurant",
+        "external_id": "4a2bb5240f",
+        "description": "CHIPOTLE ONLINE 1077",
+        "amount_cents": -1930,
+        "merchant": "Chipotle",
         "truth": "dining",
         "acceptable": [
           "dining"
@@ -1892,23 +1560,37 @@
         "pred": "food_delivery",
         "confidence": 0.9,
         "from_cache": false,
-        "rationale": "Halal Cart indicates food delivery service."
+        "rationale": "Chipotle online indicates food delivery."
       },
       {
         "persona": "ortiz_family",
-        "external_id": "e29a478926",
-        "description": "WALMART+ MEMBERSHIP OF5YMWRHAH",
-        "amount_cents": -1295,
-        "merchant": "Walmart+",
-        "truth": "shopping",
+        "external_id": "e04b55d5b1",
+        "description": "COSTCO WHOLESALE #4172",
+        "amount_cents": -17263,
+        "merchant": "Costco",
+        "truth": "groceries",
         "acceptable": [
-          "groceries",
-          "shopping"
+          "groceries"
         ],
-        "pred": "other",
+        "pred": "shopping",
         "confidence": 0.9,
         "from_cache": false,
-        "rationale": "Walmart membership fits none of the categories."
+        "rationale": "Costco indicates retail shopping."
+      },
+      {
+        "persona": "ortiz_family",
+        "external_id": "6491cf2224",
+        "description": "COSTCO WHSE #7574 ROUND ROCK",
+        "amount_cents": -21295,
+        "merchant": "Costco",
+        "truth": "groceries",
+        "acceptable": [
+          "groceries"
+        ],
+        "pred": "shopping",
+        "confidence": 0.9,
+        "from_cache": false,
+        "rationale": "Costco indicates retail shopping."
       },
       {
         "persona": "ortiz_family",
@@ -1921,17 +1603,17 @@
           "entertainment",
           "shopping"
         ],
-        "pred": "other",
+        "pred": "entertainment",
         "confidence": 0.9,
         "from_cache": false,
-        "rationale": "Amazon Prime is a subscription service."
+        "rationale": "AMAZON PRIME is a streaming service."
       },
       {
         "persona": "ortiz_family",
-        "external_id": "05f35376b0",
-        "description": "PURCHASE AUTHORIZED ON 08/07 PIZZERIA ROMA AUSTIN TX",
-        "amount_cents": -3465,
-        "merchant": "Local restaurant",
+        "external_id": "8ffc7032ca",
+        "description": "CHIPOTLE ONLINE 6560",
+        "amount_cents": -3571,
+        "merchant": "Chipotle",
         "truth": "dining",
         "acceptable": [
           "dining"
@@ -1939,7 +1621,7 @@
         "pred": "food_delivery",
         "confidence": 0.9,
         "from_cache": false,
-        "rationale": "Pizzeria Roma with DoorDash indicates food delivery."
+        "rationale": "CHIPOTLE with online indicates food delivery."
       },
       {
         "persona": "ortiz_family",
@@ -1954,7 +1636,7 @@
         "pred": "food_delivery",
         "confidence": 0.9,
         "from_cache": false,
-        "rationale": "CHIPOTLE ONLINE indicates food delivery."
+        "rationale": "CHIPOTLE ONLINE indicates a food delivery order."
       },
       {
         "persona": "ortiz_family",
@@ -1967,10 +1649,25 @@
           "entertainment",
           "shopping"
         ],
-        "pred": "other",
+        "pred": "entertainment",
         "confidence": 0.9,
         "from_cache": false,
-        "rationale": "Amazon Prime is a subscription service."
+        "rationale": "Amazon Prime is a streaming service, classified as entertainment."
+      },
+      {
+        "persona": "ortiz_family",
+        "external_id": "fa8f1c76b5",
+        "description": "POS PURCHASE COSTCO WHSE #7574 ROUND ROCK TX",
+        "amount_cents": -14742,
+        "merchant": "Costco",
+        "truth": "groceries",
+        "acceptable": [
+          "groceries"
+        ],
+        "pred": "shopping",
+        "confidence": 0.9,
+        "from_cache": false,
+        "rationale": "COSTCO is a retail store."
       },
       {
         "persona": "ortiz_family",
@@ -1985,37 +1682,99 @@
         "pred": "shopping",
         "confidence": 0.9,
         "from_cache": false,
-        "rationale": "Costco is a wholesale retailer."
+        "rationale": "COSTCO indicates a shopping transaction."
       },
       {
         "persona": "sam_freelancer",
-        "external_id": "0021ca47c0",
-        "description": "SPOTIFY USA",
-        "amount_cents": -1199,
-        "merchant": "Spotify",
-        "truth": "entertainment",
+        "external_id": "dc49c7a2a2",
+        "description": "ADOBE *CREATIVE CLD OPSW0Y2TL0",
+        "amount_cents": -5999,
+        "merchant": "Adobe",
+        "truth": "other",
         "acceptable": [
-          "entertainment"
+          "other",
+          "shopping"
         ],
-        "pred": "other",
+        "pred": "entertainment",
         "confidence": 0.9,
         "from_cache": false,
-        "rationale": "Spotify for music subscription."
+        "rationale": "Adobe for creative cloud subscription."
       },
       {
         "persona": "sam_freelancer",
-        "external_id": "ce934d6284",
-        "description": "WALGREENS STORE DENVER",
-        "amount_cents": -1367,
-        "merchant": "Walgreens",
-        "truth": "health",
+        "external_id": "46eb0a3f5f",
+        "description": "STRIPE TRANSFER ST-SPEP9JRU",
+        "amount_cents": 245136,
+        "merchant": "Stripe",
+        "truth": "income",
         "acceptable": [
-          "health"
+          "income"
         ],
-        "pred": "groceries",
+        "pred": "transfers",
         "confidence": 0.9,
         "from_cache": false,
-        "rationale": "Walgreens is a grocery store."
+        "rationale": "Stripe transfer indicates person-to-person payment."
+      },
+      {
+        "persona": "sam_freelancer",
+        "external_id": "a28cde992d",
+        "description": "STRIPE TRANSFER ST-KA9H2TV0J",
+        "amount_cents": 112736,
+        "merchant": "Stripe",
+        "truth": "income",
+        "acceptable": [
+          "income"
+        ],
+        "pred": "transfers",
+        "confidence": 0.9,
+        "from_cache": false,
+        "rationale": "STRIPE indicates a transfer between accounts."
+      },
+      {
+        "persona": "sam_freelancer",
+        "external_id": "c4e24f1268",
+        "description": "STRIPE TRANSFER ST-5XB1PDXH2",
+        "amount_cents": 198863,
+        "merchant": "Stripe",
+        "truth": "income",
+        "acceptable": [
+          "income"
+        ],
+        "pred": "transfers",
+        "confidence": 0.9,
+        "from_cache": false,
+        "rationale": "Stripe indicates a transfer between accounts."
+      },
+      {
+        "persona": "sam_freelancer",
+        "external_id": "db1ae07f05",
+        "description": "ADOBE *CREATIVE CLD I15OXYB3A",
+        "amount_cents": -5999,
+        "merchant": "Adobe",
+        "truth": "other",
+        "acceptable": [
+          "other",
+          "shopping"
+        ],
+        "pred": "entertainment",
+        "confidence": 0.9,
+        "from_cache": false,
+        "rationale": "Adobe Creative Cloud is a subscription service."
+      },
+      {
+        "persona": "sam_freelancer",
+        "external_id": "8a5890cd7d",
+        "description": "STRIPE TRANSFER ST-624CLGY94",
+        "amount_cents": 83040,
+        "merchant": "Stripe",
+        "truth": "income",
+        "acceptable": [
+          "income"
+        ],
+        "pred": "transfers",
+        "confidence": 0.9,
+        "from_cache": false,
+        "rationale": "Stripe indicates a transfer between accounts."
       },
       {
         "persona": "sam_freelancer",
@@ -2030,22 +1789,23 @@
         "pred": "food_delivery",
         "confidence": 0.9,
         "from_cache": false,
-        "rationale": "Halal Cart is a restaurant via delivery."
+        "rationale": "Halal Cart is a restaurant, classified as food_delivery."
       },
       {
         "persona": "sam_freelancer",
-        "external_id": "fc3c86a769",
-        "description": "WALGREENS #36330",
-        "amount_cents": -2161,
-        "merchant": "Walgreens",
-        "truth": "health",
+        "external_id": "55aad91224",
+        "description": "ADOBE *CREATIVE CLD WDAQ6U4M1K",
+        "amount_cents": -5999,
+        "merchant": "Adobe",
+        "truth": "other",
         "acceptable": [
-          "health"
+          "other",
+          "shopping"
         ],
-        "pred": "groceries",
+        "pred": "entertainment",
         "confidence": 0.9,
         "from_cache": false,
-        "rationale": "Walgreens is a grocery store."
+        "rationale": "Adobe Creative Cloud is a software service."
       },
       {
         "persona": "sam_freelancer",
@@ -2064,24 +1824,9 @@
       },
       {
         "persona": "sam_freelancer",
-        "external_id": "8fddc68514",
-        "description": "VISIBLE SERVICE Z2AWXO392",
-        "amount_cents": -2500,
-        "merchant": "Visible",
-        "truth": "utilities",
-        "acceptable": [
-          "utilities"
-        ],
-        "pred": "other",
-        "confidence": 0.9,
-        "from_cache": false,
-        "rationale": "VISIBLE SERVICE for phone plan."
-      },
-      {
-        "persona": "sam_freelancer",
-        "external_id": "8344fd341f",
-        "description": "STRIPE TRANSFER ST-IS21UTFC",
-        "amount_cents": 94381,
+        "external_id": "39e9d6dddc",
+        "description": "STRIPE TRANSFER ST-02R118M7G",
+        "amount_cents": 86485,
         "merchant": "Stripe",
         "truth": "income",
         "acceptable": [
@@ -2090,37 +1835,23 @@
         "pred": "transfers",
         "confidence": 0.9,
         "from_cache": false,
-        "rationale": "STRIPE TRANSFER indicates a payment transfer."
+        "rationale": "STRIPE indicates a transfer between accounts."
       },
       {
         "persona": "sam_freelancer",
-        "external_id": "c5e32e3a4d",
-        "description": "STRIPE TRANSFER ST-M4484OO07",
-        "amount_cents": 102178,
-        "merchant": "Stripe",
-        "truth": "income",
+        "external_id": "2b3b8abea5",
+        "description": "ADOBE *CREATIVE CLD TNY4WQVY",
+        "amount_cents": -5999,
+        "merchant": "Adobe",
+        "truth": "other",
         "acceptable": [
-          "income"
+          "other",
+          "shopping"
         ],
-        "pred": "transfers",
+        "pred": "entertainment",
         "confidence": 0.9,
         "from_cache": false,
-        "rationale": "STRIPE TRANSFER indicates a payment transfer."
-      },
-      {
-        "persona": "sam_freelancer",
-        "external_id": "ea212aad8e",
-        "description": "STRIPE TRANSFER ST-3WGROTRQ",
-        "amount_cents": 80967,
-        "merchant": "Stripe",
-        "truth": "income",
-        "acceptable": [
-          "income"
-        ],
-        "pred": "transfers",
-        "confidence": 0.9,
-        "from_cache": false,
-        "rationale": "STRIPE TRANSFER indicates a payment transfer."
+        "rationale": "Adobe for creative cloud subscription."
       },
       {
         "persona": "sam_freelancer",
@@ -2135,7 +1866,7 @@
         "pred": "transfers",
         "confidence": 0.9,
         "from_cache": false,
-        "rationale": "Stripe transfer."
+        "rationale": "Stripe transfer indicates a person-to-person payment."
       },
       {
         "persona": "sam_freelancer",
@@ -2148,9 +1879,25 @@
           "utilities"
         ],
         "pred": "other",
+        "confidence": 0.5,
+        "from_cache": false,
+        "rationale": "VISIBLE is unclear; service not specified."
+      },
+      {
+        "persona": "sam_freelancer",
+        "external_id": "6f2cabbefc",
+        "description": "ADOBE *CREATIVE CLD 9L36AYG1G4",
+        "amount_cents": -5999,
+        "merchant": "Adobe",
+        "truth": "other",
+        "acceptable": [
+          "other",
+          "shopping"
+        ],
+        "pred": "entertainment",
         "confidence": 0.9,
         "from_cache": false,
-        "rationale": "VISIBLE is a phone service."
+        "rationale": "ADOBE indicates a software subscription."
       },
       {
         "persona": "sam_freelancer",
@@ -2165,7 +1912,7 @@
         "pred": "food_delivery",
         "confidence": 0.9,
         "from_cache": false,
-        "rationale": "HALAL CART indicates delivery service."
+        "rationale": "HALAL CART indicates a delivery platform."
       },
       {
         "persona": "sam_freelancer",
@@ -2181,6 +1928,21 @@
         "confidence": 0.9,
         "from_cache": false,
         "rationale": "Halal Cart indicates food delivery service."
+      },
+      {
+        "persona": "sam_freelancer",
+        "external_id": "63d6853af4",
+        "description": "STRIPE TRANSFER ST-J3HFKD3CPS",
+        "amount_cents": 246768,
+        "merchant": "Stripe",
+        "truth": "income",
+        "acceptable": [
+          "income"
+        ],
+        "pred": "transfers",
+        "confidence": 0.9,
+        "from_cache": false,
+        "rationale": "Stripe indicates a transfer between accounts."
       },
       {
         "persona": "sam_freelancer",
@@ -2208,9 +1970,41 @@
           "utilities"
         ],
         "pred": "other",
-        "confidence": 0.5,
+        "confidence": 0.4,
         "from_cache": false,
-        "rationale": "Merchant unclear, service descriptor vague."
+        "rationale": "Merchant unclear, does not fit any category."
+      },
+      {
+        "persona": "sam_freelancer",
+        "external_id": "4fb6ad6a7e",
+        "description": "ADOBE *CREATIVE CLD 0UX1TXWWWN",
+        "amount_cents": -5999,
+        "merchant": "Adobe",
+        "truth": "other",
+        "acceptable": [
+          "other",
+          "shopping"
+        ],
+        "pred": "entertainment",
+        "confidence": 0.9,
+        "from_cache": false,
+        "rationale": "Adobe Creative Cloud is a subscription service."
+      },
+      {
+        "persona": "sam_freelancer",
+        "external_id": "0632e34f92",
+        "description": "ADOBE *CREATIVE CLD 0UX1TXWWWN",
+        "amount_cents": -5999,
+        "merchant": "Adobe",
+        "truth": "other",
+        "acceptable": [
+          "other",
+          "shopping"
+        ],
+        "pred": "entertainment",
+        "confidence": 0.9,
+        "from_cache": false,
+        "rationale": "Adobe Creative Cloud is a subscription service."
       },
       {
         "persona": "sam_freelancer",
@@ -2225,7 +2019,7 @@
         "pred": "transfers",
         "confidence": 0.9,
         "from_cache": false,
-        "rationale": "Stripe transfer indicates a person-to-person payment."
+        "rationale": "Stripe transfer indicates a move between accounts."
       },
       {
         "persona": "sam_freelancer",
@@ -2240,7 +2034,7 @@
         "pred": "transfers",
         "confidence": 0.9,
         "from_cache": false,
-        "rationale": "Stripe transfer indicates a person-to-person payment."
+        "rationale": "Stripe transfer indicates a move between accounts."
       },
       {
         "persona": "sam_freelancer",
@@ -2255,7 +2049,7 @@
         "pred": "transfers",
         "confidence": 0.9,
         "from_cache": false,
-        "rationale": "Stripe transfer indicates a person-to-person payment."
+        "rationale": "Stripe transfer indicates a move between accounts."
       },
       {
         "persona": "sam_freelancer",
@@ -2270,202 +2064,70 @@
         "pred": "transfers",
         "confidence": 0.9,
         "from_cache": false,
-        "rationale": "Stripe transfer indicates a person-to-person payment."
+        "rationale": "Stripe transfer indicates a move between accounts."
       },
       {
         "persona": "sam_freelancer",
-        "external_id": "92be13e18d",
-        "description": "SPOTIFY USA",
-        "amount_cents": -1199,
-        "merchant": "Spotify",
-        "truth": "entertainment",
+        "external_id": "5ee4fab81b",
+        "description": "ADOBE *CREATIVE CLD 37EXAP72B",
+        "amount_cents": -5999,
+        "merchant": "Adobe",
+        "truth": "other",
         "acceptable": [
-          "entertainment"
+          "other",
+          "shopping"
         ],
-        "pred": "other",
+        "pred": "entertainment",
         "confidence": 0.9,
         "from_cache": false,
-        "rationale": "Spotify subscription."
+        "rationale": "Adobe subscription classified as entertainment."
       },
       {
         "persona": "sam_freelancer",
-        "external_id": "664f2d6fe6",
-        "description": "STRIPE PAYMENTS TRANSFER WXKKQYQLHA",
-        "amount_cents": 147923,
-        "merchant": "Stripe",
-        "truth": "income",
+        "external_id": "790b62f986",
+        "description": "SQ *THAI BASIL",
+        "amount_cents": -5823,
+        "merchant": "Local restaurant",
+        "truth": "dining",
         "acceptable": [
-          "income"
+          "dining"
         ],
-        "pred": "transfers",
+        "pred": "food_delivery",
         "confidence": 0.9,
         "from_cache": false,
-        "rationale": "Stripe payment transfer."
+        "rationale": "Thai Basil indicates a restaurant with delivery, classified as food_delivery."
       },
       {
         "persona": "sam_freelancer",
-        "external_id": "b9e1613197",
-        "description": "STRIPE TRANSFER ST-F5EZJB08",
-        "amount_cents": 187582,
-        "merchant": "Stripe",
-        "truth": "income",
+        "external_id": "b91dadc9b8",
+        "description": "ADOBE *CREATIVE CLD FFXVIA1A",
+        "amount_cents": -5999,
+        "merchant": "Adobe",
+        "truth": "other",
         "acceptable": [
-          "income"
+          "other",
+          "shopping"
         ],
-        "pred": "transfers",
+        "pred": "entertainment",
         "confidence": 0.9,
         "from_cache": false,
-        "rationale": "Stripe transfer."
+        "rationale": "Adobe subscription indicates entertainment."
       },
       {
         "persona": "sam_freelancer",
-        "external_id": "d5467be22e",
-        "description": "STRIPE TRANSFER ST-CVBMD23HGL",
-        "amount_cents": 120838,
-        "merchant": "Stripe",
-        "truth": "income",
+        "external_id": "a21d3d3002",
+        "description": "ADOBE *CREATIVE CLD WM5RXE4J3",
+        "amount_cents": -5999,
+        "merchant": "Adobe",
+        "truth": "other",
         "acceptable": [
-          "income"
+          "other",
+          "shopping"
         ],
-        "pred": "transfers",
+        "pred": "entertainment",
         "confidence": 0.9,
         "from_cache": false,
-        "rationale": "Stripe transfer indicates a person-to-person payment."
-      },
-      {
-        "persona": "sam_freelancer",
-        "external_id": "5b7aba394b",
-        "description": "STRIPE TRANSFER ST-28MFUEJK",
-        "amount_cents": 76688,
-        "merchant": "Stripe",
-        "truth": "income",
-        "acceptable": [
-          "income"
-        ],
-        "pred": "transfers",
-        "confidence": 0.9,
-        "from_cache": false,
-        "rationale": "Stripe transfer indicates a person-to-person payment."
-      },
-      {
-        "persona": "sam_freelancer",
-        "external_id": "cef6063620",
-        "description": "SPOTIFY USA",
-        "amount_cents": -1199,
-        "merchant": "Spotify",
-        "truth": "entertainment",
-        "acceptable": [
-          "entertainment"
-        ],
-        "pred": "other",
-        "confidence": 0.9,
-        "from_cache": false,
-        "rationale": "Spotify is a software subscription."
-      },
-      {
-        "persona": "sam_freelancer",
-        "external_id": "ef45b11e33",
-        "description": "VISIBLE SERVICE KH0I4L50X",
-        "amount_cents": -2500,
-        "merchant": "Visible",
-        "truth": "utilities",
-        "acceptable": [
-          "utilities"
-        ],
-        "pred": "other",
-        "confidence": 0.9,
-        "from_cache": false,
-        "rationale": "Visible is a phone service."
-      },
-      {
-        "persona": "sam_freelancer",
-        "external_id": "99f4f91721",
-        "description": "VISIBLE SERVICE ZVCML9KGCY",
-        "amount_cents": -2500,
-        "merchant": "Visible",
-        "truth": "utilities",
-        "acceptable": [
-          "utilities"
-        ],
-        "pred": "other",
-        "confidence": 0.9,
-        "from_cache": false,
-        "rationale": "Visible is a phone service."
-      },
-      {
-        "persona": "sam_freelancer",
-        "external_id": "19a2540d69",
-        "description": "STRIPE PAYMENTS TRANSFER XU4DRDB48L",
-        "amount_cents": 328508,
-        "merchant": "Stripe",
-        "truth": "income",
-        "acceptable": [
-          "income"
-        ],
-        "pred": "transfers",
-        "confidence": 0.9,
-        "from_cache": false,
-        "rationale": "Stripe Payments Transfer indicates a transfer."
-      },
-      {
-        "persona": "sam_freelancer",
-        "external_id": "20ea1e5c71",
-        "description": "STRIPE PAYMENTS TRANSFER CUXNEWIRMH",
-        "amount_cents": 329089,
-        "merchant": "Stripe",
-        "truth": "income",
-        "acceptable": [
-          "income"
-        ],
-        "pred": "transfers",
-        "confidence": 0.9,
-        "from_cache": false,
-        "rationale": "Stripe Payments Transfer indicates a transfer."
-      },
-      {
-        "persona": "sam_freelancer",
-        "external_id": "45fbdb842c",
-        "description": "STRIPE TRANSFER ST-1UP8FBH6N",
-        "amount_cents": 90791,
-        "merchant": "Stripe",
-        "truth": "income",
-        "acceptable": [
-          "income"
-        ],
-        "pred": "transfers",
-        "confidence": 0.9,
-        "from_cache": false,
-        "rationale": "Stripe Transfer indicates a transfer."
-      },
-      {
-        "persona": "sam_freelancer",
-        "external_id": "03ceb6c923",
-        "description": "STRIPE TRANSFER ST-7YPD9LSRT",
-        "amount_cents": 249499,
-        "merchant": "Stripe",
-        "truth": "income",
-        "acceptable": [
-          "income"
-        ],
-        "pred": "transfers",
-        "confidence": 0.9,
-        "from_cache": false,
-        "rationale": "Stripe Transfer indicates a transfer."
-      },
-      {
-        "persona": "sam_freelancer",
-        "external_id": "a1367a9f42",
-        "description": "STRIPE PAYMENTS TRANSFER 9SQHDIH1",
-        "amount_cents": 146621,
-        "merchant": "Stripe",
-        "truth": "income",
-        "acceptable": [
-          "income"
-        ],
-        "pred": "transfers",
-        "confidence": 0.9,
-        "from_cache": false,
-        "rationale": "STRIPE PAYMENTS indicates a transfer."
+        "rationale": "ADOBE indicates a subscription for creative software."
       },
       {
         "persona": "sam_freelancer",
@@ -2480,7 +2142,7 @@
         "pred": "food_delivery",
         "confidence": 0.9,
         "from_cache": false,
-        "rationale": "HALAL CART is a food delivery service."
+        "rationale": "HALAL CART indicates food delivery."
       },
       {
         "persona": "sam_freelancer",
@@ -2495,22 +2157,7 @@
         "pred": "food_delivery",
         "confidence": 0.9,
         "from_cache": false,
-        "rationale": "HALAL CART is a food delivery service."
-      },
-      {
-        "persona": "sam_freelancer",
-        "external_id": "ea013b98ad",
-        "description": "STRIPE TRANSFER ST-R4Y9L6SJ84",
-        "amount_cents": 115315,
-        "merchant": "Stripe",
-        "truth": "income",
-        "acceptable": [
-          "income"
-        ],
-        "pred": "transfers",
-        "confidence": 0.9,
-        "from_cache": false,
-        "rationale": "STRIPE TRANSFER indicates a transfer."
+        "rationale": "HALAL CART indicates food delivery."
       }
     ]
   }
