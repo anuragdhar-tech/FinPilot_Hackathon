@@ -1,15 +1,35 @@
 import { mockClient } from './mock'
 import { realClient } from './real'
-import type { Health, RunCreated, RunStatus, UploadResult } from './types'
+import type {
+  EvalSummary,
+  Health,
+  RunCreated,
+  RunStatus,
+  TransactionList,
+  UploadResult,
+  User,
+} from './types'
+
+export interface UploadInput {
+  file: File
+  /** Append to this user. Omit to create a new profile. */
+  userId?: number
+  name?: string
+  openingBalanceCents?: number
+}
 
 // Add one method per backend endpoint as its screen is built.
 export interface ApiClient {
   health(): Promise<Health>
-  uploadTransactions(file: File): Promise<UploadResult>
+  getUsers(): Promise<User[]>
+  uploadTransactions(input: UploadInput): Promise<UploadResult>
   createRun(batchId: string): Promise<RunCreated>
   getRun(runId: string): Promise<RunStatus>
+  getTransactions(userId?: number): Promise<TransactionList>
+  getEvalLatest(): Promise<EvalSummary>
 }
 
-export const useMocks = import.meta.env.VITE_USE_MOCKS !== 'false'
+// Real backend by default; set VITE_USE_MOCKS=true for the mocked API.
+export const useMocks = import.meta.env.VITE_USE_MOCKS === 'true'
 
 export const api: ApiClient = useMocks ? mockClient : realClient
