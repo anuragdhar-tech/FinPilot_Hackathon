@@ -52,3 +52,16 @@ before any improvement is claimed. Iteration uses `--dev`; full runs only for co
      rows, so the 0.8 gate filtered nothing.
    - limits: agreement does not prove correctness; a consistent model error (Lemonade -> health)
      passes both looks.
+
+### cat-v2 known limitations (seen on the --dev comparison; not fixed, categorization closed Oct 15)
+
+- **Adobe -> entertainment.** Removing the `software subscriptions` hint from `other` sends Adobe
+  Creative Cloud to `entertainment` ("Adobe Creative Cloud is a subscription service, classified as
+  entertainment"). Adobe's acceptable labels are `other`/`shopping`, so this costs strict and lenient.
+- **Grubhub + restaurant -> dining.** `GRUBHUB*PHO 88` labelled `dining` ("PHO 88 indicates a restaurant
+  purchase"), possibly from the new "classify by the merchant" wording overriding rule 2. One row on dev.
+- **Consistent errors pass the second look.** `CHIPOTLE ONLINE` -> food_delivery and `STRIPE TRANSFER`
+  -> transfers were confirmed and cached wrong; agreement is not correctness.
+- **Confidence is still flat** (about 98% of rows at 0.90), so it is a weak "needs review" signal.
+- **Misalignment before/after is not measured.** The echo check rejected 0 of 520 cat-v2 answers on
+  dev; cat-v1 has no echo field, and a rationale-based proxy was tried and dropped as too noisy.

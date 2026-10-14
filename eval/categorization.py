@@ -30,7 +30,7 @@ from collections import Counter, defaultdict
 from datetime import datetime, timezone
 from pathlib import Path
 
-from backend.agents.categorizer import PROMPT_VERSION, VERSIONS, merchant_in_descriptor, merchant_key
+from backend.agents.categorizer import PROMPT_VERSION, VERSIONS, merchant_key
 from backend.db import connect, init_db
 from backend.graph import create_run, execute_run
 from backend.ingest import ingest_csv
@@ -171,14 +171,6 @@ def run_eval(dataset: Path, *, use_cache: bool, limit: int | None, db_path: Path
                   if (m := re.search(r"confirm_agreed=(\d+), confirm_disagreed=(\d+)", e["summary"]))]
     echo_rej, echo_chk = sum(r for r, _ in echo), sum(c for _, c in echo)
 
-    # Proxy for answers attached to the wrong item, usable for every prompt version: the rationale
-    # is asked to name the merchant, so a rationale with no distinctive word from the item's own
-    # descriptor suggests misalignment. Noisy (a rationale may paraphrase); compare versions on it.
-    labelled = [r for r in rows_out if r["pred"] is not None]
-    proxy = [r for r in labelled if not merchant_in_descriptor(r["rationale"], r["description"], min_token=4)]
-    proxy_llm = [r for r in proxy if not r["from_cache"]]
-    n_llm = sum(1 for r in labelled if not r["from_cache"])
-
     # Keys whose rows carry more than one true label: where a cache would hide context.
     key_labels = defaultdict(set)
     for row in rows_out:
@@ -225,10 +217,6 @@ def run_eval(dataset: Path, *, use_cache: bool, limit: int | None, db_path: Path
                 "echo_rejected": echo_rej if VERSIONS[version].echo_check else None,
                 "echo_checked": echo_chk if VERSIONS[version].echo_check else None,
                 "echo_rejection_rate": round(echo_rej / echo_chk, 4) if echo_chk else None,
-                "rationale_proxy_rate": round(len(proxy) / len(labelled), 4) if labelled else None,
-                "rationale_proxy_rate_llm_rows": round(len(proxy_llm) / n_llm, 4) if n_llm else None,
-                "rationale_proxy_examples": [{k: r[k] for k in ("description", "pred", "truth", "rationale")}
-                                             for r in proxy_llm[:15]],
             },
             "cache_confirmation": ({"agreed": sum(a for a, _ in conf_stats), "disagreed": sum(d for _, d in conf_stats)}
                                    if VERSIONS[version].confirm_before_cache and use_cache else None),
@@ -314,9 +302,6 @@ def to_markdown(res: dict) -> str:
         "",
         "## Misalignment (answer attached to the wrong item)", "",
         f"- Echo-check rejections (cat-v2+ only): {_echo(d['misalignment'])}",
-        f"- Rationale proxy (rationale shares no distinctive word with the item's descriptor): "
-        f"{_pct(d['misalignment']['rationale_proxy_rate'])} of labelled rows, "
-        f"{_pct(d['misalignment']['rationale_proxy_rate_llm_rows'])} of LLM-labelled rows",
         f"- Cache confirmation (second independent look): {_confirm(d.get('cache_confirmation'))}",
         "",
         f"## {len(d['example_misses'])} example misses (seeded sample of {len(d['misses'])})", "",
