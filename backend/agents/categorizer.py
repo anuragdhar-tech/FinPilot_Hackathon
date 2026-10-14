@@ -263,9 +263,11 @@ def run_batch(items: list[TxnIn], llm: LLM, model: str, phase: str,
 
 # ---- the agent ----
 
-def categorize(txns: list[TxnIn], cache: MerchantCache, llm: LLM, *, model: str,
+def categorize(txns: list[TxnIn], cache: MerchantCache | None, llm: LLM, *, model: str,
                batch_size: int = BATCH_SIZE, workers: int = WORKERS,
                on_batch: Callable[[BatchStat], None] | None = None) -> CategorizeResult:
+    """cache=None disables the cache and in-run reuse: every transaction gets its own LLM look
+    (the eval's --no-cache mode, which measures raw model accuracy)."""
     labels: dict[int, Label] = {}
     batches: list[BatchStat] = []
     failed: list[int] = []
@@ -287,7 +289,7 @@ def categorize(txns: list[TxnIn], cache: MerchantCache, llm: LLM, *, model: str,
     groups: dict[str | int, list[TxnIn]] = {}
     keys: dict[int, str | None] = {}
     for t in txns:
-        key = keys[t.txn_id] = merchant_key(t.description, t.amount_cents)
+        key = keys[t.txn_id] = merchant_key(t.description, t.amount_cents) if cache else None
         hit = cache.get(key, model) if key else None
         if hit:
             labels[t.txn_id] = Label(t.txn_id, hit["category"], hit["confidence"], hit["rationale"],

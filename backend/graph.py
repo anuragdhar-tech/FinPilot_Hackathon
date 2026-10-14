@@ -58,7 +58,7 @@ def default_categorizer_llm(messages: list[dict]):
     return complete("categorizer", messages, temperature=0, response_format=categorizer.RESPONSE_FORMAT)
 
 
-def build_graph(conn: sqlite3.Connection, categorizer_llm: LLM | None = None):
+def build_graph(conn: sqlite3.Connection, categorizer_llm: LLM | None = None, use_cache: bool = True):
     llm = categorizer_llm or default_categorizer_llm
 
     def ingest(state: FinPilotState) -> FinPilotState:
@@ -89,7 +89,8 @@ def build_graph(conn: sqlite3.Connection, categorizer_llm: LLM | None = None):
                              completion_tokens=s.completion_tokens, duration_ms=s.duration_ms,
                              attempt=s.attempts))
 
-        res = categorizer.categorize(state["transactions"], MerchantCache(conn), llm, model=model,
+        cache = MerchantCache(conn) if use_cache else None
+        res = categorizer.categorize(state["transactions"], cache, llm, model=model,
                                      on_batch=on_batch)
         conn.executemany(
             "INSERT INTO categorizations (txn_id, run_id, category, confidence, rationale, model, prompt_version, "
@@ -134,7 +135,8 @@ def create_run(conn: sqlite3.Connection, batch_id: str) -> str:
     return run_id
 
 
-def execute_run(run_id: str, *, db_path: str | None = None, categorizer_llm: LLM | None = None) -> None:
+def execute_run(run_id: str, *, db_path: str | None = None, categorizer_llm: LLM | None = None,
+                use_cache: bool = True) -> None:
     """Run the graph for a pending run. Called as a background task; opens its own connection."""
     conn = connect(db_path)
     try:
@@ -142,7 +144,7 @@ def execute_run(run_id: str, *, db_path: str | None = None, categorizer_llm: LLM
         conn.execute("UPDATE runs SET status = 'running' WHERE id = ?", (run_id,))
         conn.commit()
         try:
-            build_graph(conn, categorizer_llm).invoke({
+            build_graph(conn, categorizer_llm, use_cache).invoke({
                 "run_id": run_id, "user_id": run["user_id"], "batch_id": run["batch_id"],
                 "as_of_month": run["as_of_month"], "audit_events": []})
             conn.execute("UPDATE runs SET status = 'done', finished_at = datetime('now') WHERE id = ?", (run_id,))

@@ -204,3 +204,10 @@ def test_failed_representative_members_still_tried(conn):
     res = run(conn, txns("NETFLIX.COM", "NETFLIX.COM"), llm)
     assert res.failed_txn_ids == [1] and [lb.txn_id for lb in res.labels] == [2]
     assert not res.labels[0].from_cache
+
+
+def test_no_cache_mode_every_txn_gets_own_look(conn):
+    llm = FakeLLM()
+    res = categorize(txns("NETFLIX.COM", "NETFLIX.COM"), None, llm, model=MODEL)
+    assert sum(len(c) for c in llm.calls) == 2 and not any(lb.from_cache for lb in res.labels)
+    assert conn.execute("SELECT COUNT(*) FROM merchant_cache").fetchone()[0] == 0
