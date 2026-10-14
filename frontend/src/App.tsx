@@ -4,6 +4,7 @@ import { Placeholder } from './components/Placeholder'
 import { UserProvider } from './context/UserProvider'
 import { RunDetailPage } from './pages/RunDetailPage'
 import { RunsPage } from './pages/RunsPage'
+import { TransactionsPage } from './pages/TransactionsPage'
 import { UploadPage } from './pages/UploadPage'
 
 export default function App() {
@@ -13,7 +14,7 @@ export default function App() {
         <Routes>
           <Route element={<AppShell />}>
             <Route index element={<Placeholder title="Dashboard" />} />
-            <Route path="transactions" element={<Placeholder title="Transactions" />} />
+            <Route path="transactions" element={<TransactionsPage />} />
             <Route path="upload" element={<UploadPage />} />
             <Route path="eval" element={<Placeholder title="Eval" />} />
             <Route path="simulator" element={<Placeholder title="Simulator" />} />
