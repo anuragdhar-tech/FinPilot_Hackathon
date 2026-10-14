@@ -69,6 +69,7 @@ CREATE TABLE IF NOT EXISTS merchant_cache (
     merchant_key   TEXT PRIMARY KEY,
     category       TEXT NOT NULL,
     confidence     REAL NOT NULL,
+    rationale      TEXT NOT NULL DEFAULT '',
     model          TEXT NOT NULL,
     prompt_version TEXT NOT NULL,
     created_at     TEXT NOT NULL DEFAULT (datetime('now'))
@@ -80,6 +81,7 @@ CREATE TABLE IF NOT EXISTS categorizations (
     run_id         TEXT NOT NULL REFERENCES runs(id),
     category       TEXT NOT NULL,
     confidence     REAL NOT NULL CHECK (confidence BETWEEN 0 AND 1),
+    rationale      TEXT NOT NULL DEFAULT '',          -- model's short reason (copied on cache hits)
     model          TEXT NOT NULL,
     prompt_version TEXT NOT NULL,
     from_cache     INTEGER NOT NULL CHECK (from_cache IN (0, 1)),
