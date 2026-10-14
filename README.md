@@ -2,7 +2,7 @@
 
 A proactive financial agent that forecasts, simulates, and advises, and checks its own advice. Built for Agent Arena 2026 (Track 02). Multi-agent LangGraph backend, every LLM call routed through Mesh API, with measured accuracy and an audit trail for every recommendation.
 
-Full scope and API contract: [Plan.md](Plan.md).
+Full scope and API contract: [PLAN.md](PLAN.md).
 
 ## How to run
 
