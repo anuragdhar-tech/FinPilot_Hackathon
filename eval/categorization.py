@@ -1,7 +1,7 @@
 """Categorization eval: runs the real product path (ingest_csv -> LangGraph run) on a labelled dataset.
 
     python -m eval.categorization [--dataset data/synthetic] [--no-cache] [--prompt-version cat-v2]
-                                  [--dev | --limit N --out DIR] [--repeats N]
+                                  [--dev | --limit N --out DIR]
 
 --dev: fixed seeded stratified subset (~300 rows, every merchant x persona present) for iterating;
 results go to eval/results/dev/ and are not committed. Full runs are the committed baselines.
@@ -23,7 +23,6 @@ import json
 import math
 import random
 import re
-import statistics
 import subprocess
 import time
 from collections import Counter, defaultdict
@@ -338,7 +337,6 @@ def main() -> None:
     p.add_argument("--prompt-version", default=PROMPT_VERSION, choices=sorted(VERSIONS))
     p.add_argument("--dev", action="store_true", help="fixed stratified ~300-row subset for iterating")
     p.add_argument("--limit", type=int, help="seeded sample of N transactions (dry run)")
-    p.add_argument("--repeats", type=int, default=1, help="run N times; report mean/min/max")
     p.add_argument("--out", type=Path)
     args = p.parse_args()
     if args.dev and args.limit:
@@ -353,29 +351,16 @@ def main() -> None:
     versioned = f"{base}_{args.prompt_version}"
     db = ROOT / "data" / f"eval{'_nocache' if args.no_cache else ''}.db"
 
-    runs = []
-    for i in range(args.repeats):
-        res = run_eval(args.dataset, use_cache=not args.no_cache, limit=args.limit, db_path=db,
-                       dev=args.dev, version=args.prompt_version)
-        runs.append(res)
-        h = _headline(res)
-        print(f"{versioned} run {i + 1}/{args.repeats}: n={res['summary']['categorization']['n']} "
-              f"strict={_pct(h['strict'])} lenient={_pct(h['lenient'])} macroF1={h['macro_f1']:.3f} "
-              f"cache_hits={_pct(h['cache_hit_rate'])} uncategorized={h['uncategorized']} "
-              f"echo_rejections={_pct(h['echo_rejection_rate'])} | tokens {h['prompt_tokens']:,} in / "
-              f"{h['completion_tokens']:,} out, est ${h['cost_usd']}, {h['wall_seconds']} s")
-
-    if args.repeats > 1:
-        heads = [_headline(r) for r in runs]
-        agg = {k: {"mean": round(statistics.mean(h[k] for h in heads), 4), "min": min(h[k] for h in heads),
-                   "max": max(h[k] for h in heads)}
-               for k in ("strict", "lenient", "macro_f1", "cache_hit_rate", "cost_usd")}
-        out.mkdir(parents=True, exist_ok=True)
-        (out / f"{versioned}_repeats.json").write_text(json.dumps(
-            {"runs": heads, "aggregate": agg, "summary": runs[-1]["summary"]}, indent=2) + "\n")
-        print("aggregate:", json.dumps(agg))
+    res = run_eval(args.dataset, use_cache=not args.no_cache, limit=args.limit, db_path=db,
+                   dev=args.dev, version=args.prompt_version)
+    h = _headline(res)
+    print(f"{versioned}: n={res['summary']['categorization']['n']} "
+          f"strict={_pct(h['strict'])} lenient={_pct(h['lenient'])} macroF1={h['macro_f1']:.3f} "
+          f"cache_hits={_pct(h['cache_hit_rate'])} uncategorized={h['uncategorized']} "
+          f"echo_rejections={_pct(h['echo_rejection_rate'])} | tokens {h['prompt_tokens']:,} in / "
+          f"{h['completion_tokens']:,} out, est ${h['cost_usd']}, {h['wall_seconds']} s")
     names = [versioned] if (args.dev or args.limit) else [base, versioned]
-    _write(out, names, runs[-1])
+    _write(out, names, res)
     print(f"-> {', '.join(str(out / n) + '.json' for n in names)}")
 
 
