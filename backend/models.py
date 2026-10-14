@@ -64,6 +64,8 @@ class AgentEvent(BaseModel):
     input_ref: str | None = None
     output_ref: str | None = None
     model: str | None = None
+    prompt_tokens: int | None = None
+    completion_tokens: int | None = None
     duration_ms: int | None = None
     ts: str
 
@@ -89,8 +91,10 @@ class Transaction(BaseModel):
     amount_cents: int
     category: Category | None = None
     confidence: float | None = Field(default=None, ge=0, le=1)
+    rationale: str | None = None
     model: str | None = None
-    from_cache: bool | None = None
+    prompt_version: str | None = None
+    from_cache: bool | None = None  # all category fields are None when uncategorized
 
 
 class TransactionList(BaseModel):
@@ -335,10 +339,23 @@ class Confusion(BaseModel):
     count: int
 
 
+class CategoryScore(BaseModel):
+    precision: float
+    recall: float
+    f1: float
+    support: int
+
+
 class CategorizationMetrics(BaseModel):
-    accuracy: float
+    accuracy: float  # strict: primary label only
     macro_f1: float
     top_confusions: list[Confusion]
+    lenient_accuracy: float | None = None  # any of the label's acceptable_labels counts
+    n: int | None = None
+    uncategorized: int | None = None
+    cache_hit_rate: float | None = None
+    per_category: dict[str, CategoryScore] | None = None
+    per_persona: dict[str, float] | None = None  # strict accuracy per persona
 
 
 class ForecastMetrics(BaseModel):
