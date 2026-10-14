@@ -1,4 +1,4 @@
-"""API contract (PLAN.md section 6). These models are the source of truth for the frontend types.
+"""API contract. These models are the source of truth for the frontend types.
 
 Money is integer cents (negative = outflow). Dates are ISO 'YYYY-MM-DD'; months are 'YYYY-MM'.
 """

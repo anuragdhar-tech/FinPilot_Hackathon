@@ -1,4 +1,4 @@
-"""SQLite access: one connection helper and schema init. No ORM by design (see PLAN.md section 5)."""
+"""SQLite access: one connection helper and schema init. No ORM by design: plain SQL is easy to read and audit."""
 import os
 import sqlite3
 from pathlib import Path

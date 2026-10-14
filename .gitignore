@@ -27,3 +27,10 @@ frontend/.env.local
 # os / ide
 .DS_Store
 .idea/
+
+#Docs
+docs
+CLAUDE.md
+PLAN.md
+REFRESHER.md
+

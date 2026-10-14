@@ -3,7 +3,7 @@
 Plain function with typed input/output; the LangGraph node (backend/graph.py) persists results and
 writes agent_events. The LLM is injected so tests can mock it.
 
-Flow (see docs/teach-back/day2-categorizer.md):
+Flow:
 1. Merchant-cache hits are labelled without an LLM call (from_cache=True).
 2. Misses are grouped by merchant key; one representative per key goes to the LLM, in batches.
 3. cat-v1: a confident representative (>= CACHE_MIN_CONFIDENCE) is cached and its label reused for

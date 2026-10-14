@@ -1,4 +1,4 @@
-"""LangGraph coordinator. Today: ingest -> categorize. Oct 16-17 extend it per PLAN.md section 4.
+"""LangGraph coordinator. Today: ingest -> categorize; later nodes (analyze, forecast, advise, verify) extend it.
 
 Agents are plain functions (backend/agents/*); nodes here are thin wrappers that read state, call
 the agent, persist results and write agent_events. Persistence is our own runs + agent_events
@@ -20,7 +20,7 @@ from backend.llm.client import complete, get_model
 
 
 class FinPilotState(TypedDict, total=False):
-    """Shared state (PLAN.md section 4). Later nodes fill the remaining fields."""
+    """Shared state for the whole pipeline. Later nodes fill the remaining fields."""
     run_id: str
     user_id: int
     batch_id: str

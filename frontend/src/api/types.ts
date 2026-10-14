@@ -1,4 +1,4 @@
-// Shapes mirror the API contract in PLAN.md section 6.
+// Shapes mirror the backend API contract (backend/models.py).
 // Pydantic models are the source of truth; align these once they exist.
 
 export interface Health {

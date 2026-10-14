@@ -1,4 +1,4 @@
-"""Seeded synthetic transactions with planted ground truth (PLAN.md section 7).
+"""Seeded synthetic transactions with planted ground truth for the self-evaluation.
 
     python -m eval.synthetic.generate [--seed 42] [--out data/synthetic]
 

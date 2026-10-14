@@ -7,7 +7,7 @@ and reproducible (`python -m eval.categorization --prompt-version cat-v1`).
 
 ## cat-v1 (Oct 15): baseline
 
-- Prompt: written from the taxonomy (PLAN.md section 5) and Day 1 policies before any model output
+- Prompt: written from the closed 15-category taxonomy and Day 1 policies before any model output
   was seen. No few-shot examples from the dataset.
 - The line `other: ... (e.g. software subscriptions, postage)` mirrors the documented Day 1 taxonomy
   policy (Adobe/USPS fall into `other`); it was not derived from eval results.

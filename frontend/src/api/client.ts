@@ -2,7 +2,7 @@ import { mockClient } from './mock'
 import { realClient } from './real'
 import type { Health, RunCreated, RunStatus, UploadResult } from './types'
 
-// Add one method per PLAN.md endpoint as its screen is built.
+// Add one method per backend endpoint as its screen is built.
 export interface ApiClient {
   health(): Promise<Health>
   uploadTransactions(file: File): Promise<UploadResult>

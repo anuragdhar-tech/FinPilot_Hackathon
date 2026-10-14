@@ -1,4 +1,4 @@
--- FinPilot schema. See PLAN.md section 5 for the decisions behind it.
+-- FinPilot schema.
 -- Money is integer cents (negative = outflow). Dates are ISO strings; months are 'YYYY-MM'.
 -- patterns, forecasts, categorizations, recommendations, audit_trail and agent_events are
 -- append-only: code inserts, never updates (runs.status and users.as_of_month are the exceptions).

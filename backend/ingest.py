@@ -108,6 +108,6 @@ def ingest_csv(conn: sqlite3.Connection, filename: str, text: str, *, user_id: i
 
 
 def active_user_id(conn: sqlite3.Connection) -> int | None:
-    """The active user is the owner of the most recent upload (PLAN.md section 5)."""
+    """The active user is the owner of the most recent upload."""
     row = conn.execute("SELECT user_id FROM batches ORDER BY uploaded_at DESC, rowid DESC LIMIT 1").fetchone()
     return row["user_id"] if row else None
