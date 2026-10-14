@@ -34,9 +34,14 @@ def test_run_categorizes_and_logs_ordered_events(api, llm):
     run = api.get(f"/api/runs/{run_id}").json()
     assert run["status"] == "done" and run["kind"] == "main"
     nodes = [e["node"] for e in run["events"]]
-    assert nodes == ["ingest", "categorize.batch", "categorize"]
-    assert [e["seq"] for e in run["events"]] == [1, 2, 3]
-    assert "4/4 categorized (3 by LLM, 1 from cache" in run["events"][-1]["summary"]
+    # cat-v2: representatives batch, then the NETFLIX.COM confirmation look in its own batch
+    assert nodes == ["ingest", "categorize.batch", "categorize.batch", "categorize"]
+    assert [e["seq"] for e in run["events"]] == [1, 2, 3, 4]
+    assert run["events"][1]["summary"].startswith("representatives: 3 items")
+    assert "echo_mismatch=0/3" in run["events"][1]["summary"]
+    assert run["events"][2]["summary"].startswith("confirmations: 1 items")
+    last = run["events"][-1]["summary"]
+    assert "cat-v2: 4/4 categorized (4 by LLM, 0 from cache" in last and "confirm_agreed=1" in last
     assert run["events"][1]["prompt_tokens"] == 100
 
 
@@ -46,11 +51,11 @@ def test_transactions_carry_categorization_and_filter(api, llm):
     assert len(items) == 4
     row = next(i for i in items if i["external_id"] == "a4")
     assert (row["category"], row["model"], row["prompt_version"], row["from_cache"]) == \
-        ("food_delivery", "openai/gpt-4o-mini", "cat-v1", False)
+        ("food_delivery", "openai/gpt-4o-mini", "cat-v2", False)
     assert row["amount_cents"] == -2340 and row["rationale"] == "rule"
     assert {i["external_id"] for i in api.get("/api/transactions?month=2026-01").json()["items"]} == {"a1", "a2"}
     ent = api.get("/api/transactions?category=entertainment").json()["items"]
-    assert [i["from_cache"] for i in sorted(ent, key=lambda i: i["date"])] == [False, True]
+    assert [i["from_cache"] for i in sorted(ent, key=lambda i: i["date"])] == [False, False]  # both looked at
     assert api.get("/api/transactions?user_id=99").status_code == 404
     assert api.get("/api/transactions?category=subscriptions").status_code == 422
 

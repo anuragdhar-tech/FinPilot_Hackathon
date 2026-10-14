@@ -1,13 +1,18 @@
 """Categorization eval: runs the real product path (ingest_csv -> LangGraph run) on a labelled dataset.
 
-    python -m eval.categorization [--dataset data/synthetic] [--no-cache] [--limit N --out DIR]
+    python -m eval.categorization [--dataset data/synthetic] [--no-cache] [--prompt-version cat-v2]
+                                  [--dev | --limit N --out DIR] [--repeats N]
+
+--dev: fixed seeded stratified subset (~300 rows, every merchant x persona present) for iterating;
+results go to eval/results/dev/ and are not committed. Full runs are the committed baselines.
 
 Dataset dir: ground_truth.json with personas.<key>.labels.<external_id>.{category, acceptable_labels?},
 plus <key>.csv per persona (or the csv named in personas.json). A hand-labelled real sample uses the
 same layout with one persona.
 
 Every run uses a fresh eval DB (empty merchant cache), never the app DB. Results go to
-<out>/categorization[_nocache].json and .md; all numbers are computed here, never typed by hand.
+<out>/categorization[_nocache].json and .md (latest, served by the API) plus a copy suffixed with
+the prompt version, so earlier baselines stay committed. All numbers are computed here, never typed.
 """
 from __future__ import annotations
 
@@ -15,14 +20,17 @@ import argparse
 import csv
 import io
 import json
+import math
 import random
+import re
+import statistics
 import subprocess
 import time
 from collections import Counter, defaultdict
 from datetime import datetime, timezone
 from pathlib import Path
 
-from backend.agents.categorizer import PROMPT_VERSION, merchant_key
+from backend.agents.categorizer import PROMPT_VERSION, VERSIONS, merchant_in_descriptor, merchant_key
 from backend.db import connect, init_db
 from backend.graph import create_run, execute_run
 from backend.ingest import ingest_csv
@@ -33,7 +41,8 @@ from eval.metrics import (Rec, calibration, confusions, lenient_accuracy, macro_
 ROOT = Path(__file__).resolve().parents[1]
 RESULTS = ROOT / "eval" / "results"
 PRICING = ROOT / "eval" / "pricing.json"
-SAMPLE_SEED = 0  # --limit sample; fixed so dry runs are comparable
+SAMPLE_SEED = 0  # --limit / --dev samples; fixed so runs are comparable
+DEV_TARGET = 300
 N_EXAMPLE_MISSES = 10
 
 
@@ -62,7 +71,8 @@ def _git_sha() -> str:
     try:
         sha = subprocess.run(["git", "rev-parse", "--short", "HEAD"], cwd=ROOT, capture_output=True,
                              text=True, check=True).stdout.strip()
-        dirty = subprocess.run(["git", "status", "--porcelain", "--", "backend", "eval"], cwd=ROOT,
+        # eval/results is excluded: an earlier run's output file is not a code change
+        dirty = subprocess.run(["git", "status", "--porcelain", "--", "backend", "eval", ":!eval/results"], cwd=ROOT,
                                capture_output=True, text=True).stdout.strip()
         return sha + ("-dirty" if dirty else "")
     except (OSError, subprocess.CalledProcessError):
@@ -78,12 +88,32 @@ def estimate_cost(model: str, prompt_tokens: int, completion_tokens: int) -> dic
     return {"usd": round(usd, 5), "note": pricing["note"], "prices_as_of": pricing["as_of"]}
 
 
-def run_eval(dataset: Path, *, use_cache: bool, limit: int | None, db_path: Path) -> dict:
+def dev_subset(data: dict[str, dict], target: int = DEV_TARGET) -> set[tuple[str, str]]:
+    """Stratified by (persona, merchant): every group gets >= 1 row, the rest proportional
+    (largest remainder), rows picked with a fixed seed. Falls back to category if no merchant label."""
+    groups: dict[tuple[str, str], list[str]] = {}
+    for k in sorted(data):
+        for e, lab in sorted(data[k]["labels"].items()):
+            groups.setdefault((k, lab.get("merchant") or lab["category"]), []).append(e)
+    total = sum(len(v) for v in groups.values())
+    quota = {g: target * len(v) / total for g, v in groups.items()}
+    alloc = {g: max(1, math.floor(q)) for g, q in quota.items()}
+    for g in sorted(groups, key=lambda g: (-(quota[g] - math.floor(quota[g])), g)):
+        if sum(alloc.values()) >= target:
+            break
+        if alloc[g] < len(groups[g]):
+            alloc[g] += 1
+    rng = random.Random(SAMPLE_SEED)
+    return {(g[0], e) for g in sorted(groups) for e in rng.sample(groups[g], alloc[g])}
+
+
+def run_eval(dataset: Path, *, use_cache: bool, limit: int | None, db_path: Path, dev: bool = False,
+             version: str = PROMPT_VERSION) -> dict:
     data = load_dataset(dataset)
     seed = data.pop("_seed")
-    if limit:
+    if limit or dev:
         pool = sorted((k, e) for k, d in data.items() for e in d["labels"])
-        keep = set(random.Random(SAMPLE_SEED).sample(pool, limit))
+        keep = dev_subset(data) if dev else set(random.Random(SAMPLE_SEED).sample(pool, limit))
         for k, d in data.items():
             ids = {e for kk, e in keep if kk == k}
             d["labels"] = {e: lab for e, lab in d["labels"].items() if e in ids}
@@ -103,7 +133,7 @@ def run_eval(dataset: Path, *, use_cache: bool, limit: int | None, db_path: Path
         batch = ingest_csv(conn, f"{key}.csv", d["csv"], name=key, persona=key,
                            opening_balance_cents=d["opening_balance_cents"])
         run_ids[key] = create_run(conn, batch["batch_id"])
-        execute_run(run_ids[key], db_path=str(db_path), use_cache=use_cache)
+        execute_run(run_ids[key], db_path=str(db_path), use_cache=use_cache, categorizer_version=version)
         status = conn.execute("SELECT status, error FROM runs WHERE id = ?", (run_ids[key],)).fetchone()
         if status["status"] != "done":
             raise SystemExit(f"run for {key} failed: {status['error']}")
@@ -133,6 +163,22 @@ def run_eval(dataset: Path, *, use_cache: bool, limit: int | None, db_path: Path
         f"WHERE node = 'categorize.batch' AND run_id IN ({','.join('?' * len(run_ids))})",
         list(run_ids.values())).fetchone()
 
+    events = conn.execute(
+        f"SELECT node, summary FROM agent_events WHERE node IN ('categorize.batch', 'categorize') "
+        f"AND run_id IN ({','.join('?' * len(run_ids))})", list(run_ids.values())).fetchall()
+    echo = [tuple(map(int, m.groups())) for e in events if (m := re.search(r"echo_mismatch=(\d+)/(\d+)", e["summary"]))]
+    conf_stats = [tuple(map(int, m.groups())) for e in events
+                  if (m := re.search(r"confirm_agreed=(\d+), confirm_disagreed=(\d+)", e["summary"]))]
+    echo_rej, echo_chk = sum(r for r, _ in echo), sum(c for _, c in echo)
+
+    # Proxy for answers attached to the wrong item, usable for every prompt version: the rationale
+    # is asked to name the merchant, so a rationale with no distinctive word from the item's own
+    # descriptor suggests misalignment. Noisy (a rationale may paraphrase); compare versions on it.
+    labelled = [r for r in rows_out if r["pred"] is not None]
+    proxy = [r for r in labelled if not merchant_in_descriptor(r["rationale"], r["description"], min_token=4)]
+    proxy_llm = [r for r in proxy if not r["from_cache"]]
+    n_llm = sum(1 for r in labelled if not r["from_cache"])
+
     # Keys whose rows carry more than one true label: where a cache would hide context.
     key_labels = defaultdict(set)
     for row in rows_out:
@@ -156,7 +202,7 @@ def run_eval(dataset: Path, *, use_cache: bool, limit: int | None, db_path: Path
         "summary": {
             "run_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
             "git_sha": _git_sha(),
-            "dataset": dataset.name + (f" (sample {limit})" if limit else ""),
+            "dataset": dataset.name + (" (dev subset)" if dev else f" (sample {limit})" if limit else ""),
             "seed": seed,
             "models": {"categorizer": model},
             "categorization": {
@@ -173,7 +219,19 @@ def run_eval(dataset: Path, *, use_cache: bool, limit: int | None, db_path: Path
         },
         "details": {
             "mode": "cache" if use_cache else "no_cache",
-            "prompt_version": PROMPT_VERSION,
+            "prompt_version": version,
+            "subset": "dev" if dev else (f"limit {limit}" if limit else "full"),
+            "misalignment": {
+                "echo_rejected": echo_rej if VERSIONS[version].echo_check else None,
+                "echo_checked": echo_chk if VERSIONS[version].echo_check else None,
+                "echo_rejection_rate": round(echo_rej / echo_chk, 4) if echo_chk else None,
+                "rationale_proxy_rate": round(len(proxy) / len(labelled), 4) if labelled else None,
+                "rationale_proxy_rate_llm_rows": round(len(proxy_llm) / n_llm, 4) if n_llm else None,
+                "rationale_proxy_examples": [{k: r[k] for k in ("description", "pred", "truth", "rationale")}
+                                             for r in proxy_llm[:15]],
+            },
+            "cache_confirmation": ({"agreed": sum(a for a, _ in conf_stats), "disagreed": sum(d for _, d in conf_stats)}
+                                   if VERSIONS[version].confirm_before_cache and use_cache else None),
             "per_persona": {k: {"n": len(v), "strict": strict_accuracy(v), "lenient": lenient_accuracy(v)}
                             for k, v in by_persona.items()},
             "source_split": split,
@@ -201,6 +259,16 @@ def _num(x: float | None, places: int = 3) -> str:
 
 def _money(x: float | None) -> str:
     return "n/a" if x is None else f"${x:.4f}"
+
+
+def _echo(m: dict) -> str:
+    if m["echo_checked"] is None:
+        return "n/a (this version has no echo check)"
+    return f"{m['echo_rejected']} of {m['echo_checked']} answers ({_pct(m['echo_rejection_rate'])})"
+
+
+def _confirm(c: dict | None) -> str:
+    return "n/a" if c is None else f"{c['agreed']} keys agreed (cached), {c['disagreed']} disagreed (not cached)"
 
 
 def to_markdown(res: dict) -> str:
@@ -244,6 +312,13 @@ def to_markdown(res: dict) -> str:
         "",
         f"Cache keys whose rows carry more than one true label: {len(d['conflicting_cache_keys'])}.",
         "",
+        "## Misalignment (answer attached to the wrong item)", "",
+        f"- Echo-check rejections (cat-v2+ only): {_echo(d['misalignment'])}",
+        f"- Rationale proxy (rationale shares no distinctive word with the item's descriptor): "
+        f"{_pct(d['misalignment']['rationale_proxy_rate'])} of labelled rows, "
+        f"{_pct(d['misalignment']['rationale_proxy_rate_llm_rows'])} of LLM-labelled rows",
+        f"- Cache confirmation (second independent look): {_confirm(d.get('cache_confirmation'))}",
+        "",
         f"## {len(d['example_misses'])} example misses (seeded sample of {len(d['misses'])})", "",
         "| Descriptor | Amount | True | Predicted | Conf | Cache | Rationale |", "|---|---|---|---|---|---|---|",
         *[f"| `{m['description']}` | {m['amount_cents'] / 100:.2f} | {m['truth']} | {m['pred']} | "
@@ -255,30 +330,68 @@ def to_markdown(res: dict) -> str:
     return "\n".join(lines) + "\n"
 
 
+def _headline(res: dict) -> dict:
+    c, d = res["summary"]["categorization"], res["details"]
+    return {"strict": c["accuracy"], "lenient": c["lenient_accuracy"], "macro_f1": c["macro_f1"],
+            "cache_hit_rate": c["cache_hit_rate"], "uncategorized": c["uncategorized"],
+            "echo_rejection_rate": d["misalignment"]["echo_rejection_rate"],
+            "prompt_tokens": d["usage"]["prompt_tokens"], "completion_tokens": d["usage"]["completion_tokens"],
+            "cost_usd": d["usage"]["estimated_cost"]["usd"], "wall_seconds": d["usage"]["wall_seconds"]}
+
+
+def _write(out: Path, names: list[str], res: dict) -> None:
+    out.mkdir(parents=True, exist_ok=True)
+    for name in names:
+        (out / f"{name}.json").write_text(json.dumps(res, indent=2) + "\n")
+        (out / f"{name}.md").write_text(to_markdown(res))
+
+
 def main() -> None:
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("--dataset", type=Path, default=ROOT / "data" / "synthetic")
     p.add_argument("--no-cache", action="store_true", help="every transaction gets its own LLM look")
+    p.add_argument("--prompt-version", default=PROMPT_VERSION, choices=sorted(VERSIONS))
+    p.add_argument("--dev", action="store_true", help="fixed stratified ~300-row subset for iterating")
     p.add_argument("--limit", type=int, help="seeded sample of N transactions (dry run)")
-    p.add_argument("--out", type=Path, default=RESULTS)
+    p.add_argument("--repeats", type=int, default=1, help="run N times; report mean/min/max")
+    p.add_argument("--out", type=Path)
     args = p.parse_args()
-    if args.limit and args.out.resolve() == RESULTS.resolve():
+    if args.dev and args.limit:
+        raise SystemExit("use --dev or --limit, not both")
+    out = args.out or (RESULTS / "dev" if args.dev else RESULTS)
+    if args.limit and out.resolve() == RESULTS.resolve():
         raise SystemExit("--limit runs are dry runs: pass --out somewhere other than eval/results")
 
-    name = "categorization" + ("_nocache" if args.no_cache else "")
+    base = "categorization" + ("_dev" if args.dev else "") + ("_nocache" if args.no_cache else "")
     if args.dataset.resolve() != (ROOT / "data" / "synthetic").resolve():
-        name += f"_{args.dataset.name}"
+        base += f"_{args.dataset.name}"
+    versioned = f"{base}_{args.prompt_version}"
     db = ROOT / "data" / f"eval{'_nocache' if args.no_cache else ''}.db"
-    res = run_eval(args.dataset, use_cache=not args.no_cache, limit=args.limit, db_path=db)
-    args.out.mkdir(parents=True, exist_ok=True)
-    (args.out / f"{name}.json").write_text(json.dumps(res, indent=2) + "\n")
-    (args.out / f"{name}.md").write_text(to_markdown(res))
-    c = res["summary"]["categorization"]
-    u = res["details"]["usage"]
-    print(f"{name}: n={c['n']} strict={_pct(c['accuracy'])} lenient={_pct(c['lenient_accuracy'])} "
-          f"macroF1={c['macro_f1']:.3f} cache_hits={_pct(c['cache_hit_rate'])} uncategorized={c['uncategorized']}")
-    print(f"tokens {u['prompt_tokens']:,} in / {u['completion_tokens']:,} out over {u['llm_batches']} batches, "
-          f"est ${u['estimated_cost']['usd']}, {u['wall_seconds']} s -> {args.out / name}.json")
+
+    runs = []
+    for i in range(args.repeats):
+        res = run_eval(args.dataset, use_cache=not args.no_cache, limit=args.limit, db_path=db,
+                       dev=args.dev, version=args.prompt_version)
+        runs.append(res)
+        h = _headline(res)
+        print(f"{versioned} run {i + 1}/{args.repeats}: n={res['summary']['categorization']['n']} "
+              f"strict={_pct(h['strict'])} lenient={_pct(h['lenient'])} macroF1={h['macro_f1']:.3f} "
+              f"cache_hits={_pct(h['cache_hit_rate'])} uncategorized={h['uncategorized']} "
+              f"echo_rejections={_pct(h['echo_rejection_rate'])} | tokens {h['prompt_tokens']:,} in / "
+              f"{h['completion_tokens']:,} out, est ${h['cost_usd']}, {h['wall_seconds']} s")
+
+    if args.repeats > 1:
+        heads = [_headline(r) for r in runs]
+        agg = {k: {"mean": round(statistics.mean(h[k] for h in heads), 4), "min": min(h[k] for h in heads),
+                   "max": max(h[k] for h in heads)}
+               for k in ("strict", "lenient", "macro_f1", "cache_hit_rate", "cost_usd")}
+        out.mkdir(parents=True, exist_ok=True)
+        (out / f"{versioned}_repeats.json").write_text(json.dumps(
+            {"runs": heads, "aggregate": agg, "summary": runs[-1]["summary"]}, indent=2) + "\n")
+        print("aggregate:", json.dumps(agg))
+    names = [versioned] if (args.dev or args.limit) else [base, versioned]
+    _write(out, names, runs[-1])
+    print(f"-> {', '.join(str(out / n) + '.json' for n in names)}")
 
 
 if __name__ == "__main__":

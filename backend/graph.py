@@ -54,12 +54,14 @@ def emit(conn: sqlite3.Connection, run_id: str, node: str, *, status: str = "ok"
     return seq
 
 
-def default_categorizer_llm(messages: list[dict]):
-    return complete("categorizer", messages, temperature=0, response_format=categorizer.RESPONSE_FORMAT)
+def default_categorizer_llm(messages: list[dict], response_format: dict):
+    return complete("categorizer", messages, temperature=0, response_format=response_format)
 
 
-def build_graph(conn: sqlite3.Connection, categorizer_llm: LLM | None = None, use_cache: bool = True):
-    llm = categorizer_llm or default_categorizer_llm
+def build_graph(conn: sqlite3.Connection, categorizer_llm: LLM | None = None, use_cache: bool = True,
+                categorizer_version: str = categorizer.PROMPT_VERSION):
+    # late lookup of the default so tests can monkeypatch it
+    llm = categorizer_llm or (lambda m, rf: default_categorizer_llm(m, rf))
 
     def ingest(state: FinPilotState) -> FinPilotState:
         t0 = time.monotonic()
@@ -82,7 +84,9 @@ def build_graph(conn: sqlite3.Connection, categorizer_llm: LLM | None = None, us
         def on_batch(s: BatchStat) -> None:
             note = "; ".join(dict.fromkeys(s.problems))[:300]
             summary = (f"{s.phase}: {s.items} items, {s.attempts} attempt(s), {s.retried_items} retried, "
-                       f"{s.failed_items} failed" + (f" | {note}" if note else "")
+                       f"{s.failed_items} failed"
+                       + (f", echo_mismatch={s.echo_rejected}/{s.echo_checked}" if s.echo_checked else "")
+                       + (f" | {note}" if note else "")
                        + (" | MESH FALLBACK MODEL" if s.fallback_triggered else ""))
             seqs.append(emit(conn, run_id, "categorize.batch", status="error" if s.failed_items else "ok",
                              summary=summary, model=s.served_model, prompt_tokens=s.prompt_tokens,
@@ -91,7 +95,7 @@ def build_graph(conn: sqlite3.Connection, categorizer_llm: LLM | None = None, us
 
         cache = MerchantCache(conn) if use_cache else None
         res = categorizer.categorize(state["transactions"], cache, llm, model=model,
-                                     on_batch=on_batch)
+                                     version=categorizer_version, on_batch=on_batch)
         conn.executemany(
             "INSERT INTO categorizations (txn_id, run_id, category, confidence, rationale, model, prompt_version, "
             "from_cache) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
@@ -102,9 +106,11 @@ def build_graph(conn: sqlite3.Connection, categorizer_llm: LLM | None = None, us
         n = len(state["transactions"])
         seqs.append(emit(
             conn, run_id, "categorize", status="error" if res.failed_txn_ids else "ok",
-            summary=(f"{len(res.labels)}/{n} categorized ({res.llm_items} by LLM, {res.cache_hits} from cache, "
-                     f"{len(res.batches)} LLM batches); {len(res.failed_txn_ids)} left uncategorized after "
-                     f"{categorizer.MAX_ATTEMPTS} attempts"),
+            summary=(f"{categorizer_version}: {len(res.labels)}/{n} categorized ({res.llm_items} by LLM, "
+                     f"{res.cache_hits} from cache, {len(res.batches)} LLM batches); "
+                     f"{len(res.failed_txn_ids)} left uncategorized after {categorizer.MAX_ATTEMPTS} attempts"
+                     + (f"; confirm_agreed={res.confirmed_keys}, confirm_disagreed={res.disagreed_keys}"
+                        if categorizer.VERSIONS[categorizer_version].confirm_before_cache and use_cache else "")),
             output_ref=f"run:{run_id}/categorizations", model=model,
             prompt_tokens=sum(b.prompt_tokens for b in res.batches),
             completion_tokens=sum(b.completion_tokens for b in res.batches),
@@ -136,7 +142,7 @@ def create_run(conn: sqlite3.Connection, batch_id: str) -> str:
 
 
 def execute_run(run_id: str, *, db_path: str | None = None, categorizer_llm: LLM | None = None,
-                use_cache: bool = True) -> None:
+                use_cache: bool = True, categorizer_version: str = categorizer.PROMPT_VERSION) -> None:
     """Run the graph for a pending run. Called as a background task; opens its own connection."""
     conn = connect(db_path)
     try:
@@ -144,7 +150,7 @@ def execute_run(run_id: str, *, db_path: str | None = None, categorizer_llm: LLM
         conn.execute("UPDATE runs SET status = 'running' WHERE id = ?", (run_id,))
         conn.commit()
         try:
-            build_graph(conn, categorizer_llm, use_cache).invoke({
+            build_graph(conn, categorizer_llm, use_cache, categorizer_version).invoke({
                 "run_id": run_id, "user_id": run["user_id"], "batch_id": run["batch_id"],
                 "as_of_month": run["as_of_month"], "audit_events": []})
             conn.execute("UPDATE runs SET status = 'done', finished_at = datetime('now') WHERE id = ?", (run_id,))

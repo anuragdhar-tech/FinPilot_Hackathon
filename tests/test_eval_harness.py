@@ -37,8 +37,9 @@ def dataset(tmp_path, monkeypatch):
 def test_harness_metrics(dataset, tmp_path):
     db = tmp_path / "eval.db"
     db.write_text("stale")  # must be replaced, never reused
-    res = ev.run_eval(dataset, use_cache=True, limit=None, db_path=db)
+    res = ev.run_eval(dataset, use_cache=True, limit=None, db_path=db, version="cat-v1")
     c, d = res["summary"]["categorization"], res["details"]
+    assert d["misalignment"]["echo_checked"] is None and d["cache_confirmation"] is None
     assert c["n"] == 5 and c["uncategorized"] == 0
     assert c["accuracy"] == 0.6 and c["lenient_accuracy"] == 0.8  # Adobe 'other' forgiven
     assert c["top_confusions"][0] == {"true": "dining", "predicted": "food_delivery", "count": 1}
@@ -54,3 +55,24 @@ def test_harness_no_cache_and_limit(dataset, tmp_path):
     res = ev.run_eval(dataset, use_cache=False, limit=3, db_path=tmp_path / "e.db")
     c = res["summary"]["categorization"]
     assert c["n"] == 3 and c["cache_hit_rate"] == 0.0 and res["details"]["mode"] == "no_cache"
+
+
+def test_harness_cat_v2_reports_echo_and_confirmation(dataset, tmp_path):
+    res = ev.run_eval(dataset, use_cache=True, limit=None, db_path=tmp_path / "e.db", version="cat-v2")
+    d = res["details"]
+    assert d["prompt_version"] == "cat-v2"
+    assert d["misalignment"]["echo_checked"] == 5 and d["misalignment"]["echo_rejected"] == 0
+    assert d["cache_confirmation"] == {"agreed": 1, "disagreed": 0}  # NETFLIX.COM x2
+    assert res["summary"]["categorization"]["cache_hit_rate"] == 0.0  # 2-member key: both looked at
+    assert "Echo-check rejections" in ev.to_markdown(res)
+
+
+def test_dev_subset_is_stratified_and_stable():
+    data = ev.load_dataset(ev.ROOT / "data" / "synthetic")
+    data.pop("_seed")
+    sub = ev.dev_subset(data)
+    assert len(sub) == ev.DEV_TARGET and sub == ev.dev_subset(data)
+    assert {k for k, _ in sub} == set(data)
+    merchants = {(k, lab["merchant"]) for k, d in data.items() for lab in d["labels"].values()}
+    picked = {(k, data[k]["labels"][e]["merchant"]) for k, e in sub}
+    assert picked == merchants  # every merchant x persona present
