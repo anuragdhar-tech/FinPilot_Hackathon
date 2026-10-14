@@ -28,8 +28,23 @@ TriggerType = Literal["pattern", "forecast", "goal", "scenario"]
 
 class UploadResponse(BaseModel):
     batch_id: str
-    count: int
-    duplicates_skipped: int
+    user_id: int
+    count: int  # rows stored (new)
+    duplicates_skipped: int  # same external_id already stored for this user, or repeated in the file
+
+
+class User(BaseModel):
+    id: int
+    name: str
+    opening_balance_cents: int
+    opening_date: IsoDate
+    as_of_month: Month
+    txn_count: int
+    is_active: bool  # owner of the latest upload; GET endpoints default to this user
+
+
+class UserList(BaseModel):
+    items: list[User]
 
 
 class RunCreate(BaseModel):

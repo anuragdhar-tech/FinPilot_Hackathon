@@ -16,7 +16,9 @@ def connect(path: str | Path | None = None) -> sqlite3.Connection:
     target = str(path if path is not None else db_path())
     if target != ":memory:":
         Path(target).parent.mkdir(parents=True, exist_ok=True)
-    conn = sqlite3.connect(target)
+    # check_same_thread=False: FastAPI may open a request's connection in one worker thread
+    # and use it in another. Each request/run still gets its own connection.
+    conn = sqlite3.connect(target, check_same_thread=False)
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA foreign_keys = ON")
     return conn
