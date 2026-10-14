@@ -15,6 +15,7 @@ cp .env.example .env        # then fill in MESH_API_KEY and the *_MODEL values
 uvicorn backend.main:app --reload --port 8000
 python scripts/mesh_smoke_test.py   # verify the Mesh connection
 pytest
+python -m eval.synthetic.generate   # regenerate data/synthetic (seed 42, reproducible)
 ```
 
 **Frontend**
