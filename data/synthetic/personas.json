@@ -1,0 +1,26 @@
+{
+  "maya_renter": {
+    "display_name": "Maya (synthetic)",
+    "description": "Young professional renting in Oakland; biweekly salary.",
+    "csv": "maya_renter.csv",
+    "opening_balance_cents": 420000,
+    "opening_date": "2025-10-01",
+    "as_of_month": "2026-09"
+  },
+  "ortiz_family": {
+    "display_name": "Ortiz family (synthetic)",
+    "description": "Two-income family with a mortgage in Austin.",
+    "csv": "ortiz_family.csv",
+    "opening_balance_cents": 1250000,
+    "opening_date": "2025-10-01",
+    "as_of_month": "2026-09"
+  },
+  "sam_freelancer": {
+    "display_name": "Sam (synthetic)",
+    "description": "Freelancer in Denver with irregular client payouts.",
+    "csv": "sam_freelancer.csv",
+    "opening_balance_cents": 1800000,
+    "opening_date": "2025-10-01",
+    "as_of_month": "2026-09"
+  }
+}
