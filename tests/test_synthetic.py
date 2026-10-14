@@ -185,3 +185,18 @@ def test_backend_never_reads_ground_truth():
     for p in (ROOT / "backend").rglob("*.py"):
         text = p.read_text()
         assert "ground_truth" not in text and "eval.synthetic" not in text, p
+
+
+# ---- lenient labels ----
+
+def test_acceptable_labels_are_valid_and_include_primary(data):
+    truth, _ = data
+    seen = set()
+    for p in truth["personas"].values():
+        for label in p["labels"].values():
+            alts = label.get("acceptable_labels")
+            if alts is None:
+                continue
+            seen.add(label["merchant"])
+            assert label["category"] in alts and set(alts) <= set(CATEGORIES), label
+    assert seen == {"Adobe", "USPS", "Uber One", "Amazon Prime", "Walmart+"}

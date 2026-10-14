@@ -27,7 +27,7 @@ from typing import Callable
 
 from backend.models import CATEGORIES
 
-GENERATOR_VERSION = 1
+GENERATOR_VERSION = 2
 DEFAULT_SEED = 42
 N_MONTHS = 12
 START = date(2025, 10, 1)
@@ -155,6 +155,17 @@ MERCHANTS: dict[str, tuple[str, list[str]]] = {
     # other (no closer category in the taxonomy)
     "Adobe": ("other", ["ADOBE *CREATIVE CLD {ref}", "ADOBE  *ADOBE 408-536-6000"]),
     "USPS": ("other", ["USPS PO {n8}", "USPS.COM CLICKNSHIP"]),
+}
+
+# Merchants whose category is a genuine judgment call even with the taxonomy in hand
+# (mixed-use memberships, software, postage). The eval scores these leniently: any listed
+# label counts. Strict accuracy still uses only the primary label. Approved Oct 15 (Tier A).
+ACCEPTABLE_LABELS: dict[str, list[str]] = {
+    "Adobe": ["other", "shopping"],
+    "USPS": ["other", "shopping"],
+    "Uber One": ["transport", "food_delivery"],
+    "Amazon Prime": ["shopping", "entertainment"],
+    "Walmart+": ["shopping", "groceries"],
 }
 
 RESTAURANTS = ["CHIPOTLE", "SWEETGREEN", "THAI BASIL", "PIZZERIA ROMA", "HALAL CART", "SUSHI ZONE",
@@ -311,7 +322,7 @@ class _Gen:
 
         recurring = [self._series_truth(s) for s in self.series_list]
         return {
-            "labels": {t.ext_id: {"category": t.category, "merchant": t.merchant} for t in self.txns},
+            "labels": {t.ext_id: _label(t) for t in self.txns},
             "recurring": recurring,
             "unused_subscriptions": [r["merchant"] for r in recurring if r["unused"]],
             "anomalies": [self._anomaly_truth(a) for a in self.anomalies],
@@ -597,6 +608,13 @@ PERSONAS = {
         description="Freelancer in Denver with irregular client payouts.",
     ),
 }
+
+
+def _label(t) -> dict:
+    label = {"category": t.category, "merchant": t.merchant}
+    if t.merchant in ACCEPTABLE_LABELS:
+        label["acceptable_labels"] = ACCEPTABLE_LABELS[t.merchant]
+    return label
 
 
 def _fmt_amount(cents: int) -> str:

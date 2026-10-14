@@ -1,5 +1,5 @@
 {
-  "generator_version": 1,
+  "generator_version": 2,
   "seed": 42,
   "period": {
     "start": "2025-10-01",
@@ -47,7 +47,11 @@
         },
         "f925724fa1": {
           "category": "transport",
-          "merchant": "Uber One"
+          "merchant": "Uber One",
+          "acceptable_labels": [
+            "transport",
+            "food_delivery"
+          ]
         },
         "354da3bc0f": {
           "category": "groceries",
@@ -275,7 +279,11 @@
         },
         "12b9f4f8fb": {
           "category": "transport",
-          "merchant": "Uber One"
+          "merchant": "Uber One",
+          "acceptable_labels": [
+            "transport",
+            "food_delivery"
+          ]
         },
         "c64d9f61c8": {
           "category": "transport",
@@ -455,7 +463,11 @@
         },
         "91940eee39": {
           "category": "transport",
-          "merchant": "Uber One"
+          "merchant": "Uber One",
+          "acceptable_labels": [
+            "transport",
+            "food_delivery"
+          ]
         },
         "077de58bdb": {
           "category": "shopping",
@@ -655,7 +667,11 @@
         },
         "0471331fd2": {
           "category": "transport",
-          "merchant": "Uber One"
+          "merchant": "Uber One",
+          "acceptable_labels": [
+            "transport",
+            "food_delivery"
+          ]
         },
         "d64d750cad": {
           "category": "shopping",
@@ -871,7 +887,11 @@
         },
         "7270fb8e12": {
           "category": "transport",
-          "merchant": "Uber One"
+          "merchant": "Uber One",
+          "acceptable_labels": [
+            "transport",
+            "food_delivery"
+          ]
         },
         "7734efd967": {
           "category": "transport",
@@ -1051,7 +1071,11 @@
         },
         "5cad2de11b": {
           "category": "transport",
-          "merchant": "Uber One"
+          "merchant": "Uber One",
+          "acceptable_labels": [
+            "transport",
+            "food_delivery"
+          ]
         },
         "e833920265": {
           "category": "food_delivery",
@@ -1271,7 +1295,11 @@
         },
         "86604bbeb6": {
           "category": "transport",
-          "merchant": "Uber One"
+          "merchant": "Uber One",
+          "acceptable_labels": [
+            "transport",
+            "food_delivery"
+          ]
         },
         "0d0f13f1ab": {
           "category": "transport",
@@ -1507,7 +1535,11 @@
         },
         "547dbbb3e7": {
           "category": "transport",
-          "merchant": "Uber One"
+          "merchant": "Uber One",
+          "acceptable_labels": [
+            "transport",
+            "food_delivery"
+          ]
         },
         "b39859368a": {
           "category": "travel",
@@ -1743,7 +1775,11 @@
         },
         "d2839d316c": {
           "category": "transport",
-          "merchant": "Uber One"
+          "merchant": "Uber One",
+          "acceptable_labels": [
+            "transport",
+            "food_delivery"
+          ]
         },
         "ceec3a7790": {
           "category": "shopping",
@@ -1983,7 +2019,11 @@
         },
         "80fe977b14": {
           "category": "transport",
-          "merchant": "Uber One"
+          "merchant": "Uber One",
+          "acceptable_labels": [
+            "transport",
+            "food_delivery"
+          ]
         },
         "86ab0ed5c3": {
           "category": "food_delivery",
@@ -2279,7 +2319,11 @@
         },
         "daa76c3463": {
           "category": "transport",
-          "merchant": "Uber One"
+          "merchant": "Uber One",
+          "acceptable_labels": [
+            "transport",
+            "food_delivery"
+          ]
         },
         "9eb1b4c4b6": {
           "category": "utilities",
@@ -2519,7 +2563,11 @@
         },
         "5112416fcd": {
           "category": "transport",
-          "merchant": "Uber One"
+          "merchant": "Uber One",
+          "acceptable_labels": [
+            "transport",
+            "food_delivery"
+          ]
         },
         "22633805a8": {
           "category": "dining",
@@ -3165,7 +3213,11 @@
         },
         "caf327fef8": {
           "category": "shopping",
-          "merchant": "Amazon Prime"
+          "merchant": "Amazon Prime",
+          "acceptable_labels": [
+            "shopping",
+            "entertainment"
+          ]
         },
         "e622d14b2d": {
           "category": "shopping",
@@ -3289,7 +3341,11 @@
         },
         "28a83959b9": {
           "category": "shopping",
-          "merchant": "Walmart+"
+          "merchant": "Walmart+",
+          "acceptable_labels": [
+            "shopping",
+            "groceries"
+          ]
         },
         "94bd600a23": {
           "category": "shopping",
@@ -3377,7 +3433,11 @@
         },
         "aefaa12d4a": {
           "category": "shopping",
-          "merchant": "Amazon Prime"
+          "merchant": "Amazon Prime",
+          "acceptable_labels": [
+            "shopping",
+            "entertainment"
+          ]
         },
         "e3d76c4959": {
           "category": "groceries",
@@ -3521,7 +3581,11 @@
         },
         "242aadb257": {
           "category": "shopping",
-          "merchant": "Walmart+"
+          "merchant": "Walmart+",
+          "acceptable_labels": [
+            "shopping",
+            "groceries"
+          ]
         },
         "d335453457": {
           "category": "dining",
@@ -3585,7 +3649,11 @@
         },
         "8069b7360b": {
           "category": "shopping",
-          "merchant": "Amazon Prime"
+          "merchant": "Amazon Prime",
+          "acceptable_labels": [
+            "shopping",
+            "entertainment"
+          ]
         },
         "8492f7d126": {
           "category": "transport",
@@ -3717,7 +3785,11 @@
         },
         "4e693551ef": {
           "category": "shopping",
-          "merchant": "Walmart+"
+          "merchant": "Walmart+",
+          "acceptable_labels": [
+            "shopping",
+            "groceries"
+          ]
         },
         "a0615c5160": {
           "category": "dining",
@@ -3785,7 +3857,11 @@
         },
         "52317db11d": {
           "category": "shopping",
-          "merchant": "Amazon Prime"
+          "merchant": "Amazon Prime",
+          "acceptable_labels": [
+            "shopping",
+            "entertainment"
+          ]
         },
         "5177cec245": {
           "category": "shopping",
@@ -3913,7 +3989,11 @@
         },
         "7105d1c805": {
           "category": "shopping",
-          "merchant": "Walmart+"
+          "merchant": "Walmart+",
+          "acceptable_labels": [
+            "shopping",
+            "groceries"
+          ]
         },
         "85bc21a645": {
           "category": "food_delivery",
@@ -3989,7 +4069,11 @@
         },
         "7055ef2fff": {
           "category": "shopping",
-          "merchant": "Amazon Prime"
+          "merchant": "Amazon Prime",
+          "acceptable_labels": [
+            "shopping",
+            "entertainment"
+          ]
         },
         "80b8cbce0d": {
           "category": "groceries",
@@ -4125,7 +4209,11 @@
         },
         "768fa510e0": {
           "category": "shopping",
-          "merchant": "Walmart+"
+          "merchant": "Walmart+",
+          "acceptable_labels": [
+            "shopping",
+            "groceries"
+          ]
         },
         "385926c96b": {
           "category": "income",
@@ -4193,7 +4281,11 @@
         },
         "ac37615dd4": {
           "category": "shopping",
-          "merchant": "Amazon Prime"
+          "merchant": "Amazon Prime",
+          "acceptable_labels": [
+            "shopping",
+            "entertainment"
+          ]
         },
         "ae69646e4d": {
           "category": "health",
@@ -4337,7 +4429,11 @@
         },
         "92740b71ab": {
           "category": "shopping",
-          "merchant": "Walmart+"
+          "merchant": "Walmart+",
+          "acceptable_labels": [
+            "shopping",
+            "groceries"
+          ]
         },
         "4b875f63a4": {
           "category": "shopping",
@@ -4433,7 +4529,11 @@
         },
         "9e634a72c9": {
           "category": "shopping",
-          "merchant": "Amazon Prime"
+          "merchant": "Amazon Prime",
+          "acceptable_labels": [
+            "shopping",
+            "entertainment"
+          ]
         },
         "6beb29463f": {
           "category": "transport",
@@ -4549,7 +4649,11 @@
         },
         "28b8bc2242": {
           "category": "shopping",
-          "merchant": "Walmart+"
+          "merchant": "Walmart+",
+          "acceptable_labels": [
+            "shopping",
+            "groceries"
+          ]
         },
         "895b6b7410": {
           "category": "food_delivery",
@@ -4641,7 +4745,11 @@
         },
         "43bcb9efb7": {
           "category": "shopping",
-          "merchant": "Amazon Prime"
+          "merchant": "Amazon Prime",
+          "acceptable_labels": [
+            "shopping",
+            "entertainment"
+          ]
         },
         "85c8559c80": {
           "category": "groceries",
@@ -4765,7 +4873,11 @@
         },
         "58e3c1ef88": {
           "category": "shopping",
-          "merchant": "Walmart+"
+          "merchant": "Walmart+",
+          "acceptable_labels": [
+            "shopping",
+            "groceries"
+          ]
         },
         "128d24d0e5": {
           "category": "groceries",
@@ -4857,7 +4969,11 @@
         },
         "4da0e1f843": {
           "category": "shopping",
-          "merchant": "Amazon Prime"
+          "merchant": "Amazon Prime",
+          "acceptable_labels": [
+            "shopping",
+            "entertainment"
+          ]
         },
         "c2e4f085e3": {
           "category": "shopping",
@@ -4997,7 +5113,11 @@
         },
         "e2ef230947": {
           "category": "shopping",
-          "merchant": "Walmart+"
+          "merchant": "Walmart+",
+          "acceptable_labels": [
+            "shopping",
+            "groceries"
+          ]
         },
         "9c74b67ea0": {
           "category": "income",
@@ -5081,7 +5201,11 @@
         },
         "b2095b9dba": {
           "category": "shopping",
-          "merchant": "Amazon Prime"
+          "merchant": "Amazon Prime",
+          "acceptable_labels": [
+            "shopping",
+            "entertainment"
+          ]
         },
         "cebe788bf1": {
           "category": "transport",
@@ -5201,7 +5325,11 @@
         },
         "e29a478926": {
           "category": "shopping",
-          "merchant": "Walmart+"
+          "merchant": "Walmart+",
+          "acceptable_labels": [
+            "shopping",
+            "groceries"
+          ]
         },
         "26c27c6f33": {
           "category": "groceries",
@@ -5289,7 +5417,11 @@
         },
         "cb15178454": {
           "category": "shopping",
-          "merchant": "Amazon Prime"
+          "merchant": "Amazon Prime",
+          "acceptable_labels": [
+            "shopping",
+            "entertainment"
+          ]
         },
         "e9eb030bdb": {
           "category": "shopping",
@@ -5449,7 +5581,11 @@
         },
         "5bf22682ca": {
           "category": "shopping",
-          "merchant": "Walmart+"
+          "merchant": "Walmart+",
+          "acceptable_labels": [
+            "shopping",
+            "groceries"
+          ]
         },
         "04737bb7e6": {
           "category": "income",
@@ -5525,7 +5661,11 @@
         },
         "cf3a4bceb1": {
           "category": "shopping",
-          "merchant": "Amazon Prime"
+          "merchant": "Amazon Prime",
+          "acceptable_labels": [
+            "shopping",
+            "entertainment"
+          ]
         },
         "2ead3dd6bd": {
           "category": "dining",
@@ -5657,7 +5797,11 @@
         },
         "cb714edb52": {
           "category": "shopping",
-          "merchant": "Walmart+"
+          "merchant": "Walmart+",
+          "acceptable_labels": [
+            "shopping",
+            "groceries"
+          ]
         },
         "f67b83565b": {
           "category": "income",
@@ -6166,7 +6310,11 @@
         },
         "63f9080983": {
           "category": "other",
-          "merchant": "USPS"
+          "merchant": "USPS",
+          "acceptable_labels": [
+            "other",
+            "shopping"
+          ]
         },
         "16052cfb61": {
           "category": "transport",
@@ -6174,7 +6322,11 @@
         },
         "dc49c7a2a2": {
           "category": "other",
-          "merchant": "Adobe"
+          "merchant": "Adobe",
+          "acceptable_labels": [
+            "other",
+            "shopping"
+          ]
         },
         "a599b26e56": {
           "category": "transport",
@@ -6286,7 +6438,11 @@
         },
         "5213198fac": {
           "category": "other",
-          "merchant": "USPS"
+          "merchant": "USPS",
+          "acceptable_labels": [
+            "other",
+            "shopping"
+          ]
         },
         "a28cde992d": {
           "category": "income",
@@ -6382,7 +6538,11 @@
         },
         "db1ae07f05": {
           "category": "other",
-          "merchant": "Adobe"
+          "merchant": "Adobe",
+          "acceptable_labels": [
+            "other",
+            "shopping"
+          ]
         },
         "ebf889240a": {
           "category": "groceries",
@@ -6578,7 +6738,11 @@
         },
         "55aad91224": {
           "category": "other",
-          "merchant": "Adobe"
+          "merchant": "Adobe",
+          "acceptable_labels": [
+            "other",
+            "shopping"
+          ]
         },
         "294378dab3": {
           "category": "groceries",
@@ -6762,7 +6926,11 @@
         },
         "36c4c2b167": {
           "category": "other",
-          "merchant": "Adobe"
+          "merchant": "Adobe",
+          "acceptable_labels": [
+            "other",
+            "shopping"
+          ]
         },
         "59b777a9a4": {
           "category": "groceries",
@@ -6886,7 +7054,11 @@
         },
         "cc8c51fb39": {
           "category": "other",
-          "merchant": "USPS"
+          "merchant": "USPS",
+          "acceptable_labels": [
+            "other",
+            "shopping"
+          ]
         },
         "89b83b1213": {
           "category": "groceries",
@@ -6910,7 +7082,11 @@
         },
         "1c62a489a6": {
           "category": "other",
-          "merchant": "USPS"
+          "merchant": "USPS",
+          "acceptable_labels": [
+            "other",
+            "shopping"
+          ]
         },
         "7a56495dcd": {
           "category": "income",
@@ -6942,7 +7118,11 @@
         },
         "a2592cd502": {
           "category": "other",
-          "merchant": "Adobe"
+          "merchant": "Adobe",
+          "acceptable_labels": [
+            "other",
+            "shopping"
+          ]
         },
         "05c93efdb3": {
           "category": "groceries",
@@ -7042,7 +7222,11 @@
         },
         "a03ed98469": {
           "category": "other",
-          "merchant": "USPS"
+          "merchant": "USPS",
+          "acceptable_labels": [
+            "other",
+            "shopping"
+          ]
         },
         "a78a1fb65e": {
           "category": "shopping",
@@ -7138,11 +7322,19 @@
         },
         "a734bb517b": {
           "category": "other",
-          "merchant": "USPS"
+          "merchant": "USPS",
+          "acceptable_labels": [
+            "other",
+            "shopping"
+          ]
         },
         "2b3b8abea5": {
           "category": "other",
-          "merchant": "Adobe"
+          "merchant": "Adobe",
+          "acceptable_labels": [
+            "other",
+            "shopping"
+          ]
         },
         "98e9f14966": {
           "category": "groceries",
@@ -7318,7 +7510,11 @@
         },
         "fcabbd74f5": {
           "category": "other",
-          "merchant": "USPS"
+          "merchant": "USPS",
+          "acceptable_labels": [
+            "other",
+            "shopping"
+          ]
         },
         "07af070065": {
           "category": "food_delivery",
@@ -7326,7 +7522,11 @@
         },
         "6f2cabbefc": {
           "category": "other",
-          "merchant": "Adobe"
+          "merchant": "Adobe",
+          "acceptable_labels": [
+            "other",
+            "shopping"
+          ]
         },
         "e8d1004ff3": {
           "category": "groceries",
@@ -7370,7 +7570,11 @@
         },
         "ca3fb5d2a3": {
           "category": "other",
-          "merchant": "USPS"
+          "merchant": "USPS",
+          "acceptable_labels": [
+            "other",
+            "shopping"
+          ]
         },
         "81da9d5b9c": {
           "category": "dining",
@@ -7530,11 +7734,19 @@
         },
         "4fb6ad6a7e": {
           "category": "other",
-          "merchant": "Adobe"
+          "merchant": "Adobe",
+          "acceptable_labels": [
+            "other",
+            "shopping"
+          ]
         },
         "0632e34f92": {
           "category": "other",
-          "merchant": "Adobe"
+          "merchant": "Adobe",
+          "acceptable_labels": [
+            "other",
+            "shopping"
+          ]
         },
         "ebb366ef90": {
           "category": "dining",
@@ -7706,7 +7918,11 @@
         },
         "5ee4fab81b": {
           "category": "other",
-          "merchant": "Adobe"
+          "merchant": "Adobe",
+          "acceptable_labels": [
+            "other",
+            "shopping"
+          ]
         },
         "ba7026c8e0": {
           "category": "shopping",
@@ -7922,7 +8138,11 @@
         },
         "b91dadc9b8": {
           "category": "other",
-          "merchant": "Adobe"
+          "merchant": "Adobe",
+          "acceptable_labels": [
+            "other",
+            "shopping"
+          ]
         },
         "c317595849": {
           "category": "groceries",
@@ -8146,7 +8366,11 @@
         },
         "1c57ad0324": {
           "category": "other",
-          "merchant": "Adobe"
+          "merchant": "Adobe",
+          "acceptable_labels": [
+            "other",
+            "shopping"
+          ]
         },
         "03b5fb2ae9": {
           "category": "shopping",
@@ -8326,7 +8550,11 @@
         },
         "a21d3d3002": {
           "category": "other",
-          "merchant": "Adobe"
+          "merchant": "Adobe",
+          "acceptable_labels": [
+            "other",
+            "shopping"
+          ]
         },
         "555dec81da": {
           "category": "dining",
@@ -8334,7 +8562,11 @@
         },
         "5b0a051c69": {
           "category": "other",
-          "merchant": "USPS"
+          "merchant": "USPS",
+          "acceptable_labels": [
+            "other",
+            "shopping"
+          ]
         },
         "f05bb5d40b": {
           "category": "food_delivery",
@@ -8354,7 +8586,11 @@
         },
         "2ff66624b2": {
           "category": "other",
-          "merchant": "USPS"
+          "merchant": "USPS",
+          "acceptable_labels": [
+            "other",
+            "shopping"
+          ]
         },
         "c3bc5ca5a5": {
           "category": "dining",
