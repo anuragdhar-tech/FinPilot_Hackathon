@@ -1,11 +1,16 @@
+import { lazy, Suspense } from 'react'
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import { AppShell } from './components/AppShell'
 import { Placeholder } from './components/Placeholder'
 import { UserProvider } from './context/UserProvider'
+import { Loading } from './components/State'
 import { RunDetailPage } from './pages/RunDetailPage'
 import { RunsPage } from './pages/RunsPage'
 import { TransactionsPage } from './pages/TransactionsPage'
 import { UploadPage } from './pages/UploadPage'
+
+// The dashboard pulls in the charting library, so it loads as its own chunk.
+const DashboardPage = lazy(() => import('./pages/DashboardPage').then((m) => ({ default: m.DashboardPage })))
 
 export default function App() {
   return (
@@ -13,7 +18,14 @@ export default function App() {
       <UserProvider>
         <Routes>
           <Route element={<AppShell />}>
-            <Route index element={<Placeholder title="Dashboard" />} />
+            <Route
+              index
+              element={
+                <Suspense fallback={<Loading />}>
+                  <DashboardPage />
+                </Suspense>
+              }
+            />
             <Route path="transactions" element={<TransactionsPage />} />
             <Route path="upload" element={<UploadPage />} />
             <Route path="eval" element={<Placeholder title="Eval" />} />

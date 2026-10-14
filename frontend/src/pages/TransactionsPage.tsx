@@ -1,8 +1,7 @@
-import { useCallback, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { api, ApiError, CATEGORIES, type Transaction } from '../api'
-import { useUsers } from '../context/user-context'
-import { useAsync } from '../hooks/useAsync'
+import { CATEGORIES, type Transaction } from '../api'
+import { useProfileTransactions } from '../hooks/useProfileTransactions'
 import { categoryLabel } from '../lib/categories'
 import { money, monthLabel } from '../lib/format'
 import { CategoryChip } from '../components/CategoryChip'
@@ -16,18 +15,7 @@ const control =
   'rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm focus:border-emerald-600 focus:outline-none focus:ring-1 focus:ring-emerald-600'
 
 export function TransactionsPage() {
-  const { selected, loading: usersLoading } = useUsers()
-  const userId = selected?.id
-  const load = useCallback(async () => {
-    if (userId == null) return null
-    try {
-      return await api.getTransactions(userId)
-    } catch (e) {
-      if (e instanceof ApiError && e.status === 404) return null // no data uploaded yet
-      throw e
-    }
-  }, [userId])
-  const { data, error, loading, reload } = useAsync(load)
+  const { selected, usersLoading, data, error, loading, reload } = useProfileTransactions()
 
   const [month, setMonth] = useState('')
   const [category, setCategory] = useState('')
