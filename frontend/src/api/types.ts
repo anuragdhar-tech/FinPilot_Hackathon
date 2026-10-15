@@ -23,6 +23,11 @@ export interface User {
   is_active: boolean
 }
 
+export interface UserDeleted {
+  user_id: number
+  deleted_rows: Record<string, number>
+}
+
 export interface UploadResult {
   batch_id: string
   user_id: number

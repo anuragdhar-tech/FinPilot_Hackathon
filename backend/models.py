@@ -47,6 +47,11 @@ class UserList(BaseModel):
     items: list[User]
 
 
+class UserDeleted(BaseModel):
+    user_id: int
+    deleted_rows: dict[str, int]  # rows removed per table; merchant_cache is shared and never touched
+
+
 class RunCreate(BaseModel):
     batch_id: str
 

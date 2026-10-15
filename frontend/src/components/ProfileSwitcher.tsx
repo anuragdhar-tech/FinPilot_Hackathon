@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { monthLabel } from '../lib/format'
 import { useUsers } from '../context/user-context'
+import { DeleteProfileButton } from './DeleteProfileButton'
 
 export function ProfileSwitcher() {
   const { users, loading, error, selected, select, refresh } = useUsers()
@@ -28,20 +29,23 @@ export function ProfileSwitcher() {
     )
   }
   return (
-    <label className="flex items-center gap-3 text-sm">
-      <span className="text-slate-500">Profile</span>
-      <select
-        value={selected?.id ?? ''}
-        onChange={(e) => select(Number(e.target.value))}
-        className="rounded-md border border-slate-300 bg-white px-2 py-1.5 font-medium focus:border-emerald-600 focus:outline-none focus:ring-1 focus:ring-emerald-600"
-      >
-        {users.map((u) => (
-          <option key={u.id} value={u.id}>
-            {u.name} · {u.txn_count} txns
-          </option>
-        ))}
-      </select>
-      {selected && <span className="hidden text-slate-400 md:inline">as of {monthLabel(selected.as_of_month)}</span>}
-    </label>
+    <div className="flex items-center gap-3">
+      <label className="flex items-center gap-3 text-sm">
+        <span className="text-slate-500">Profile</span>
+        <select
+          value={selected?.id ?? ''}
+          onChange={(e) => select(Number(e.target.value))}
+          className="rounded-md border border-slate-300 bg-white px-2 py-1.5 font-medium focus:border-emerald-600 focus:outline-none focus:ring-1 focus:ring-emerald-600"
+        >
+          {users.map((u) => (
+            <option key={u.id} value={u.id}>
+              {u.name} · {u.txn_count} txns
+            </option>
+          ))}
+        </select>
+        {selected && <span className="hidden text-slate-400 md:inline">as of {monthLabel(selected.as_of_month)}</span>}
+      </label>
+      {selected && <DeleteProfileButton user={selected} />}
+    </div>
   )
 }

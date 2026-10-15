@@ -8,6 +8,7 @@ import type {
   TransactionList,
   UploadResult,
   User,
+  UserDeleted,
 } from './types'
 
 /** FastAPI errors carry `detail` as a string, a list of validation errors, or {errors: [...]}. */
@@ -62,6 +63,7 @@ const post = (body: unknown): RequestInit => ({
 export const realClient: ApiClient = {
   health: () => request<Health>('/api/health'),
   getUsers: async () => (await request<{ items: User[] }>('/api/users')).items,
+  deleteUser: (userId) => request<UserDeleted>(`/api/users/${userId}`, { method: 'DELETE' }),
   uploadTransactions: ({ file, userId, name, openingBalanceCents }) => {
     const form = new FormData()
     form.append('file', file)

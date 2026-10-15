@@ -9,7 +9,8 @@ from backend.db import connect, init_db
 from backend.graph import create_run, execute_run
 from backend.ingest import CsvError, active_user_id, ingest_csv
 from backend.models import (Category, EvalSummary, Month, RunCreate, RunCreated, RunStatus, TransactionList,
-                            UploadResponse, User, UserList)
+                            UploadResponse, User, UserDeleted, UserList)
+from backend.users import delete_user
 
 EVAL_RESULTS = Path(__file__).resolve().parents[1] / "eval" / "results"
 
@@ -75,6 +76,15 @@ def list_users(conn: sqlite3.Connection = Depends(get_conn)):
         "FROM users u ORDER BY u.id"
     ).fetchall()
     return {"items": [{**dict(r), "is_active": r["id"] == active} for r in rows]}
+
+
+@app.delete("/api/users/{user_id}", response_model=UserDeleted)
+def delete_profile(user_id: int, conn: sqlite3.Connection = Depends(get_conn)):
+    """Remove a profile and everything that belongs to it. The shared merchant cache is kept."""
+    deleted = delete_user(conn, user_id)
+    if deleted is None:
+        raise HTTPException(404, "no such user")
+    return {"user_id": user_id, "deleted_rows": deleted}
 
 
 @app.post("/api/runs", response_model=RunCreated)

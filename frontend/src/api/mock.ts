@@ -105,6 +105,13 @@ const mockEval: EvalSummary = {
 export const mockClient: ApiClient = {
   health: () => delay({ status: 'ok (mock)' }),
   getUsers: () => delay(users.map((u) => ({ ...u }))),
+  deleteUser: async (userId) => {
+    const user = users.find((u) => u.id === userId)
+    if (!user) throw new ApiError(404, 'no such user')
+    users = users.filter((u) => u.id !== userId)
+    delete txns[userId]
+    return delay({ user_id: userId, deleted_rows: { transactions: user.txn_count, users: 1 } })
+  },
   uploadTransactions: async ({ file, userId, name, openingBalanceCents }) => {
     const rows = Math.max(0, (await file.text()).trim().split('\n').length - 1)
     let id = userId

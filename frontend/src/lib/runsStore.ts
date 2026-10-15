@@ -28,6 +28,15 @@ export function rememberRun(run: RememberedRun) {
   }
 }
 
+/** Drop the remembered runs of one profile (used when that profile is deleted). */
+export function forgetRunsForUser(userId: number) {
+  try {
+    localStorage.setItem(KEY, JSON.stringify(loadRuns().filter((r) => r.user_id !== userId)))
+  } catch {
+    // storage unavailable; nothing was remembered anyway
+  }
+}
+
 export function forgetRuns() {
   try {
     localStorage.removeItem(KEY)

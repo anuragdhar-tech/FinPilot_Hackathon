@@ -72,7 +72,7 @@ export function TransactionsPage() {
         </Empty>
       )}
 
-      {data && !error && (
+      {selected && data && !error && (
         <div className={loading ? 'opacity-60' : ''}>
           {data.items.length === 0 ? (
             <Empty title="No transactions for this profile">

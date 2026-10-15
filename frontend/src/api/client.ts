@@ -8,6 +8,7 @@ import type {
   TransactionList,
   UploadResult,
   User,
+  UserDeleted,
 } from './types'
 
 export interface UploadInput {
@@ -22,6 +23,7 @@ export interface UploadInput {
 export interface ApiClient {
   health(): Promise<Health>
   getUsers(): Promise<User[]>
+  deleteUser(userId: number): Promise<UserDeleted>
   uploadTransactions(input: UploadInput): Promise<UploadResult>
   createRun(batchId: string): Promise<RunCreated>
   getRun(runId: string): Promise<RunStatus>
