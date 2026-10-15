@@ -1,0 +1,920 @@
+{
+  "summary": {
+    "run_at": "2026-10-14T21:49:51+00:00",
+    "git_sha": "b7e8b43",
+    "dataset": "synthetic (dev subset)",
+    "seed": 42,
+    "models": {
+      "categorizer": "openai/gpt-4o-mini"
+    },
+    "categorization": {
+      "accuracy": 0.9133,
+      "lenient_accuracy": 0.9133,
+      "macro_f1": 0.892,
+      "top_confusions": [
+        {
+          "true": "dining",
+          "predicted": "other",
+          "count": 6
+        },
+        {
+          "true": "shopping",
+          "predicted": "other",
+          "count": 5
+        },
+        {
+          "true": "income",
+          "predicted": "transfers",
+          "count": 4
+        },
+        {
+          "true": "dining",
+          "predicted": "food_delivery",
+          "count": 3
+        },
+        {
+          "true": "groceries",
+          "predicted": "shopping",
+          "count": 3
+        }
+      ],
+      "n": 300,
+      "uncategorized": 0,
+      "cache_hit_rate": 0.5367,
+      "per_category": {
+        "dining": {
+          "precision": 1.0,
+          "recall": 0.8235,
+          "f1": 0.9032,
+          "support": 51
+        },
+        "entertainment": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "support": 18
+        },
+        "fees": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "support": 2
+        },
+        "fitness": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "support": 6
+        },
+        "food_delivery": {
+          "precision": 0.9167,
+          "recall": 1.0,
+          "f1": 0.9565,
+          "support": 33
+        },
+        "groceries": {
+          "precision": 0.9697,
+          "recall": 0.9143,
+          "f1": 0.9412,
+          "support": 35
+        },
+        "health": {
+          "precision": 0.8,
+          "recall": 1.0,
+          "f1": 0.8889,
+          "support": 8
+        },
+        "housing": {
+          "precision": 1.0,
+          "recall": 0.75,
+          "f1": 0.8571,
+          "support": 8
+        },
+        "income": {
+          "precision": 1.0,
+          "recall": 0.8,
+          "f1": 0.8889,
+          "support": 20
+        },
+        "other": {
+          "precision": 0.1875,
+          "recall": 1.0,
+          "f1": 0.3158,
+          "support": 3
+        },
+        "shopping": {
+          "precision": 0.925,
+          "recall": 0.8605,
+          "f1": 0.8916,
+          "support": 43
+        },
+        "transfers": {
+          "precision": 0.6667,
+          "recall": 1.0,
+          "f1": 0.8,
+          "support": 8
+        },
+        "transport": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "support": 41
+        },
+        "travel": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "support": 7
+        },
+        "utilities": {
+          "precision": 1.0,
+          "recall": 0.8824,
+          "f1": 0.9375,
+          "support": 17
+        }
+      },
+      "per_persona": {
+        "maya_renter": 0.9083,
+        "ortiz_family": 0.8788,
+        "sam_freelancer": 0.9565
+      }
+    }
+  },
+  "details": {
+    "mode": "cache",
+    "prompt_version": "cat-v1",
+    "subset": "dev",
+    "misalignment": {
+      "echo_rejected": null,
+      "echo_checked": null,
+      "echo_rejection_rate": null,
+      "rationale_proxy_rate": 0.0967,
+      "rationale_proxy_rate_llm_rows": 0.0863,
+      "rationale_proxy_examples": [
+        {
+          "description": "CHECKCARD 1115 SQ *BLUE BTL COF 6979",
+          "pred": "other",
+          "truth": "dining",
+          "rationale": "Coffee purchase, fits none of the main categories."
+        },
+        {
+          "description": "AMC 2955 ONLINE",
+          "pred": "entertainment",
+          "truth": "entertainment",
+          "rationale": "AMC for movies, classified as entertainment."
+        },
+        {
+          "description": "PGANDE WEB ONLINE 01186876",
+          "pred": "other",
+          "truth": "utilities",
+          "rationale": "Online purchase, fits none of the main categories."
+        },
+        {
+          "description": "AMZN Mktp US*5ISL939YA7",
+          "pred": "shopping",
+          "truth": "shopping",
+          "rationale": "Amazon indicates online shopping."
+        },
+        {
+          "description": "INTL TXN FEE",
+          "pred": "fees",
+          "truth": "fees",
+          "rationale": "International transaction fee indicates a bank fee."
+        },
+        {
+          "description": "SQ *PHO 88",
+          "pred": "dining",
+          "truth": "dining",
+          "rationale": "Pho 88 is a restaurant."
+        },
+        {
+          "description": "AMZN Mktp US*SLLJTWYOAD",
+          "pred": "other",
+          "truth": "shopping",
+          "rationale": "Amazon Marketplace purchase, fits none of the categories."
+        },
+        {
+          "description": "H-E-B #329 AUSTIN TX",
+          "pred": "groceries",
+          "truth": "groceries",
+          "rationale": "H-E-B is a grocery store."
+        },
+        {
+          "description": "LAKEVIEW LN SRV MTG PYMT 150729",
+          "pred": "housing",
+          "truth": "housing",
+          "rationale": "Mortgage payment."
+        },
+        {
+          "description": "PURCHASE AUTHORIZED ON 03/12 HEB ONLINE 79NRI3IX",
+          "pred": "groceries",
+          "truth": "groceries",
+          "rationale": "H-E-B online grocery purchase."
+        },
+        {
+          "description": "POS PURCHASE PHO 88 LAKEWOOD CO",
+          "pred": "dining",
+          "truth": "dining",
+          "rationale": "Pho 88 is a restaurant."
+        },
+        {
+          "description": "SERVICE FEE",
+          "pred": "fees",
+          "truth": "fees",
+          "rationale": "Service fee indicates a bank fee."
+        }
+      ]
+    },
+    "cache_confirmation": null,
+    "per_persona": {
+      "maya_renter": {
+        "n": 109,
+        "strict": 0.9083,
+        "lenient": 0.9083
+      },
+      "ortiz_family": {
+        "n": 99,
+        "strict": 0.8788,
+        "lenient": 0.8788
+      },
+      "sam_freelancer": {
+        "n": 92,
+        "strict": 0.9565,
+        "lenient": 0.9565
+      }
+    },
+    "source_split": {
+      "cache_hit_rate": 0.5367,
+      "from_cache": {
+        "n": 161,
+        "strict": 0.9068,
+        "lenient": 0.9068
+      },
+      "from_llm": {
+        "n": 139,
+        "strict": 0.9209,
+        "lenient": 0.9209
+      }
+    },
+    "confusions": [
+      {
+        "true": "dining",
+        "predicted": "other",
+        "count": 6,
+        "lenient_ok": 0
+      },
+      {
+        "true": "shopping",
+        "predicted": "other",
+        "count": 5,
+        "lenient_ok": 0
+      },
+      {
+        "true": "income",
+        "predicted": "transfers",
+        "count": 4,
+        "lenient_ok": 0
+      },
+      {
+        "true": "dining",
+        "predicted": "food_delivery",
+        "count": 3,
+        "lenient_ok": 0
+      },
+      {
+        "true": "groceries",
+        "predicted": "shopping",
+        "count": 3,
+        "lenient_ok": 0
+      },
+      {
+        "true": "housing",
+        "predicted": "health",
+        "count": 2,
+        "lenient_ok": 0
+      },
+      {
+        "true": "utilities",
+        "predicted": "other",
+        "count": 2,
+        "lenient_ok": 0
+      },
+      {
+        "true": "shopping",
+        "predicted": "groceries",
+        "count": 1,
+        "lenient_ok": 0
+      }
+    ],
+    "calibration": [
+      {
+        "bucket": "[0.00, 0.50)",
+        "n": 0,
+        "accuracy": null,
+        "mean_confidence": null
+      },
+      {
+        "bucket": "[0.50, 0.70)",
+        "n": 0,
+        "accuracy": null,
+        "mean_confidence": null
+      },
+      {
+        "bucket": "[0.70, 0.80)",
+        "n": 0,
+        "accuracy": null,
+        "mean_confidence": null
+      },
+      {
+        "bucket": "[0.80, 0.90)",
+        "n": 0,
+        "accuracy": null,
+        "mean_confidence": null
+      },
+      {
+        "bucket": "[0.90, 0.95)",
+        "n": 300,
+        "accuracy": 0.9133,
+        "mean_confidence": 0.9
+      },
+      {
+        "bucket": "[0.95, 1.00]",
+        "n": 0,
+        "accuracy": null,
+        "mean_confidence": null
+      }
+    ],
+    "lenient_merchants": [
+      "Adobe",
+      "Amazon Prime",
+      "USPS",
+      "Uber One",
+      "Walmart+"
+    ],
+    "conflicting_cache_keys": [],
+    "usage": {
+      "llm_batches": 7,
+      "prompt_tokens": 8776,
+      "completion_tokens": 3780,
+      "retry_attempts": 0,
+      "batches_with_failures": 0,
+      "mesh_fallbacks": 0,
+      "wall_seconds": 20.7,
+      "estimated_cost": {
+        "usd": 0.00358,
+        "note": "Estimated at OpenAI list prices (USD per 1M tokens) for the configured model; Mesh BYOK fees, if any, are not included. Check the OpenAI pricing page before quoting.",
+        "prices_as_of": "2026-10-15"
+      }
+    },
+    "example_misses": [
+      {
+        "persona": "ortiz_family",
+        "external_id": "df35980f43",
+        "description": "AMZN Mktp US*SLLJTWYOAD",
+        "amount_cents": -3772,
+        "merchant": "Amazon",
+        "truth": "shopping",
+        "acceptable": [
+          "shopping"
+        ],
+        "pred": "other",
+        "confidence": 0.9,
+        "from_cache": false,
+        "rationale": "Amazon Marketplace purchase, fits none of the categories."
+      },
+      {
+        "persona": "sam_freelancer",
+        "external_id": "d5467be22e",
+        "description": "STRIPE TRANSFER ST-CVBMD23HGL",
+        "amount_cents": 120838,
+        "merchant": "Stripe",
+        "truth": "income",
+        "acceptable": [
+          "income"
+        ],
+        "pred": "transfers",
+        "confidence": 0.9,
+        "from_cache": true,
+        "rationale": "Stripe transfer indicates a payment transfer."
+      },
+      {
+        "persona": "ortiz_family",
+        "external_id": "aefaa12d4a",
+        "description": "Amazon Prime*O2LUQH19CH",
+        "amount_cents": -1499,
+        "merchant": "Amazon Prime",
+        "truth": "shopping",
+        "acceptable": [
+          "entertainment",
+          "shopping"
+        ],
+        "pred": "other",
+        "confidence": 0.9,
+        "from_cache": true,
+        "rationale": "Amazon Prime subscription, fits none of the categories."
+      },
+      {
+        "persona": "maya_renter",
+        "external_id": "8445c4b08f",
+        "description": "POS PURCHASE SQ *BLUE BTL COF 6979",
+        "amount_cents": -554,
+        "merchant": "Blue Bottle Coffee",
+        "truth": "dining",
+        "acceptable": [
+          "dining"
+        ],
+        "pred": "other",
+        "confidence": 0.9,
+        "from_cache": true,
+        "rationale": "Coffee purchase, fits none of the main categories."
+      },
+      {
+        "persona": "maya_renter",
+        "external_id": "61cc33ed49",
+        "description": "PGANDE WEB ONLINE 07186876",
+        "amount_cents": -4251,
+        "merchant": "PG&E",
+        "truth": "utilities",
+        "acceptable": [
+          "utilities"
+        ],
+        "pred": "other",
+        "confidence": 0.9,
+        "from_cache": true,
+        "rationale": "Online purchase, fits none of the main categories."
+      },
+      {
+        "persona": "ortiz_family",
+        "external_id": "768fa510e0",
+        "description": "WALMART+ MEMBERSHIP PO5LYV37",
+        "amount_cents": -1295,
+        "merchant": "Walmart+",
+        "truth": "shopping",
+        "acceptable": [
+          "groceries",
+          "shopping"
+        ],
+        "pred": "other",
+        "confidence": 0.9,
+        "from_cache": false,
+        "rationale": "Walmart+ membership, fits none of the categories."
+      },
+      {
+        "persona": "ortiz_family",
+        "external_id": "80b8cbce0d",
+        "description": "COSTCO WHOLESALE #4172",
+        "amount_cents": -19287,
+        "merchant": "Costco",
+        "truth": "groceries",
+        "acceptable": [
+          "groceries"
+        ],
+        "pred": "shopping",
+        "confidence": 0.9,
+        "from_cache": false,
+        "rationale": "Costco is a retail store."
+      },
+      {
+        "persona": "sam_freelancer",
+        "external_id": "d13c09f8a8",
+        "description": "STRIPE TRANSFER ST-P8LBV3GSW",
+        "amount_cents": 288607,
+        "merchant": "Stripe",
+        "truth": "income",
+        "acceptable": [
+          "income"
+        ],
+        "pred": "transfers",
+        "confidence": 0.9,
+        "from_cache": true,
+        "rationale": "Stripe transfer indicates a payment transfer."
+      },
+      {
+        "persona": "maya_renter",
+        "external_id": "66550c82f0",
+        "description": "LEMONADE INSURANCE CO",
+        "amount_cents": -1250,
+        "merchant": "Lemonade",
+        "truth": "housing",
+        "acceptable": [
+          "housing"
+        ],
+        "pred": "health",
+        "confidence": 0.9,
+        "from_cache": true,
+        "rationale": "Insurance indicates health insurance."
+      },
+      {
+        "persona": "ortiz_family",
+        "external_id": "8ffc7032ca",
+        "description": "CHIPOTLE ONLINE 6560",
+        "amount_cents": -3571,
+        "merchant": "Chipotle",
+        "truth": "dining",
+        "acceptable": [
+          "dining"
+        ],
+        "pred": "food_delivery",
+        "confidence": 0.9,
+        "from_cache": true,
+        "rationale": "Chipotle online order via delivery platform."
+      }
+    ],
+    "misses": [
+      {
+        "persona": "maya_renter",
+        "external_id": "1e0c9cdb92",
+        "description": "CHECKCARD 1115 SQ *BLUE BTL COF 6979",
+        "amount_cents": -534,
+        "merchant": "Blue Bottle Coffee",
+        "truth": "dining",
+        "acceptable": [
+          "dining"
+        ],
+        "pred": "other",
+        "confidence": 0.9,
+        "from_cache": false,
+        "rationale": "Coffee purchase, fits none of the main categories."
+      },
+      {
+        "persona": "maya_renter",
+        "external_id": "8445c4b08f",
+        "description": "POS PURCHASE SQ *BLUE BTL COF 6979",
+        "amount_cents": -554,
+        "merchant": "Blue Bottle Coffee",
+        "truth": "dining",
+        "acceptable": [
+          "dining"
+        ],
+        "pred": "other",
+        "confidence": 0.9,
+        "from_cache": true,
+        "rationale": "Coffee purchase, fits none of the main categories."
+      },
+      {
+        "persona": "maya_renter",
+        "external_id": "bb7b8428ab",
+        "description": "PGANDE WEB ONLINE 01186876",
+        "amount_cents": -8946,
+        "merchant": "PG&E",
+        "truth": "utilities",
+        "acceptable": [
+          "utilities"
+        ],
+        "pred": "other",
+        "confidence": 0.9,
+        "from_cache": false,
+        "rationale": "Online purchase, fits none of the main categories."
+      },
+      {
+        "persona": "maya_renter",
+        "external_id": "d2f9d257c2",
+        "description": "SQ *BLUE BTL COF 6979",
+        "amount_cents": -692,
+        "merchant": "Blue Bottle Coffee",
+        "truth": "dining",
+        "acceptable": [
+          "dining"
+        ],
+        "pred": "other",
+        "confidence": 0.9,
+        "from_cache": true,
+        "rationale": "Coffee purchase, fits none of the main categories."
+      },
+      {
+        "persona": "maya_renter",
+        "external_id": "b1f5b33c2a",
+        "description": "SQ *BLUE BTL COF 6979",
+        "amount_cents": -707,
+        "merchant": "Blue Bottle Coffee",
+        "truth": "dining",
+        "acceptable": [
+          "dining"
+        ],
+        "pred": "other",
+        "confidence": 0.9,
+        "from_cache": true,
+        "rationale": "Coffee purchase, fits none of the main categories."
+      },
+      {
+        "persona": "maya_renter",
+        "external_id": "2c09e98b8a",
+        "description": "SQ *BLUE BTL COF 6979",
+        "amount_cents": -667,
+        "merchant": "Blue Bottle Coffee",
+        "truth": "dining",
+        "acceptable": [
+          "dining"
+        ],
+        "pred": "other",
+        "confidence": 0.9,
+        "from_cache": true,
+        "rationale": "Coffee purchase, fits none of the main categories."
+      },
+      {
+        "persona": "maya_renter",
+        "external_id": "95cf33d6dc",
+        "description": "SQ *BLUE BTL COF 6979",
+        "amount_cents": -665,
+        "merchant": "Blue Bottle Coffee",
+        "truth": "dining",
+        "acceptable": [
+          "dining"
+        ],
+        "pred": "other",
+        "confidence": 0.9,
+        "from_cache": true,
+        "rationale": "Coffee purchase, fits none of the main categories."
+      },
+      {
+        "persona": "maya_renter",
+        "external_id": "d182291a42",
+        "description": "LEMONADE INSURANCE CO",
+        "amount_cents": -1250,
+        "merchant": "Lemonade",
+        "truth": "housing",
+        "acceptable": [
+          "housing"
+        ],
+        "pred": "health",
+        "confidence": 0.9,
+        "from_cache": false,
+        "rationale": "Insurance indicates health insurance."
+      },
+      {
+        "persona": "maya_renter",
+        "external_id": "61cc33ed49",
+        "description": "PGANDE WEB ONLINE 07186876",
+        "amount_cents": -4251,
+        "merchant": "PG&E",
+        "truth": "utilities",
+        "acceptable": [
+          "utilities"
+        ],
+        "pred": "other",
+        "confidence": 0.9,
+        "from_cache": true,
+        "rationale": "Online purchase, fits none of the main categories."
+      },
+      {
+        "persona": "maya_renter",
+        "external_id": "66550c82f0",
+        "description": "LEMONADE INSURANCE CO",
+        "amount_cents": -1250,
+        "merchant": "Lemonade",
+        "truth": "housing",
+        "acceptable": [
+          "housing"
+        ],
+        "pred": "health",
+        "confidence": 0.9,
+        "from_cache": true,
+        "rationale": "Insurance indicates health insurance."
+      },
+      {
+        "persona": "ortiz_family",
+        "external_id": "caf327fef8",
+        "description": "Amazon Prime*QS4N7KBB9S",
+        "amount_cents": -1499,
+        "merchant": "Amazon Prime",
+        "truth": "shopping",
+        "acceptable": [
+          "entertainment",
+          "shopping"
+        ],
+        "pred": "other",
+        "confidence": 0.9,
+        "from_cache": false,
+        "rationale": "Amazon Prime subscription, fits none of the categories."
+      },
+      {
+        "persona": "ortiz_family",
+        "external_id": "d537af4fae",
+        "description": "WALMART.COM BC6J0TVD",
+        "amount_cents": -6063,
+        "merchant": "Walmart",
+        "truth": "shopping",
+        "acceptable": [
+          "shopping"
+        ],
+        "pred": "groceries",
+        "confidence": 0.9,
+        "from_cache": false,
+        "rationale": "Walmart is a grocery store."
+      },
+      {
+        "persona": "ortiz_family",
+        "external_id": "df35980f43",
+        "description": "AMZN Mktp US*SLLJTWYOAD",
+        "amount_cents": -3772,
+        "merchant": "Amazon",
+        "truth": "shopping",
+        "acceptable": [
+          "shopping"
+        ],
+        "pred": "other",
+        "confidence": 0.9,
+        "from_cache": false,
+        "rationale": "Amazon Marketplace purchase, fits none of the categories."
+      },
+      {
+        "persona": "ortiz_family",
+        "external_id": "aefaa12d4a",
+        "description": "Amazon Prime*O2LUQH19CH",
+        "amount_cents": -1499,
+        "merchant": "Amazon Prime",
+        "truth": "shopping",
+        "acceptable": [
+          "entertainment",
+          "shopping"
+        ],
+        "pred": "other",
+        "confidence": 0.9,
+        "from_cache": true,
+        "rationale": "Amazon Prime subscription, fits none of the categories."
+      },
+      {
+        "persona": "ortiz_family",
+        "external_id": "4b7bd1e66a",
+        "description": "POS PURCHASE CHIPOTLE ONLINE 6560",
+        "amount_cents": -1531,
+        "merchant": "Chipotle",
+        "truth": "dining",
+        "acceptable": [
+          "dining"
+        ],
+        "pred": "food_delivery",
+        "confidence": 0.9,
+        "from_cache": false,
+        "rationale": "Chipotle online order via delivery platform."
+      },
+      {
+        "persona": "ortiz_family",
+        "external_id": "80b8cbce0d",
+        "description": "COSTCO WHOLESALE #4172",
+        "amount_cents": -19287,
+        "merchant": "Costco",
+        "truth": "groceries",
+        "acceptable": [
+          "groceries"
+        ],
+        "pred": "shopping",
+        "confidence": 0.9,
+        "from_cache": false,
+        "rationale": "Costco is a retail store."
+      },
+      {
+        "persona": "ortiz_family",
+        "external_id": "768fa510e0",
+        "description": "WALMART+ MEMBERSHIP PO5LYV37",
+        "amount_cents": -1295,
+        "merchant": "Walmart+",
+        "truth": "shopping",
+        "acceptable": [
+          "groceries",
+          "shopping"
+        ],
+        "pred": "other",
+        "confidence": 0.9,
+        "from_cache": false,
+        "rationale": "Walmart+ membership, fits none of the categories."
+      },
+      {
+        "persona": "ortiz_family",
+        "external_id": "4accd04f6d",
+        "description": "COSTCO WHOLESALE #4172",
+        "amount_cents": -15061,
+        "merchant": "Costco",
+        "truth": "groceries",
+        "acceptable": [
+          "groceries"
+        ],
+        "pred": "shopping",
+        "confidence": 0.9,
+        "from_cache": true,
+        "rationale": "Costco is a retail store."
+      },
+      {
+        "persona": "ortiz_family",
+        "external_id": "e29a478926",
+        "description": "WALMART+ MEMBERSHIP OF5YMWRHAH",
+        "amount_cents": -1295,
+        "merchant": "Walmart+",
+        "truth": "shopping",
+        "acceptable": [
+          "groceries",
+          "shopping"
+        ],
+        "pred": "other",
+        "confidence": 0.9,
+        "from_cache": true,
+        "rationale": "Walmart+ membership, fits none of the categories."
+      },
+      {
+        "persona": "ortiz_family",
+        "external_id": "8ffc7032ca",
+        "description": "CHIPOTLE ONLINE 6560",
+        "amount_cents": -3571,
+        "merchant": "Chipotle",
+        "truth": "dining",
+        "acceptable": [
+          "dining"
+        ],
+        "pred": "food_delivery",
+        "confidence": 0.9,
+        "from_cache": true,
+        "rationale": "Chipotle online order via delivery platform."
+      },
+      {
+        "persona": "ortiz_family",
+        "external_id": "0b42586ac0",
+        "description": "POS PURCHASE COSTCO WHOLESALE #4172",
+        "amount_cents": -19871,
+        "merchant": "Costco",
+        "truth": "groceries",
+        "acceptable": [
+          "groceries"
+        ],
+        "pred": "shopping",
+        "confidence": 0.9,
+        "from_cache": true,
+        "rationale": "Costco is a retail store."
+      },
+      {
+        "persona": "ortiz_family",
+        "external_id": "8881a34a79",
+        "description": "CHIPOTLE ONLINE 1077",
+        "amount_cents": -2402,
+        "merchant": "Chipotle",
+        "truth": "dining",
+        "acceptable": [
+          "dining"
+        ],
+        "pred": "food_delivery",
+        "confidence": 0.9,
+        "from_cache": true,
+        "rationale": "Chipotle online order via delivery platform."
+      },
+      {
+        "persona": "sam_freelancer",
+        "external_id": "ea212aad8e",
+        "description": "STRIPE TRANSFER ST-3WGROTRQ",
+        "amount_cents": 80967,
+        "merchant": "Stripe",
+        "truth": "income",
+        "acceptable": [
+          "income"
+        ],
+        "pred": "transfers",
+        "confidence": 0.9,
+        "from_cache": false,
+        "rationale": "Stripe transfer indicates a payment transfer."
+      },
+      {
+        "persona": "sam_freelancer",
+        "external_id": "664f2d6fe6",
+        "description": "STRIPE PAYMENTS TRANSFER WXKKQYQLHA",
+        "amount_cents": 147923,
+        "merchant": "Stripe",
+        "truth": "income",
+        "acceptable": [
+          "income"
+        ],
+        "pred": "transfers",
+        "confidence": 0.9,
+        "from_cache": false,
+        "rationale": "Stripe payments indicate a payment transfer."
+      },
+      {
+        "persona": "sam_freelancer",
+        "external_id": "d5467be22e",
+        "description": "STRIPE TRANSFER ST-CVBMD23HGL",
+        "amount_cents": 120838,
+        "merchant": "Stripe",
+        "truth": "income",
+        "acceptable": [
+          "income"
+        ],
+        "pred": "transfers",
+        "confidence": 0.9,
+        "from_cache": true,
+        "rationale": "Stripe transfer indicates a payment transfer."
+      },
+      {
+        "persona": "sam_freelancer",
+        "external_id": "d13c09f8a8",
+        "description": "STRIPE TRANSFER ST-P8LBV3GSW",
+        "amount_cents": 288607,
+        "merchant": "Stripe",
+        "truth": "income",
+        "acceptable": [
+          "income"
+        ],
+        "pred": "transfers",
+        "confidence": 0.9,
+        "from_cache": true,
+        "rationale": "Stripe transfer indicates a payment transfer."
+      }
+    ]
+  }
+}

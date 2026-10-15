@@ -1,0 +1,790 @@
+{
+  "summary": {
+    "run_at": "2026-10-14T21:50:16+00:00",
+    "git_sha": "b7e8b43",
+    "dataset": "synthetic (dev subset)",
+    "seed": 42,
+    "models": {
+      "categorizer": "openai/gpt-4o-mini"
+    },
+    "categorization": {
+      "accuracy": 0.9467,
+      "lenient_accuracy": 0.9467,
+      "macro_f1": 0.9073,
+      "top_confusions": [
+        {
+          "true": "shopping",
+          "predicted": "other",
+          "count": 4
+        },
+        {
+          "true": "entertainment",
+          "predicted": "other",
+          "count": 3
+        },
+        {
+          "true": "housing",
+          "predicted": "health",
+          "count": 2
+        },
+        {
+          "true": "transport",
+          "predicted": "other",
+          "count": 2
+        },
+        {
+          "true": "utilities",
+          "predicted": "other",
+          "count": 2
+        }
+      ],
+      "n": 300,
+      "uncategorized": 0,
+      "cache_hit_rate": 0.0,
+      "per_category": {
+        "dining": {
+          "precision": 1.0,
+          "recall": 0.9608,
+          "f1": 0.98,
+          "support": 51
+        },
+        "entertainment": {
+          "precision": 1.0,
+          "recall": 0.8333,
+          "f1": 0.9091,
+          "support": 18
+        },
+        "fees": {
+          "precision": 0.6667,
+          "recall": 1.0,
+          "f1": 0.8,
+          "support": 2
+        },
+        "fitness": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "support": 6
+        },
+        "food_delivery": {
+          "precision": 0.9706,
+          "recall": 1.0,
+          "f1": 0.9851,
+          "support": 33
+        },
+        "groceries": {
+          "precision": 0.9722,
+          "recall": 1.0,
+          "f1": 0.9859,
+          "support": 35
+        },
+        "health": {
+          "precision": 0.8,
+          "recall": 1.0,
+          "f1": 0.8889,
+          "support": 8
+        },
+        "housing": {
+          "precision": 1.0,
+          "recall": 0.75,
+          "f1": 0.8571,
+          "support": 8
+        },
+        "income": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "support": 20
+        },
+        "other": {
+          "precision": 0.2143,
+          "recall": 1.0,
+          "f1": 0.3529,
+          "support": 3
+        },
+        "shopping": {
+          "precision": 1.0,
+          "recall": 0.8837,
+          "f1": 0.9383,
+          "support": 43
+        },
+        "transfers": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "support": 8
+        },
+        "transport": {
+          "precision": 1.0,
+          "recall": 0.9512,
+          "f1": 0.975,
+          "support": 41
+        },
+        "travel": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "support": 7
+        },
+        "utilities": {
+          "precision": 1.0,
+          "recall": 0.8824,
+          "f1": 0.9375,
+          "support": 17
+        }
+      },
+      "per_persona": {
+        "maya_renter": 0.9266,
+        "ortiz_family": 0.9394,
+        "sam_freelancer": 0.9783
+      }
+    }
+  },
+  "details": {
+    "mode": "no_cache",
+    "prompt_version": "cat-v1",
+    "subset": "dev",
+    "misalignment": {
+      "echo_rejected": null,
+      "echo_checked": null,
+      "echo_rejection_rate": null,
+      "rationale_proxy_rate": 0.0833,
+      "rationale_proxy_rate_llm_rows": 0.0833,
+      "rationale_proxy_examples": [
+        {
+          "description": "CHECKCARD 1115 SQ *BLUE BTL COF 6979",
+          "pred": "fees",
+          "truth": "dining",
+          "rationale": "Bank fee for a purchase, classified as fees."
+        },
+        {
+          "description": "AMC 2955 ONLINE",
+          "pred": "entertainment",
+          "truth": "entertainment",
+          "rationale": "AMC for movie tickets, classified as entertainment."
+        },
+        {
+          "description": "PGANDE WEB ONLINE 01186876",
+          "pred": "other",
+          "truth": "utilities",
+          "rationale": "Merchant unclear; likely a subscription or service."
+        },
+        {
+          "description": "AMZN Mktp US*5ISL939YA7",
+          "pred": "shopping",
+          "truth": "shopping",
+          "rationale": "Amazon is an online marketplace."
+        },
+        {
+          "description": "INTL TXN FEE",
+          "pred": "fees",
+          "truth": "fees",
+          "rationale": "International transaction fee is a bank fee."
+        },
+        {
+          "description": "SQ *PHO 88",
+          "pred": "dining",
+          "truth": "dining",
+          "rationale": "Pho 88 is a restaurant."
+        },
+        {
+          "description": "PGANDE WEB ONLINE 07186876",
+          "pred": "other",
+          "truth": "utilities",
+          "rationale": "Merchant unclear, likely a software subscription."
+        },
+        {
+          "description": "AMZN Mktp US*SLLJTWYOAD",
+          "pred": "shopping",
+          "truth": "shopping",
+          "rationale": "Amazon Marketplace purchase, fits shopping."
+        },
+        {
+          "description": "H-E-B #329 AUSTIN TX",
+          "pred": "groceries",
+          "truth": "groceries",
+          "rationale": "H-E-B purchase, fits grocery shopping."
+        },
+        {
+          "description": "LAKEVIEW LN SRV MTG PYMT 150729",
+          "pred": "housing",
+          "truth": "housing",
+          "rationale": "Mortgage payment."
+        },
+        {
+          "description": "LAKEVIEW LN SRV MTG PYMT 150729",
+          "pred": "housing",
+          "truth": "housing",
+          "rationale": "Mortgage payment."
+        },
+        {
+          "description": "CHECKCARD 0306 AMZN Mktp US*9PM524MJAJ",
+          "pred": "shopping",
+          "truth": "shopping",
+          "rationale": "Amazon marketplace purchase."
+        },
+        {
+          "description": "PURCHASE AUTHORIZED ON 03/12 HEB ONLINE 79NRI3IX",
+          "pred": "groceries",
+          "truth": "groceries",
+          "rationale": "H-E-B online grocery purchase."
+        },
+        {
+          "description": "POS PURCHASE H-E-B #329 AUSTIN TX",
+          "pred": "groceries",
+          "truth": "groceries",
+          "rationale": "H-E-B grocery purchase."
+        },
+        {
+          "description": "POS PURCHASE AMZN Mktp US*QEUSOAE0L3",
+          "pred": "shopping",
+          "truth": "shopping",
+          "rationale": "Amazon purchase indicates shopping."
+        }
+      ]
+    },
+    "cache_confirmation": null,
+    "per_persona": {
+      "maya_renter": {
+        "n": 109,
+        "strict": 0.9266,
+        "lenient": 0.9266
+      },
+      "ortiz_family": {
+        "n": 99,
+        "strict": 0.9394,
+        "lenient": 0.9394
+      },
+      "sam_freelancer": {
+        "n": 92,
+        "strict": 0.9783,
+        "lenient": 0.9783
+      }
+    },
+    "source_split": {
+      "cache_hit_rate": 0.0,
+      "from_cache": {
+        "n": 0,
+        "strict": 0.0,
+        "lenient": 0.0
+      },
+      "from_llm": {
+        "n": 300,
+        "strict": 0.9467,
+        "lenient": 0.9467
+      }
+    },
+    "confusions": [
+      {
+        "true": "shopping",
+        "predicted": "other",
+        "count": 4,
+        "lenient_ok": 0
+      },
+      {
+        "true": "entertainment",
+        "predicted": "other",
+        "count": 3,
+        "lenient_ok": 0
+      },
+      {
+        "true": "housing",
+        "predicted": "health",
+        "count": 2,
+        "lenient_ok": 0
+      },
+      {
+        "true": "transport",
+        "predicted": "other",
+        "count": 2,
+        "lenient_ok": 0
+      },
+      {
+        "true": "utilities",
+        "predicted": "other",
+        "count": 2,
+        "lenient_ok": 0
+      },
+      {
+        "true": "dining",
+        "predicted": "fees",
+        "count": 1,
+        "lenient_ok": 0
+      },
+      {
+        "true": "dining",
+        "predicted": "food_delivery",
+        "count": 1,
+        "lenient_ok": 0
+      },
+      {
+        "true": "shopping",
+        "predicted": "groceries",
+        "count": 1,
+        "lenient_ok": 0
+      }
+    ],
+    "calibration": [
+      {
+        "bucket": "[0.00, 0.50)",
+        "n": 0,
+        "accuracy": null,
+        "mean_confidence": null
+      },
+      {
+        "bucket": "[0.50, 0.70)",
+        "n": 4,
+        "accuracy": 0.5,
+        "mean_confidence": 0.5
+      },
+      {
+        "bucket": "[0.70, 0.80)",
+        "n": 0,
+        "accuracy": null,
+        "mean_confidence": null
+      },
+      {
+        "bucket": "[0.80, 0.90)",
+        "n": 0,
+        "accuracy": null,
+        "mean_confidence": null
+      },
+      {
+        "bucket": "[0.90, 0.95)",
+        "n": 296,
+        "accuracy": 0.9527,
+        "mean_confidence": 0.9
+      },
+      {
+        "bucket": "[0.95, 1.00]",
+        "n": 0,
+        "accuracy": null,
+        "mean_confidence": null
+      }
+    ],
+    "lenient_merchants": [
+      "Adobe",
+      "Amazon Prime",
+      "USPS",
+      "Uber One",
+      "Walmart+"
+    ],
+    "conflicting_cache_keys": [],
+    "usage": {
+      "llm_batches": 13,
+      "prompt_tokens": 17686,
+      "completion_tokens": 8199,
+      "retry_attempts": 0,
+      "batches_with_failures": 0,
+      "mesh_fallbacks": 0,
+      "wall_seconds": 24.2,
+      "estimated_cost": {
+        "usd": 0.00757,
+        "note": "Estimated at OpenAI list prices (USD per 1M tokens) for the configured model; Mesh BYOK fees, if any, are not included. Check the OpenAI pricing page before quoting.",
+        "prices_as_of": "2026-10-15"
+      }
+    },
+    "example_misses": [
+      {
+        "persona": "ortiz_family",
+        "external_id": "549a72228f",
+        "description": "DISNEY PLUS",
+        "amount_cents": -1399,
+        "merchant": "Disney+",
+        "truth": "entertainment",
+        "acceptable": [
+          "entertainment"
+        ],
+        "pred": "other",
+        "confidence": 0.9,
+        "from_cache": false,
+        "rationale": "Disney Plus subscription, fits none of the categories."
+      },
+      {
+        "persona": "sam_freelancer",
+        "external_id": "623d69f2e9",
+        "description": "SPOTIFY USA",
+        "amount_cents": -1199,
+        "merchant": "Spotify",
+        "truth": "entertainment",
+        "acceptable": [
+          "entertainment"
+        ],
+        "pred": "other",
+        "confidence": 0.9,
+        "from_cache": false,
+        "rationale": "Spotify subscription service."
+      },
+      {
+        "persona": "maya_renter",
+        "external_id": "66550c82f0",
+        "description": "LEMONADE INSURANCE CO",
+        "amount_cents": -1250,
+        "merchant": "Lemonade",
+        "truth": "housing",
+        "acceptable": [
+          "housing"
+        ],
+        "pred": "health",
+        "confidence": 0.9,
+        "from_cache": false,
+        "rationale": "Lemonade Insurance is health insurance."
+      },
+      {
+        "persona": "maya_renter",
+        "external_id": "12b9f4f8fb",
+        "description": "UBER *ONE MEMBERSHIP",
+        "amount_cents": -999,
+        "merchant": "Uber One",
+        "truth": "transport",
+        "acceptable": [
+          "food_delivery",
+          "transport"
+        ],
+        "pred": "other",
+        "confidence": 0.9,
+        "from_cache": false,
+        "rationale": "Uber membership, fits none of the specified categories."
+      },
+      {
+        "persona": "maya_renter",
+        "external_id": "d182291a42",
+        "description": "LEMONADE INSURANCE CO",
+        "amount_cents": -1250,
+        "merchant": "Lemonade",
+        "truth": "housing",
+        "acceptable": [
+          "housing"
+        ],
+        "pred": "health",
+        "confidence": 0.9,
+        "from_cache": false,
+        "rationale": "Lemonade Insurance is health insurance."
+      },
+      {
+        "persona": "ortiz_family",
+        "external_id": "caf327fef8",
+        "description": "Amazon Prime*QS4N7KBB9S",
+        "amount_cents": -1499,
+        "merchant": "Amazon Prime",
+        "truth": "shopping",
+        "acceptable": [
+          "entertainment",
+          "shopping"
+        ],
+        "pred": "other",
+        "confidence": 0.9,
+        "from_cache": false,
+        "rationale": "Amazon Prime subscription, fits none of the categories."
+      },
+      {
+        "persona": "maya_renter",
+        "external_id": "5c274a909e",
+        "description": "SPOTIFY USA",
+        "amount_cents": -1299,
+        "merchant": "Spotify",
+        "truth": "entertainment",
+        "acceptable": [
+          "entertainment"
+        ],
+        "pred": "other",
+        "confidence": 0.9,
+        "from_cache": false,
+        "rationale": "Spotify is a software subscription."
+      },
+      {
+        "persona": "ortiz_family",
+        "external_id": "768fa510e0",
+        "description": "WALMART+ MEMBERSHIP PO5LYV37",
+        "amount_cents": -1295,
+        "merchant": "Walmart+",
+        "truth": "shopping",
+        "acceptable": [
+          "groceries",
+          "shopping"
+        ],
+        "pred": "other",
+        "confidence": 0.9,
+        "from_cache": false,
+        "rationale": "Walmart membership fee."
+      },
+      {
+        "persona": "ortiz_family",
+        "external_id": "4b7bd1e66a",
+        "description": "POS PURCHASE CHIPOTLE ONLINE 6560",
+        "amount_cents": -1531,
+        "merchant": "Chipotle",
+        "truth": "dining",
+        "acceptable": [
+          "dining"
+        ],
+        "pred": "food_delivery",
+        "confidence": 0.9,
+        "from_cache": false,
+        "rationale": "Chipotle online order, fits food delivery."
+      },
+      {
+        "persona": "maya_renter",
+        "external_id": "bb7b8428ab",
+        "description": "PGANDE WEB ONLINE 01186876",
+        "amount_cents": -8946,
+        "merchant": "PG&E",
+        "truth": "utilities",
+        "acceptable": [
+          "utilities"
+        ],
+        "pred": "other",
+        "confidence": 0.5,
+        "from_cache": false,
+        "rationale": "Merchant unclear; likely a subscription or service."
+      }
+    ],
+    "misses": [
+      {
+        "persona": "maya_renter",
+        "external_id": "12b9f4f8fb",
+        "description": "UBER *ONE MEMBERSHIP",
+        "amount_cents": -999,
+        "merchant": "Uber One",
+        "truth": "transport",
+        "acceptable": [
+          "food_delivery",
+          "transport"
+        ],
+        "pred": "other",
+        "confidence": 0.9,
+        "from_cache": false,
+        "rationale": "Uber membership, fits none of the specified categories."
+      },
+      {
+        "persona": "maya_renter",
+        "external_id": "1e0c9cdb92",
+        "description": "CHECKCARD 1115 SQ *BLUE BTL COF 6979",
+        "amount_cents": -534,
+        "merchant": "Blue Bottle Coffee",
+        "truth": "dining",
+        "acceptable": [
+          "dining"
+        ],
+        "pred": "fees",
+        "confidence": 0.9,
+        "from_cache": false,
+        "rationale": "Bank fee for a purchase, classified as fees."
+      },
+      {
+        "persona": "maya_renter",
+        "external_id": "0471331fd2",
+        "description": "UBER *ONE MEMBERSHIP",
+        "amount_cents": -999,
+        "merchant": "Uber One",
+        "truth": "transport",
+        "acceptable": [
+          "food_delivery",
+          "transport"
+        ],
+        "pred": "other",
+        "confidence": 0.9,
+        "from_cache": false,
+        "rationale": "Uber membership, fits none of the specified categories."
+      },
+      {
+        "persona": "maya_renter",
+        "external_id": "bb7b8428ab",
+        "description": "PGANDE WEB ONLINE 01186876",
+        "amount_cents": -8946,
+        "merchant": "PG&E",
+        "truth": "utilities",
+        "acceptable": [
+          "utilities"
+        ],
+        "pred": "other",
+        "confidence": 0.5,
+        "from_cache": false,
+        "rationale": "Merchant unclear; likely a subscription or service."
+      },
+      {
+        "persona": "maya_renter",
+        "external_id": "d182291a42",
+        "description": "LEMONADE INSURANCE CO",
+        "amount_cents": -1250,
+        "merchant": "Lemonade",
+        "truth": "housing",
+        "acceptable": [
+          "housing"
+        ],
+        "pred": "health",
+        "confidence": 0.9,
+        "from_cache": false,
+        "rationale": "Lemonade Insurance is health insurance."
+      },
+      {
+        "persona": "maya_renter",
+        "external_id": "61cc33ed49",
+        "description": "PGANDE WEB ONLINE 07186876",
+        "amount_cents": -4251,
+        "merchant": "PG&E",
+        "truth": "utilities",
+        "acceptable": [
+          "utilities"
+        ],
+        "pred": "other",
+        "confidence": 0.5,
+        "from_cache": false,
+        "rationale": "Merchant unclear, likely a software subscription."
+      },
+      {
+        "persona": "maya_renter",
+        "external_id": "66550c82f0",
+        "description": "LEMONADE INSURANCE CO",
+        "amount_cents": -1250,
+        "merchant": "Lemonade",
+        "truth": "housing",
+        "acceptable": [
+          "housing"
+        ],
+        "pred": "health",
+        "confidence": 0.9,
+        "from_cache": false,
+        "rationale": "Lemonade Insurance is health insurance."
+      },
+      {
+        "persona": "maya_renter",
+        "external_id": "5c274a909e",
+        "description": "SPOTIFY USA",
+        "amount_cents": -1299,
+        "merchant": "Spotify",
+        "truth": "entertainment",
+        "acceptable": [
+          "entertainment"
+        ],
+        "pred": "other",
+        "confidence": 0.9,
+        "from_cache": false,
+        "rationale": "Spotify is a software subscription."
+      },
+      {
+        "persona": "ortiz_family",
+        "external_id": "caf327fef8",
+        "description": "Amazon Prime*QS4N7KBB9S",
+        "amount_cents": -1499,
+        "merchant": "Amazon Prime",
+        "truth": "shopping",
+        "acceptable": [
+          "entertainment",
+          "shopping"
+        ],
+        "pred": "other",
+        "confidence": 0.9,
+        "from_cache": false,
+        "rationale": "Amazon Prime subscription, fits none of the categories."
+      },
+      {
+        "persona": "ortiz_family",
+        "external_id": "d537af4fae",
+        "description": "WALMART.COM BC6J0TVD",
+        "amount_cents": -6063,
+        "merchant": "Walmart",
+        "truth": "shopping",
+        "acceptable": [
+          "shopping"
+        ],
+        "pred": "groceries",
+        "confidence": 0.9,
+        "from_cache": false,
+        "rationale": "Walmart purchase, fits grocery shopping."
+      },
+      {
+        "persona": "ortiz_family",
+        "external_id": "aefaa12d4a",
+        "description": "Amazon Prime*O2LUQH19CH",
+        "amount_cents": -1499,
+        "merchant": "Amazon Prime",
+        "truth": "shopping",
+        "acceptable": [
+          "entertainment",
+          "shopping"
+        ],
+        "pred": "other",
+        "confidence": 0.9,
+        "from_cache": false,
+        "rationale": "Amazon Prime subscription, fits none of the categories."
+      },
+      {
+        "persona": "ortiz_family",
+        "external_id": "4b7bd1e66a",
+        "description": "POS PURCHASE CHIPOTLE ONLINE 6560",
+        "amount_cents": -1531,
+        "merchant": "Chipotle",
+        "truth": "dining",
+        "acceptable": [
+          "dining"
+        ],
+        "pred": "food_delivery",
+        "confidence": 0.9,
+        "from_cache": false,
+        "rationale": "Chipotle online order, fits food delivery."
+      },
+      {
+        "persona": "ortiz_family",
+        "external_id": "549a72228f",
+        "description": "DISNEY PLUS",
+        "amount_cents": -1399,
+        "merchant": "Disney+",
+        "truth": "entertainment",
+        "acceptable": [
+          "entertainment"
+        ],
+        "pred": "other",
+        "confidence": 0.9,
+        "from_cache": false,
+        "rationale": "Disney Plus subscription, fits none of the categories."
+      },
+      {
+        "persona": "ortiz_family",
+        "external_id": "768fa510e0",
+        "description": "WALMART+ MEMBERSHIP PO5LYV37",
+        "amount_cents": -1295,
+        "merchant": "Walmart+",
+        "truth": "shopping",
+        "acceptable": [
+          "groceries",
+          "shopping"
+        ],
+        "pred": "other",
+        "confidence": 0.9,
+        "from_cache": false,
+        "rationale": "Walmart membership fee."
+      },
+      {
+        "persona": "sam_freelancer",
+        "external_id": "d77fbe819c",
+        "description": "AMZN Mktp US*W1DZSJUXKW",
+        "amount_cents": -4042,
+        "merchant": "Amazon",
+        "truth": "shopping",
+        "acceptable": [
+          "shopping"
+        ],
+        "pred": "other",
+        "confidence": 0.9,
+        "from_cache": false,
+        "rationale": "AMZN Mktp indicates an online marketplace."
+      },
+      {
+        "persona": "sam_freelancer",
+        "external_id": "623d69f2e9",
+        "description": "SPOTIFY USA",
+        "amount_cents": -1199,
+        "merchant": "Spotify",
+        "truth": "entertainment",
+        "acceptable": [
+          "entertainment"
+        ],
+        "pred": "other",
+        "confidence": 0.9,
+        "from_cache": false,
+        "rationale": "Spotify subscription service."
+      }
+    ]
+  }
+}
