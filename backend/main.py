@@ -3,13 +3,14 @@ import sqlite3
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-from fastapi import BackgroundTasks, Depends, FastAPI, File, Form, HTTPException, UploadFile
+from fastapi import BackgroundTasks, Depends, FastAPI, File, Form, HTTPException, Query, UploadFile
 
 from backend.db import connect, init_db
 from backend.graph import create_run, execute_run
 from backend.ingest import CsvError, active_user_id, ingest_csv
-from backend.models import (Category, EvalSummary, Month, RunCreate, RunCreated, RunStatus, TransactionList,
-                            UploadResponse, User, UserDeleted, UserList)
+from backend.agents.forecaster import MAX_HORIZON
+from backend.models import (Category, EvalSummary, Forecast, Month, PatternList, RunCreate, RunCreated, RunList,
+                            RunStatus, TransactionList, UploadResponse, User, UserDeleted, UserList)
 from backend.users import delete_user
 
 EVAL_RESULTS = Path(__file__).resolve().parents[1] / "eval" / "results"
@@ -97,6 +98,16 @@ def start_run(body: RunCreate, background: BackgroundTasks, conn: sqlite3.Connec
     return {"run_id": run_id}
 
 
+@app.get("/api/runs", response_model=RunList)
+def list_runs(user_id: int | None = None, conn: sqlite3.Connection = Depends(get_conn)):
+    """Runs of one user (default: active user), newest first."""
+    uid = resolve_user(conn, user_id)
+    rows = conn.execute(
+        "SELECT r.*, r.id AS run_id, (SELECT COUNT(*) FROM agent_events e WHERE e.run_id = r.id) AS event_count "
+        "FROM runs r WHERE r.user_id = ? ORDER BY r.started_at DESC, r.rowid DESC", (uid,)).fetchall()
+    return {"items": [dict(r) for r in rows]}
+
+
 @app.get("/api/runs/{run_id}", response_model=RunStatus)
 def get_run(run_id: str, conn: sqlite3.Connection = Depends(get_conn)):
     run = conn.execute("SELECT * FROM runs WHERE id = ?", (run_id,)).fetchone()
@@ -128,10 +139,71 @@ def list_transactions(month: Month | None = None, category: Category | None = No
     return {"items": rows, "total": len(rows)}
 
 
+@app.get("/api/patterns", response_model=PatternList)
+def list_patterns(user_id: int | None = None, conn: sqlite3.Connection = Depends(get_conn)):
+    """Patterns from the user's latest finished main run (append-only table, so older runs stay queryable)."""
+    uid = resolve_user(conn, user_id)
+    run = conn.execute("SELECT id, as_of_month FROM runs WHERE user_id = ? AND kind = 'main' AND status = 'done' "
+                       "ORDER BY started_at DESC, rowid DESC LIMIT 1", (uid,)).fetchone()
+    if run is None:
+        return {"items": []}
+    rows = conn.execute("SELECT * FROM patterns WHERE run_id = ? ORDER BY id", (run["id"],)).fetchall()
+    evidence: dict[int, list[int]] = {}
+    for e in conn.execute("SELECT pe.pattern_id, pe.txn_id FROM pattern_evidence pe JOIN patterns p ON p.id = pe.pattern_id "
+                          "WHERE p.run_id = ? ORDER BY pe.txn_id", (run["id"],)):
+        evidence.setdefault(e["pattern_id"], []).append(e["txn_id"])
+    items = [{"id": r["id"], "type": r["type"], "title": r["title"], "narration": r["narration"],
+              "params": json.loads(r["params"]), "evidence_txn_ids": evidence.get(r["id"], [])} for r in rows]
+    return {"items": items, "run_id": run["id"], "as_of_month": run["as_of_month"]}
+
+
+@app.get("/api/forecast", response_model=Forecast)
+def get_forecast(horizon_months: int = Query(6, ge=1, le=MAX_HORIZON), user_id: int | None = None,
+                 conn: sqlite3.Connection = Depends(get_conn)):
+    """Latest baseline forecast for the user (stored at the full horizon), cut to horizon_months."""
+    uid = resolve_user(conn, user_id)
+    row = conn.execute("SELECT * FROM forecasts WHERE user_id = ? AND scenario IS NULL ORDER BY id DESC LIMIT 1",
+                       (uid,)).fetchone()
+    if row is None:
+        raise HTTPException(404, "no forecast yet; start a run")
+    params = json.loads(row["params"])
+    return {"id": row["id"], "as_of_month": row["as_of_month"], "horizon_months": horizon_months,
+            "method": row["method"], "start_balance_cents": params["start_balance_cents"],
+            "points": json.loads(row["output"])[:horizon_months]}
+
+
 @app.get("/api/eval/latest", response_model=EvalSummary)
-def eval_latest():
-    """Serves the script-written eval/results/categorization.json (canonical; never typed by hand)."""
-    path = EVAL_RESULTS / "categorization.json"
+def eval_latest(version: str | None = Query(None, pattern=r"^cat-v\d+$"),
+                forecast_version: str | None = Query(None, pattern=r"^fc-v\d+$")):
+    """Serves the script-written eval/results/categorization.json (canonical; never typed by hand).
+
+    ?version=cat-v1 serves the committed categorization_cat-v1.json instead. Prompt version, tokens and
+    cost come from the same file's details block. Pattern and forecast metrics are merged in from
+    patterns.json and forecast.json (eval/analysis.py); ?forecast_version=fc-v1 takes the forecast
+    metrics from the committed forecast_fc-v1.json instead.
+    """
+    path = EVAL_RESULTS / ("categorization.json" if version is None else f"categorization_{version}.json")
     if not path.exists():
-        raise HTTPException(404, "no eval results yet; run python -m eval.categorization")
-    return json.loads(path.read_text())["summary"]
+        raise HTTPException(404, "no eval results yet; run python -m eval.categorization" if version is None
+                            else f"no committed eval results for {version}")
+    res = json.loads(path.read_text())
+    summary, details = res["summary"], res.get("details", {})
+    usage = details.get("usage", {})
+    if summary.get("categorization") is not None:
+        summary["categorization"] |= {
+            "prompt_version": details.get("prompt_version"),
+            "prompt_tokens": usage.get("prompt_tokens"),
+            "completion_tokens": usage.get("completion_tokens"),
+            "cost_usd": usage.get("estimated_cost", {}).get("usd"),
+        }
+    # pattern and forecast metrics come from eval/analysis.py's own result files, when present
+    forecast_file = "forecast" if forecast_version is None else f"forecast_{forecast_version}"
+    if forecast_version and not (EVAL_RESULTS / f"{forecast_file}.json").exists():
+        raise HTTPException(404, f"no committed forecast results for {forecast_version}")
+    for name, keys in (("patterns", ("recurring", "unused", "anomaly", "pattern_types")), (forecast_file, ("forecast",))):
+        extra = EVAL_RESULTS / f"{name}.json"
+        if extra.exists():
+            s = json.loads(extra.read_text())["summary"]
+            summary |= {k: s[k] for k in keys if k in s}
+            summary["models"] = s.get("models", {}) | summary.get("models", {})
+    return summary

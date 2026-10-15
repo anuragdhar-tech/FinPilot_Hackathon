@@ -1,0 +1,1422 @@
+{
+  "summary": {
+    "run_at": "2026-10-15T11:48:46+00:00",
+    "git_sha": "c533386-dirty",
+    "dataset": "synthetic",
+    "seed": 42,
+    "models": {
+      "categorizer": "openai/gpt-4o-mini"
+    },
+    "forecast": {
+      "mape": 0.1118,
+      "naive_mape": 0.1315,
+      "naive_mean_mape": 0.1144,
+      "no_trend_mape": 0.1128,
+      "mean_error_cents": -40383,
+      "baseline_mean_error_cents": {
+        "no_trend": -41474,
+        "naive_last": -7647,
+        "naive_mean": -28585
+      },
+      "method_version": "fc-v2",
+      "coverage_80": 0.5417,
+      "per_category": {
+        "dining": {
+          "mape": 0.2526,
+          "naive_mape": 0.2859,
+          "naive_mean_mape": 0.2475,
+          "n": 8
+        },
+        "food_delivery": {
+          "mape": 0.1321,
+          "naive_mape": 0.1579,
+          "naive_mean_mape": 0.1645,
+          "n": 8
+        },
+        "groceries": {
+          "mape": 0.2289,
+          "naive_mape": 0.2733,
+          "naive_mean_mape": 0.2377,
+          "n": 24
+        },
+        "health": {
+          "mape": 0.0242,
+          "naive_mape": 0.0314,
+          "naive_mean_mape": 0.0242,
+          "n": 8
+        },
+        "housing": {
+          "mape": 0.0,
+          "naive_mape": 0.0,
+          "naive_mean_mape": 0.0,
+          "n": 24
+        },
+        "shopping": {
+          "mape": 0.4968,
+          "naive_mape": 1.4344,
+          "naive_mean_mape": 1.1416,
+          "n": 24
+        },
+        "transfers": {
+          "mape": 0.1691,
+          "naive_mape": 0.161,
+          "naive_mean_mape": 0.1253,
+          "n": 19
+        },
+        "transport": {
+          "mape": 0.1135,
+          "naive_mape": 0.1826,
+          "naive_mean_mape": 0.1393,
+          "n": 8
+        },
+        "utilities": {
+          "mape": 0.0786,
+          "naive_mape": 0.0452,
+          "naive_mean_mape": 0.0786,
+          "n": 8
+        }
+      },
+      "origins": 24,
+      "horizon": 1
+    }
+  },
+  "details": {
+    "mode": "reuse_db",
+    "per_persona": {
+      "maya_renter": {
+        "mape": 0.0878,
+        "naive_mape": 0.091,
+        "naive_mean_mape": 0.0846,
+        "no_trend_mape": 0.0912,
+        "mean_error_cents": -29028,
+        "baseline_mean_error_cents": {
+          "no_trend": -31951,
+          "naive_last": -6870,
+          "naive_mean": -23544
+        },
+        "method_version": "fc-v2",
+        "coverage_80": 0.75,
+        "per_category": {
+          "food_delivery": {
+            "mape": 0.1321,
+            "naive_mape": 0.1579,
+            "naive_mean_mape": 0.1645,
+            "n": 8
+          },
+          "groceries": {
+            "mape": 0.2384,
+            "naive_mape": 0.3205,
+            "naive_mean_mape": 0.2649,
+            "n": 8
+          },
+          "housing": {
+            "mape": 0.0,
+            "naive_mape": 0.0,
+            "naive_mean_mape": 0.0,
+            "n": 8
+          },
+          "shopping": {
+            "mape": 0.6321,
+            "naive_mape": 1.9687,
+            "naive_mean_mape": 1.0644,
+            "n": 8
+          },
+          "transfers": {
+            "mape": 0.0684,
+            "naive_mape": 0.07,
+            "naive_mean_mape": 0.0684,
+            "n": 8
+          }
+        },
+        "origins": 8,
+        "horizon": 1
+      },
+      "ortiz_family": {
+        "mape": 0.1221,
+        "naive_mape": 0.1624,
+        "naive_mean_mape": 0.1274,
+        "no_trend_mape": 0.1214,
+        "mean_error_cents": -39133,
+        "baseline_mean_error_cents": {
+          "no_trend": -39605,
+          "naive_last": -5192,
+          "naive_mean": -26598
+        },
+        "method_version": "fc-v2",
+        "coverage_80": 0.375,
+        "per_category": {
+          "groceries": {
+            "mape": 0.1877,
+            "naive_mape": 0.231,
+            "naive_mean_mape": 0.1875,
+            "n": 8
+          },
+          "housing": {
+            "mape": 0.0,
+            "naive_mape": 0.0,
+            "naive_mean_mape": 0.0,
+            "n": 8
+          },
+          "shopping": {
+            "mape": 0.2572,
+            "naive_mape": 0.6224,
+            "naive_mean_mape": 0.3397,
+            "n": 8
+          },
+          "transfers": {
+            "mape": 0.0,
+            "naive_mape": 0.0,
+            "naive_mean_mape": 0.0,
+            "n": 8
+          },
+          "transport": {
+            "mape": 0.1135,
+            "naive_mape": 0.1826,
+            "naive_mean_mape": 0.1393,
+            "n": 8
+          },
+          "utilities": {
+            "mape": 0.0786,
+            "naive_mape": 0.0452,
+            "naive_mean_mape": 0.0786,
+            "n": 8
+          }
+        },
+        "origins": 8,
+        "horizon": 1
+      },
+      "sam_freelancer": {
+        "mape": 0.1254,
+        "naive_mape": 0.141,
+        "naive_mean_mape": 0.1313,
+        "no_trend_mape": 0.1257,
+        "mean_error_cents": -52987,
+        "baseline_mean_error_cents": {
+          "no_trend": -52867,
+          "naive_last": -10878,
+          "naive_mean": -35613
+        },
+        "method_version": "fc-v2",
+        "coverage_80": 0.5,
+        "per_category": {
+          "dining": {
+            "mape": 0.2526,
+            "naive_mape": 0.2859,
+            "naive_mean_mape": 0.2475,
+            "n": 8
+          },
+          "groceries": {
+            "mape": 0.2606,
+            "naive_mape": 0.2684,
+            "naive_mean_mape": 0.2606,
+            "n": 8
+          },
+          "health": {
+            "mape": 0.0242,
+            "naive_mape": 0.0314,
+            "naive_mean_mape": 0.0242,
+            "n": 8
+          },
+          "housing": {
+            "mape": 0.0,
+            "naive_mape": 0.0,
+            "naive_mean_mape": 0.0,
+            "n": 8
+          },
+          "shopping": {
+            "mape": 0.6011,
+            "naive_mape": 1.7122,
+            "naive_mean_mape": 2.0205,
+            "n": 8
+          },
+          "transfers": {
+            "mape": 0.8889,
+            "naive_mape": 0.8333,
+            "naive_mean_mape": 0.6111,
+            "n": 3
+          }
+        },
+        "origins": 8,
+        "horizon": 1
+      }
+    },
+    "records": [
+      {
+        "persona": "maya_renter",
+        "origin": "2026-01",
+        "target": "2026-02",
+        "actual": 391757,
+        "engine": 390196,
+        "no_trend": 390196,
+        "naive_last": 380249,
+        "naive_mean": 390197,
+        "balance_p10": 798688,
+        "balance_p90": 1082272,
+        "actual_balance": 883188,
+        "categories": {
+          "food_delivery": {
+            "actual": 29172,
+            "engine": 31720,
+            "naive_last": 33780,
+            "naive_mean": 31720
+          },
+          "groceries": {
+            "actual": 21220,
+            "engine": 26083,
+            "naive_last": 21681,
+            "naive_mean": 26083
+          },
+          "housing": {
+            "actual": 215000,
+            "engine": 215000,
+            "naive_last": 215000,
+            "naive_mean": 215000
+          },
+          "shopping": {
+            "actual": 8009,
+            "engine": 18408,
+            "naive_last": 18435,
+            "naive_mean": 18408
+          },
+          "transfers": {
+            "actual": 38792,
+            "engine": 35018,
+            "naive_last": 34549,
+            "naive_mean": 35018
+          }
+        }
+      },
+      {
+        "persona": "maya_renter",
+        "origin": "2026-02",
+        "target": "2026-03",
+        "actual": 399003,
+        "engine": 392991,
+        "no_trend": 392991,
+        "naive_last": 391757,
+        "naive_mean": 392485,
+        "balance_p10": 844459,
+        "balance_p90": 1099489,
+        "actual_balance": 921443,
+        "categories": {
+          "food_delivery": {
+            "actual": 36613,
+            "engine": 33931,
+            "naive_last": 29172,
+            "naive_mean": 33931
+          },
+          "groceries": {
+            "actual": 29306,
+            "engine": 23213,
+            "naive_last": 21220,
+            "naive_mean": 24965
+          },
+          "housing": {
+            "actual": 215000,
+            "engine": 215000,
+            "naive_last": 215000,
+            "naive_mean": 215000
+          },
+          "shopping": {
+            "actual": 23599,
+            "engine": 15430,
+            "naive_last": 8009,
+            "naive_mean": 15430
+          },
+          "transfers": {
+            "actual": 34583,
+            "engine": 36200,
+            "naive_last": 38792,
+            "naive_mean": 36200
+          }
+        }
+      },
+      {
+        "persona": "maya_renter",
+        "origin": "2026-03",
+        "target": "2026-04",
+        "actual": 458776,
+        "engine": 390543,
+        "no_trend": 390543,
+        "naive_last": 399003,
+        "naive_mean": 390336,
+        "balance_p10": 888940,
+        "balance_p90": 1121574,
+        "actual_balance": 903881,
+        "categories": {
+          "food_delivery": {
+            "actual": 41632,
+            "engine": 33188,
+            "naive_last": 36613,
+            "naive_mean": 33188
+          },
+          "groceries": {
+            "actual": 30813,
+            "engine": 24069,
+            "naive_last": 29306,
+            "naive_mean": 24069
+          },
+          "housing": {
+            "actual": 215000,
+            "engine": 215000,
+            "naive_last": 215000,
+            "naive_mean": 215000
+          },
+          "shopping": {
+            "actual": 33363,
+            "engine": 16681,
+            "naive_last": 23599,
+            "naive_mean": 16681
+          },
+          "transfers": {
+            "actual": 32207,
+            "engine": 35975,
+            "naive_last": 34583,
+            "naive_mean": 35975
+          }
+        }
+      },
+      {
+        "persona": "maya_renter",
+        "origin": "2026-04",
+        "target": "2026-05",
+        "actual": 467136,
+        "engine": 411612,
+        "no_trend": 411612,
+        "naive_last": 458776,
+        "naive_mean": 416512,
+        "balance_p10": 898797,
+        "balance_p90": 962293,
+        "actual_balance": 1092404,
+        "categories": {
+          "food_delivery": {
+            "actual": 46638,
+            "engine": 35806,
+            "naive_last": 41632,
+            "naive_mean": 35806
+          },
+          "groceries": {
+            "actual": 23277,
+            "engine": 27113,
+            "naive_last": 30813,
+            "naive_mean": 27113
+          },
+          "housing": {
+            "actual": 215000,
+            "engine": 215000,
+            "naive_last": 215000,
+            "naive_mean": 215000
+          },
+          "shopping": {
+            "actual": 19896,
+            "engine": 18425,
+            "naive_last": 33363,
+            "naive_mean": 21657
+          },
+          "transfers": {
+            "actual": 31519,
+            "engine": 35194,
+            "naive_last": 32207,
+            "naive_mean": 35194
+          }
+        }
+      },
+      {
+        "persona": "maya_renter",
+        "origin": "2026-05",
+        "target": "2026-06",
+        "actual": 465820,
+        "engine": 432861,
+        "no_trend": 425034,
+        "naive_last": 467136,
+        "naive_mean": 441638,
+        "balance_p10": 1013789,
+        "balance_p90": 1254677,
+        "actual_balance": 1063749,
+        "categories": {
+          "food_delivery": {
+            "actual": 46770,
+            "engine": 49455,
+            "naive_last": 46638,
+            "naive_mean": 41628
+          },
+          "groceries": {
+            "actual": 60460,
+            "engine": 27799,
+            "naive_last": 23277,
+            "naive_mean": 27799
+          },
+          "housing": {
+            "actual": 215000,
+            "engine": 215000,
+            "naive_last": 215000,
+            "naive_mean": 215000
+          },
+          "shopping": {
+            "actual": 26914,
+            "engine": 22387,
+            "naive_last": 19896,
+            "naive_mean": 25619
+          },
+          "transfers": {
+            "actual": 34285,
+            "engine": 32770,
+            "naive_last": 31519,
+            "naive_mean": 32770
+          }
+        }
+      },
+      {
+        "persona": "maya_renter",
+        "origin": "2026-06",
+        "target": "2026-07",
+        "actual": 456313,
+        "engine": 447920,
+        "no_trend": 442048,
+        "naive_last": 465820,
+        "naive_mean": 463911,
+        "balance_p10": 970220,
+        "balance_p90": 1210780,
+        "actual_balance": 1047336,
+        "categories": {
+          "food_delivery": {
+            "actual": 67271,
+            "engine": 50885,
+            "naive_last": 46770,
+            "naive_mean": 45013
+          },
+          "groceries": {
+            "actual": 27975,
+            "engine": 24438,
+            "naive_last": 60460,
+            "naive_mean": 38183
+          },
+          "housing": {
+            "actual": 215000,
+            "engine": 215000,
+            "naive_last": 215000,
+            "naive_mean": 215000
+          },
+          "shopping": {
+            "actual": 43398,
+            "engine": 26724,
+            "naive_last": 26914,
+            "naive_mean": 26724
+          },
+          "transfers": {
+            "actual": 32425,
+            "engine": 32670,
+            "naive_last": 34285,
+            "naive_mean": 32670
+          }
+        }
+      },
+      {
+        "persona": "maya_renter",
+        "origin": "2026-07",
+        "target": "2026-08",
+        "actual": 569823,
+        "engine": 455520,
+        "no_trend": 450541,
+        "naive_last": 456313,
+        "naive_mean": 463090,
+        "balance_p10": 946150,
+        "balance_p90": 1186944,
+        "actual_balance": 914789,
+        "categories": {
+          "food_delivery": {
+            "actual": 57732,
+            "engine": 58539,
+            "naive_last": 67271,
+            "naive_mean": 53560
+          },
+          "groceries": {
+            "actual": 31544,
+            "engine": 23492,
+            "naive_last": 27975,
+            "naive_mean": 37237
+          },
+          "housing": {
+            "actual": 215000,
+            "engine": 215000,
+            "naive_last": 215000,
+            "naive_mean": 215000
+          },
+          "shopping": {
+            "actual": 154306,
+            "engine": 27070,
+            "naive_last": 43398,
+            "naive_mean": 30069
+          },
+          "transfers": {
+            "actual": 35053,
+            "engine": 32743,
+            "naive_last": 32425,
+            "naive_mean": 32743
+          }
+        }
+      },
+      {
+        "persona": "maya_renter",
+        "origin": "2026-08",
+        "target": "2026-09",
+        "actual": 435212,
+        "engine": 489977,
+        "no_trend": 485269,
+        "naive_last": 569823,
+        "naive_mean": 497319,
+        "balance_p10": 770977,
+        "balance_p90": 1028137,
+        "actual_balance": 916811,
+        "categories": {
+          "food_delivery": {
+            "actual": 72249,
+            "engine": 61683,
+            "naive_last": 57732,
+            "naive_mean": 57258
+          },
+          "groceries": {
+            "actual": 31419,
+            "engine": 26247,
+            "naive_last": 31544,
+            "naive_mean": 39993
+          },
+          "housing": {
+            "actual": 215000,
+            "engine": 215000,
+            "naive_last": 215000,
+            "naive_mean": 215000
+          },
+          "shopping": {
+            "actual": 12386,
+            "engine": 30490,
+            "naive_last": 154306,
+            "naive_mean": 74873
+          },
+          "transfers": {
+            "actual": 35768,
+            "engine": 33921,
+            "naive_last": 35053,
+            "naive_mean": 33921
+          }
+        }
+      },
+      {
+        "persona": "ortiz_family",
+        "origin": "2026-01",
+        "target": "2026-02",
+        "actual": 608946,
+        "engine": 624205,
+        "no_trend": 624205,
+        "naive_last": 617743,
+        "naive_mean": 624205,
+        "balance_p10": 1981107,
+        "balance_p90": 2103893,
+        "actual_balance": 2060934,
+        "categories": {
+          "groceries": {
+            "actual": 96973,
+            "engine": 91216,
+            "naive_last": 59797,
+            "naive_mean": 90784
+          },
+          "housing": {
+            "actual": 264018,
+            "engine": 264018,
+            "naive_last": 264018,
+            "naive_mean": 264018
+          },
+          "shopping": {
+            "actual": 71026,
+            "engine": 79908,
+            "naive_last": 112866,
+            "naive_mean": 80340
+          },
+          "transfers": {
+            "actual": 50000,
+            "engine": 50000,
+            "naive_last": 50000,
+            "naive_mean": 50000
+          },
+          "transport": {
+            "actual": 47484,
+            "engine": 44063,
+            "naive_last": 45545,
+            "naive_mean": 44063
+          },
+          "utilities": {
+            "actual": 34132,
+            "engine": 37643,
+            "naive_last": 34889,
+            "naive_mean": 37643
+          }
+        }
+      },
+      {
+        "persona": "ortiz_family",
+        "origin": "2026-02",
+        "target": "2026-03",
+        "actual": 771117,
+        "engine": 608419,
+        "no_trend": 608419,
+        "naive_last": 608946,
+        "naive_mean": 608419,
+        "balance_p10": 2188574,
+        "balance_p90": 2296654,
+        "actual_balance": 2079019,
+        "categories": {
+          "groceries": {
+            "actual": 116133,
+            "engine": 82663,
+            "naive_last": 96973,
+            "naive_mean": 82663
+          },
+          "housing": {
+            "actual": 264018,
+            "engine": 264018,
+            "naive_last": 264018,
+            "naive_mean": 264018
+          },
+          "shopping": {
+            "actual": 198447,
+            "engine": 76783,
+            "naive_last": 71026,
+            "naive_mean": 76783
+          },
+          "transfers": {
+            "actual": 50000,
+            "engine": 50000,
+            "naive_last": 50000,
+            "naive_mean": 50000
+          },
+          "transport": {
+            "actual": 52046,
+            "engine": 44981,
+            "naive_last": 47484,
+            "naive_mean": 44981
+          },
+          "utilities": {
+            "actual": 35566,
+            "engine": 35386,
+            "naive_last": 34132,
+            "naive_mean": 35386
+          }
+        }
+      },
+      {
+        "persona": "ortiz_family",
+        "origin": "2026-03",
+        "target": "2026-04",
+        "actual": 776734,
+        "engine": 646193,
+        "no_trend": 646193,
+        "naive_last": 771117,
+        "naive_mean": 665935,
+        "balance_p10": 2144832,
+        "balance_p90": 2300720,
+        "actual_balance": 2091556,
+        "categories": {
+          "groceries": {
+            "actual": 135366,
+            "engine": 90968,
+            "naive_last": 116133,
+            "naive_mean": 90968
+          },
+          "housing": {
+            "actual": 264018,
+            "engine": 264018,
+            "naive_last": 264018,
+            "naive_mean": 264018
+          },
+          "shopping": {
+            "actual": 78585,
+            "engine": 87961,
+            "naive_last": 198447,
+            "naive_mean": 127446
+          },
+          "transfers": {
+            "actual": 50000,
+            "engine": 50000,
+            "naive_last": 50000,
+            "naive_mean": 50000
+          },
+          "transport": {
+            "actual": 42019,
+            "engine": 48358,
+            "naive_last": 52046,
+            "naive_mean": 48358
+          },
+          "utilities": {
+            "actual": 37177,
+            "engine": 34862,
+            "naive_last": 35566,
+            "naive_mean": 34862
+          }
+        }
+      },
+      {
+        "persona": "ortiz_family",
+        "origin": "2026-04",
+        "target": "2026-05",
+        "actual": 676325,
+        "engine": 677348,
+        "no_trend": 677348,
+        "naive_last": 776734,
+        "naive_mean": 718932,
+        "balance_p10": 2118931,
+        "balance_p90": 2289329,
+        "actual_balance": 2204661,
+        "categories": {
+          "groceries": {
+            "actual": 116077,
+            "engine": 116157,
+            "naive_last": 135366,
+            "naive_mean": 116157
+          },
+          "housing": {
+            "actual": 264018,
+            "engine": 264018,
+            "naive_last": 264018,
+            "naive_mean": 264018
+          },
+          "shopping": {
+            "actual": 115513,
+            "engine": 76534,
+            "naive_last": 78585,
+            "naive_mean": 116019
+          },
+          "transfers": {
+            "actual": 50000,
+            "engine": 50000,
+            "naive_last": 50000,
+            "naive_mean": 50000
+          },
+          "transport": {
+            "actual": 47790,
+            "engine": 47183,
+            "naive_last": 42019,
+            "naive_mean": 47183
+          },
+          "utilities": {
+            "actual": 41005,
+            "engine": 35625,
+            "naive_last": 37177,
+            "naive_mean": 35625
+          }
+        }
+      },
+      {
+        "persona": "ortiz_family",
+        "origin": "2026-05",
+        "target": "2026-06",
+        "actual": 841766,
+        "engine": 700923,
+        "no_trend": 700923,
+        "naive_last": 676325,
+        "naive_mean": 741392,
+        "balance_p10": 2207068,
+        "balance_p90": 2380300,
+        "actual_balance": 2152078,
+        "categories": {
+          "groceries": {
+            "actual": 107192,
+            "engine": 122957,
+            "naive_last": 116077,
+            "naive_mean": 122525
+          },
+          "housing": {
+            "actual": 264018,
+            "engine": 264018,
+            "naive_last": 264018,
+            "naive_mean": 264018
+          },
+          "shopping": {
+            "actual": 109252,
+            "engine": 91363,
+            "naive_last": 115513,
+            "naive_mean": 130848
+          },
+          "transfers": {
+            "actual": 50000,
+            "engine": 50000,
+            "naive_last": 50000,
+            "naive_mean": 50000
+          },
+          "transport": {
+            "actual": 67775,
+            "engine": 47285,
+            "naive_last": 47790,
+            "naive_mean": 47285
+          },
+          "utilities": {
+            "actual": 43723,
+            "engine": 37916,
+            "naive_last": 41005,
+            "naive_mean": 37916
+          }
+        }
+      },
+      {
+        "persona": "ortiz_family",
+        "origin": "2026-06",
+        "target": "2026-07",
+        "actual": 677487,
+        "engine": 745952,
+        "no_trend": 744499,
+        "naive_last": 841766,
+        "naive_mean": 764942,
+        "balance_p10": 2100463,
+        "balance_p90": 2291549,
+        "actual_balance": 2263751,
+        "categories": {
+          "groceries": {
+            "actual": 97460,
+            "engine": 119977,
+            "naive_last": 107192,
+            "naive_mean": 119545
+          },
+          "housing": {
+            "actual": 264018,
+            "engine": 264018,
+            "naive_last": 264018,
+            "naive_mean": 264018
+          },
+          "shopping": {
+            "actual": 120566,
+            "engine": 101117,
+            "naive_last": 109252,
+            "naive_mean": 101117
+          },
+          "transfers": {
+            "actual": 50000,
+            "engine": 50000,
+            "naive_last": 50000,
+            "naive_mean": 50000
+          },
+          "transport": {
+            "actual": 48371,
+            "engine": 46448,
+            "naive_last": 67775,
+            "naive_mean": 52528
+          },
+          "utilities": {
+            "actual": 46193,
+            "engine": 40635,
+            "naive_last": 43723,
+            "naive_mean": 40635
+          }
+        }
+      },
+      {
+        "persona": "ortiz_family",
+        "origin": "2026-07",
+        "target": "2026-08",
+        "actual": 844849,
+        "engine": 753035,
+        "no_trend": 753035,
+        "naive_last": 677487,
+        "naive_mean": 731859,
+        "balance_p10": 2209171,
+        "balance_p90": 2391889,
+        "actual_balance": 2208458,
+        "categories": {
+          "groceries": {
+            "actual": 145850,
+            "engine": 107341,
+            "naive_last": 97460,
+            "naive_mean": 106910
+          },
+          "housing": {
+            "actual": 264018,
+            "engine": 264018,
+            "naive_last": 264018,
+            "naive_mean": 264018
+          },
+          "shopping": {
+            "actual": 241441,
+            "engine": 115110,
+            "naive_last": 120566,
+            "naive_mean": 115110
+          },
+          "transfers": {
+            "actual": 50000,
+            "engine": 50000,
+            "naive_last": 50000,
+            "naive_mean": 50000
+          },
+          "transport": {
+            "actual": 42537,
+            "engine": 48565,
+            "naive_last": 48371,
+            "naive_mean": 54645
+          },
+          "utilities": {
+            "actual": 46797,
+            "engine": 43640,
+            "naive_last": 46193,
+            "naive_mean": 43640
+          }
+        }
+      },
+      {
+        "persona": "ortiz_family",
+        "origin": "2026-08",
+        "target": "2026-09",
+        "actual": 659279,
+        "engine": 787362,
+        "no_trend": 785042,
+        "naive_last": 844849,
+        "naive_mean": 788034,
+        "balance_p10": 2113099,
+        "balance_p90": 2307693,
+        "actual_balance": 2338627,
+        "categories": {
+          "groceries": {
+            "actual": 98761,
+            "engine": 116834,
+            "naive_last": 145850,
+            "naive_mean": 116834
+          },
+          "housing": {
+            "actual": 264018,
+            "engine": 264018,
+            "naive_last": 264018,
+            "naive_mean": 264018
+          },
+          "shopping": {
+            "actual": 107239,
+            "engine": 108753,
+            "naive_last": 241441,
+            "naive_mean": 157086
+          },
+          "transfers": {
+            "actual": 50000,
+            "engine": 50000,
+            "naive_last": 50000,
+            "naive_mean": 50000
+          },
+          "transport": {
+            "actual": 49441,
+            "engine": 46814,
+            "naive_last": 42537,
+            "naive_mean": 52894
+          },
+          "utilities": {
+            "actual": 45265,
+            "engine": 45571,
+            "naive_last": 46797,
+            "naive_mean": 45571
+          }
+        }
+      },
+      {
+        "persona": "sam_freelancer",
+        "origin": "2026-01",
+        "target": "2026-02",
+        "actual": 355572,
+        "engine": 376620,
+        "no_trend": 376620,
+        "naive_last": 350165,
+        "naive_mean": 376620,
+        "balance_p10": 1628377,
+        "balance_p90": 1824023,
+        "actual_balance": 1390137,
+        "categories": {
+          "dining": {
+            "actual": 29532,
+            "engine": 20600,
+            "naive_last": 16984,
+            "naive_mean": 20600
+          },
+          "groceries": {
+            "actual": 26862,
+            "engine": 38005,
+            "naive_last": 38372,
+            "naive_mean": 38005
+          },
+          "health": {
+            "actual": 45634,
+            "engine": 43785,
+            "naive_last": 43675,
+            "naive_mean": 43785
+          },
+          "housing": {
+            "actual": 178000,
+            "engine": 178000,
+            "naive_last": 178000,
+            "naive_mean": 178000
+          },
+          "shopping": {
+            "actual": 15387,
+            "engine": 20592,
+            "naive_last": 17672,
+            "naive_mean": 20592
+          },
+          "transfers": {
+            "actual": 0,
+            "engine": 0,
+            "naive_last": 0,
+            "naive_mean": 0
+          }
+        }
+      },
+      {
+        "persona": "sam_freelancer",
+        "origin": "2026-02",
+        "target": "2026-03",
+        "actual": 336931,
+        "engine": 371475,
+        "no_trend": 371475,
+        "naive_last": 355572,
+        "naive_mean": 371301,
+        "balance_p10": 1081692,
+        "balance_p90": 1527354,
+        "actual_balance": 1240868,
+        "categories": {
+          "dining": {
+            "actual": 19162,
+            "engine": 22481,
+            "naive_last": 29532,
+            "naive_mean": 22306
+          },
+          "groceries": {
+            "actual": 25015,
+            "engine": 35857,
+            "naive_last": 26862,
+            "naive_mean": 35857
+          },
+          "health": {
+            "actual": 43421,
+            "engine": 44087,
+            "naive_last": 45634,
+            "naive_mean": 44087
+          },
+          "housing": {
+            "actual": 178000,
+            "engine": 178000,
+            "naive_last": 178000,
+            "naive_mean": 178000
+          },
+          "shopping": {
+            "actual": 14282,
+            "engine": 20738,
+            "naive_last": 15387,
+            "naive_mean": 20738
+          },
+          "transfers": {
+            "actual": 0,
+            "engine": 0,
+            "naive_last": 0,
+            "naive_mean": 0
+          }
+        }
+      },
+      {
+        "persona": "sam_freelancer",
+        "origin": "2026-03",
+        "target": "2026-04",
+        "actual": 350418,
+        "engine": 347555,
+        "no_trend": 347555,
+        "naive_last": 336931,
+        "naive_mean": 347556,
+        "balance_p10": 958993,
+        "balance_p90": 1366621,
+        "actual_balance": 1366246,
+        "categories": {
+          "dining": {
+            "actual": 21979,
+            "engine": 21893,
+            "naive_last": 19162,
+            "naive_mean": 21893
+          },
+          "groceries": {
+            "actual": 29607,
+            "engine": 30083,
+            "naive_last": 25015,
+            "naive_mean": 30083
+          },
+          "health": {
+            "actual": 43404,
+            "engine": 44243,
+            "naive_last": 43421,
+            "naive_mean": 44243
+          },
+          "housing": {
+            "actual": 178000,
+            "engine": 178000,
+            "naive_last": 178000,
+            "naive_mean": 178000
+          },
+          "shopping": {
+            "actual": 15408,
+            "engine": 15780,
+            "naive_last": 14282,
+            "naive_mean": 15780
+          },
+          "transfers": {
+            "actual": 0,
+            "engine": 0,
+            "naive_last": 0,
+            "naive_mean": 0
+          }
+        }
+      },
+      {
+        "persona": "sam_freelancer",
+        "origin": "2026-04",
+        "target": "2026-05",
+        "actual": 355377,
+        "engine": 347641,
+        "no_trend": 347641,
+        "naive_last": 350418,
+        "naive_mean": 347640,
+        "balance_p10": 1079894,
+        "balance_p90": 1508356,
+        "actual_balance": 1608519,
+        "categories": {
+          "dining": {
+            "actual": 18702,
+            "engine": 23558,
+            "naive_last": 21979,
+            "naive_mean": 23558
+          },
+          "groceries": {
+            "actual": 39962,
+            "engine": 27161,
+            "naive_last": 29607,
+            "naive_mean": 27161
+          },
+          "health": {
+            "actual": 42653,
+            "engine": 44153,
+            "naive_last": 43404,
+            "naive_mean": 44153
+          },
+          "housing": {
+            "actual": 178000,
+            "engine": 178000,
+            "naive_last": 178000,
+            "naive_mean": 178000
+          },
+          "shopping": {
+            "actual": 7977,
+            "engine": 15026,
+            "naive_last": 15408,
+            "naive_mean": 15026
+          },
+          "transfers": {
+            "actual": 0,
+            "engine": 0,
+            "naive_last": 0,
+            "naive_mean": 0
+          }
+        }
+      },
+      {
+        "persona": "sam_freelancer",
+        "origin": "2026-05",
+        "target": "2026-06",
+        "actual": 344959,
+        "engine": 343453,
+        "no_trend": 343453,
+        "naive_last": 355377,
+        "naive_mean": 347575,
+        "balance_p10": 1319734,
+        "balance_p90": 1866614,
+        "actual_balance": 1796974,
+        "categories": {
+          "dining": {
+            "actual": 19364,
+            "engine": 19948,
+            "naive_last": 18702,
+            "naive_mean": 19948
+          },
+          "groceries": {
+            "actual": 41904,
+            "engine": 31528,
+            "naive_last": 39962,
+            "naive_mean": 31528
+          },
+          "health": {
+            "actual": 43090,
+            "engine": 43159,
+            "naive_last": 42653,
+            "naive_mean": 43159
+          },
+          "housing": {
+            "actual": 178000,
+            "engine": 178000,
+            "naive_last": 178000,
+            "naive_mean": 178000
+          },
+          "shopping": {
+            "actual": 19050,
+            "engine": 12556,
+            "naive_last": 7977,
+            "naive_mean": 12556
+          },
+          "transfers": {
+            "actual": 0,
+            "engine": 0,
+            "naive_last": 0,
+            "naive_mean": 0
+          }
+        }
+      },
+      {
+        "persona": "sam_freelancer",
+        "origin": "2026-06",
+        "target": "2026-07",
+        "actual": 675240,
+        "engine": 346129,
+        "no_trend": 346129,
+        "naive_last": 344959,
+        "naive_mean": 350251,
+        "balance_p10": 1522696,
+        "balance_p90": 2108844,
+        "actual_balance": 1493454,
+        "categories": {
+          "dining": {
+            "actual": 13807,
+            "engine": 20015,
+            "naive_last": 19364,
+            "naive_mean": 20015
+          },
+          "groceries": {
+            "actual": 29497,
+            "engine": 37158,
+            "naive_last": 41904,
+            "naive_mean": 37158
+          },
+          "health": {
+            "actual": 45390,
+            "engine": 43049,
+            "naive_last": 43090,
+            "naive_mean": 43049
+          },
+          "housing": {
+            "actual": 178000,
+            "engine": 178000,
+            "naive_last": 178000,
+            "naive_mean": 178000
+          },
+          "shopping": {
+            "actual": 259079,
+            "engine": 14145,
+            "naive_last": 19050,
+            "naive_mean": 14145
+          },
+          "transfers": {
+            "actual": 100000,
+            "engine": 0,
+            "naive_last": 0,
+            "naive_mean": 0
+          }
+        }
+      },
+      {
+        "persona": "sam_freelancer",
+        "origin": "2026-07",
+        "target": "2026-08",
+        "actual": 553125,
+        "engine": 397752,
+        "no_trend": 397752,
+        "naive_last": 675240,
+        "naive_mean": 458525,
+        "balance_p10": 1115826,
+        "balance_p90": 1797716,
+        "actual_balance": 1938298,
+        "categories": {
+          "dining": {
+            "actual": 13392,
+            "engine": 17291,
+            "naive_last": 13807,
+            "naive_mean": 17291
+          },
+          "groceries": {
+            "actual": 45540,
+            "engine": 37121,
+            "naive_last": 29497,
+            "naive_mean": 37121
+          },
+          "health": {
+            "actual": 43581,
+            "engine": 43711,
+            "naive_last": 45390,
+            "naive_mean": 43711
+          },
+          "housing": {
+            "actual": 178000,
+            "engine": 178000,
+            "naive_last": 178000,
+            "naive_mean": 178000
+          },
+          "shopping": {
+            "actual": 25828,
+            "engine": 15402,
+            "naive_last": 259079,
+            "naive_mean": 95369
+          },
+          "transfers": {
+            "actual": 200000,
+            "engine": 0,
+            "naive_last": 100000,
+            "naive_mean": 33333
+          }
+        }
+      },
+      {
+        "persona": "sam_freelancer",
+        "origin": "2026-08",
+        "target": "2026-09",
+        "actual": 437188,
+        "engine": 454288,
+        "no_trend": 455247,
+        "naive_last": 553125,
+        "naive_mean": 524441,
+        "balance_p10": 1615880,
+        "balance_p90": 2406876,
+        "actual_balance": 2208263,
+        "categories": {
+          "dining": {
+            "actual": 29775,
+            "engine": 14562,
+            "naive_last": 13392,
+            "naive_mean": 15521
+          },
+          "groceries": {
+            "actual": 32262,
+            "engine": 38980,
+            "naive_last": 45540,
+            "naive_mean": 38980
+          },
+          "health": {
+            "actual": 45250,
+            "engine": 44020,
+            "naive_last": 43581,
+            "naive_mean": 44020
+          },
+          "housing": {
+            "actual": 178000,
+            "engine": 178000,
+            "naive_last": 178000,
+            "naive_mean": 178000
+          },
+          "shopping": {
+            "actual": 8820,
+            "engine": 21352,
+            "naive_last": 25828,
+            "naive_mean": 101319
+          },
+          "transfers": {
+            "actual": 100000,
+            "engine": 33333,
+            "naive_last": 200000,
+            "naive_mean": 100000
+          }
+        }
+      }
+    ]
+  }
+}

@@ -86,6 +86,23 @@ class RunStatus(BaseModel):
     events: list[AgentEvent]
 
 
+class RunSummary(BaseModel):
+    run_id: str
+    user_id: int
+    batch_id: str | None = None
+    kind: RunKind
+    status: RunState
+    as_of_month: Month
+    started_at: str
+    finished_at: str | None = None
+    error: str | None = None
+    event_count: int
+
+
+class RunList(BaseModel):
+    items: list[RunSummary]  # newest first
+
+
 # ---- transactions ----
 
 class Transaction(BaseModel):
@@ -111,35 +128,49 @@ class TransactionList(BaseModel):
 
 class RecurringParams(BaseModel):
     merchant: str
-    cadence: Literal["weekly", "monthly", "annual"]
-    amount_cents: int
+    merchant_root: str  # grouping key; parent spend for "unused" is other spend at the same root
+    category: Category | None = None
+    cadence: Literal["monthly"]
+    n: int
+    period_days: float
+    amount_cents: int  # current price (mean of the last 3 charges when amount_varies)
+    monthly_cents: int
+    amount_varies: bool
     first_seen: IsoDate
     last_seen: IsoDate
+    active: bool  # last charge within 1.5 periods of the end of as_of_month
     price_changed: bool = False
+    prev_amount_cents: int | None = None
+    price_change_date: IsoDate | None = None  # first charge at the new price
     possibly_unused: bool = False
+    parent_last_spend: IsoDate | None = None
+    parent_last_txn_id: int | None = None
+    days_since_parent_spend: int | None = None  # counted to the end of as_of_month
 
 
 class AnomalyParams(BaseModel):
     txn_id: int
     kind: Literal["spike", "duplicate", "new_merchant"]
+    date: IsoDate
     amount_cents: int
-    baseline_cents: int | None = None
-
-
-class ShiftParams(BaseModel):
-    category: Category
-    month: Month
-    prev_cents: int
-    cur_cents: int
-    pct_change: float
+    merchant_root: str | None = None
+    baseline_cents: int | None = None  # spike: merchant median; new_merchant: typical purchase
+    mad_cents: int | None = None
+    robust_z: float | None = None  # None when the baseline has no spread
+    n_baseline: int | None = None
+    related_txn_id: int | None = None  # duplicate: the earlier charge
 
 
 class TrendParams(BaseModel):
     category: Category
     months: int
-    slope_cents_per_month: int
-    start_cents: int
-    end_cents: int
+    slope_cents_per_month: int  # Theil-Sen, on positive monthly outflow
+    start_cents: int  # fitted value, first month of the window
+    end_cents: int  # fitted value, last month of the window
+    latest_month_cents: int
+    prev_3mo_mean_cents: int  # mean of the 3 months before the latest
+    mk_p: float  # Mann-Kendall two-sided p-value
+    monthly_totals: dict[Month, int]
 
 
 class _PatternBase(BaseModel):
@@ -159,23 +190,18 @@ class AnomalyPattern(_PatternBase):
     params: AnomalyParams
 
 
-class ShiftPattern(_PatternBase):
-    type: Literal["mom_shift"] = "mom_shift"
-    params: ShiftParams
-
-
 class TrendPattern(_PatternBase):
     type: Literal["trend"] = "trend"
     params: TrendParams
 
 
-Pattern = Annotated[
-    RecurringPattern | AnomalyPattern | ShiftPattern | TrendPattern, Field(discriminator="type")
-]
+Pattern = Annotated[RecurringPattern | AnomalyPattern | TrendPattern, Field(discriminator="type")]
 
 
 class PatternList(BaseModel):
     items: list[Pattern]
+    run_id: str | None = None  # latest finished run for the user; None if none yet
+    as_of_month: Month | None = None
 
 
 # ---- forecast / what-if ----
@@ -186,6 +212,9 @@ class ForecastPoint(BaseModel):
     balance_p50: int
     balance_p90: int
     net_flow_cents: int
+    income_cents: int = 0
+    spend_cents: int = 0  # positive = money out
+    by_category: dict[str, int] = {}  # projected spend per category (p50, positive), incl. "uncategorized", "one_off"
 
 
 class Forecast(BaseModel):
@@ -193,6 +222,7 @@ class Forecast(BaseModel):
     as_of_month: Month
     horizon_months: int = Field(gt=0)
     method: str
+    start_balance_cents: int  # balance at the end of as_of_month
     points: list[ForecastPoint]
 
 
@@ -334,8 +364,8 @@ class GoalAdvance(BaseModel):
 # ---- eval ----
 
 class PrecisionRecall(BaseModel):
-    precision: float
-    recall: float
+    precision: float | None  # None when there is nothing to divide by (no detections / nothing planted)
+    recall: float | None
 
 
 class Confusion(BaseModel):
@@ -361,11 +391,40 @@ class CategorizationMetrics(BaseModel):
     cache_hit_rate: float | None = None
     per_category: dict[str, CategoryScore] | None = None
     per_persona: dict[str, float] | None = None  # strict accuracy per persona
+    # from the result file's details block (prompt version, usage)
+    prompt_version: str | None = None
+    prompt_tokens: int | None = None
+    completion_tokens: int | None = None
+    cost_usd: float | None = None  # estimate at list prices, see eval/pricing.json
+
+
+class PatternTypeScore(BaseModel):
+    precision: float | None
+    recall: float | None
+    tp: int
+    fp: int
+    fn: int
+
+
+class CategoryForecastScore(BaseModel):
+    mape: float | None
+    naive_mape: float | None
+    naive_mean_mape: float | None
+    n: int
 
 
 class ForecastMetrics(BaseModel):
-    mape: float
-    naive_mape: float
+    mape: float  # next-month total spend, rolling origin
+    naive_mape: float  # last month's spend
+    naive_mean_mape: float | None = None  # 3-month trailing mean
+    no_trend_mape: float | None = None  # engine without the trend-line adjustment
+    mean_error_cents: int | None = None  # engine forecast minus actual, averaged (negative = under-forecast)
+    baseline_mean_error_cents: dict[str, int] | None = None  # same, for no_trend, naive_last, naive_mean
+    method_version: str | None = None
+    coverage_80: float | None = None  # share of actual next-month balances inside p10..p90
+    per_category: dict[str, CategoryForecastScore] | None = None
+    origins: int | None = None  # forecasts scored (personas x origin months)
+    horizon: int | None = None
 
 
 class VerifierMetrics(BaseModel):
@@ -383,7 +442,8 @@ class EvalSummary(BaseModel):
     categorization: CategorizationMetrics | None = None
     recurring: PrecisionRecall | None = None
     unused: PrecisionRecall | None = None
-    anomaly: PrecisionRecall | None = None
+    anomaly: PrecisionRecall | None = None  # spike + duplicate + new_merchant pooled
+    pattern_types: dict[str, PatternTypeScore] | None = None
     forecast: ForecastMetrics | None = None
     verifier: VerifierMetrics | None = None
     grounded_number_rate: float | None = None

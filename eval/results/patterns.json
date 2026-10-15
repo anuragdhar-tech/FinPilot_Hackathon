@@ -1,0 +1,454 @@
+{
+  "summary": {
+    "run_at": "2026-10-15T11:32:48+00:00",
+    "git_sha": "f35978d-dirty",
+    "dataset": "synthetic",
+    "seed": 42,
+    "models": {
+      "categorizer": "openai/gpt-4o-mini"
+    },
+    "recurring": {
+      "precision": 1.0,
+      "recall": 1.0
+    },
+    "unused": {
+      "precision": 1.0,
+      "recall": 1.0
+    },
+    "anomaly": {
+      "precision": 0.6,
+      "recall": 1.0
+    },
+    "pattern_types": {
+      "recurring": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "tp": 32,
+        "fp": 0,
+        "fn": 0
+      },
+      "price_change": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "tp": 2,
+        "fp": 0,
+        "fn": 0
+      },
+      "unused": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "tp": 3,
+        "fp": 0,
+        "fn": 0
+      },
+      "spike": {
+        "precision": 0.75,
+        "recall": 1.0,
+        "tp": 3,
+        "fp": 1,
+        "fn": 0
+      },
+      "duplicate": {
+        "precision": 0.75,
+        "recall": 1.0,
+        "tp": 3,
+        "fp": 1,
+        "fn": 0
+      },
+      "new_merchant": {
+        "precision": 0.4286,
+        "recall": 1.0,
+        "tp": 3,
+        "fp": 4,
+        "fn": 0
+      },
+      "trend": {
+        "precision": 0.3333,
+        "recall": 1.0,
+        "tp": 1,
+        "fp": 2,
+        "fn": 0
+      }
+    }
+  },
+  "details": {
+    "mode": "fresh",
+    "detected_counts": {
+      "maya_renter": {
+        "recurring": 11,
+        "spike": 2,
+        "duplicate": 1,
+        "new_merchant": 3,
+        "trend": 1,
+        "price_change": 1,
+        "possibly_unused": 1
+      },
+      "ortiz_family": {
+        "recurring": 11,
+        "spike": 1,
+        "duplicate": 1,
+        "new_merchant": 3,
+        "trend": 1,
+        "price_change": 1,
+        "possibly_unused": 1
+      },
+      "sam_freelancer": {
+        "recurring": 10,
+        "spike": 1,
+        "duplicate": 2,
+        "new_merchant": 1,
+        "trend": 1,
+        "price_change": 0,
+        "possibly_unused": 1
+      }
+    },
+    "controls": [
+      {
+        "persona": "maya_renter",
+        "check": "used membership DashPass not flagged unused",
+        "passed": true,
+        "detected": true
+      },
+      {
+        "persona": "ortiz_family",
+        "check": "used membership Amazon Prime not flagged unused",
+        "passed": true,
+        "detected": true
+      },
+      {
+        "persona": "ortiz_family",
+        "check": "flat food_delivery not flagged as a trend",
+        "passed": true
+      },
+      {
+        "persona": "sam_freelancer",
+        "check": "flat food_delivery not flagged as a trend",
+        "passed": true
+      }
+    ],
+    "items": {
+      "recurring": {
+        "tp": [
+          {
+            "persona": "maya_renter",
+            "title": "CLASSPASS*MONTHLY: $49.00 monthly",
+            "planted": "ClassPass"
+          },
+          {
+            "persona": "maya_renter",
+            "title": "COMCAST CABLE COMM: $70.00 monthly",
+            "planted": "Comcast"
+          },
+          {
+            "persona": "maya_renter",
+            "title": "DOORDASH DASHPASS: $9.99 monthly",
+            "planted": "DashPass"
+          },
+          {
+            "persona": "maya_renter",
+            "title": "ELM ST PROPERTY MGMT WEB PMTS: $2,150.00 monthly",
+            "planted": "Elm Street Property Mgmt"
+          },
+          {
+            "persona": "maya_renter",
+            "title": "LEMONADE INSURANCE CO: $12.50 monthly",
+            "planted": "Lemonade"
+          },
+          {
+            "persona": "maya_renter",
+            "title": "NETFLIX.COM: $15.49 monthly",
+            "planted": "Netflix"
+          },
+          {
+            "persona": "maya_renter",
+            "title": "PGANDE WEB ONLINE: $51.32 monthly (amount varies)",
+            "planted": "PG&E"
+          },
+          {
+            "persona": "maya_renter",
+            "title": "SPOTIFY USA: price up from $11.99 to $12.99 on 2026-03-03",
+            "planted": "Spotify"
+          },
+          {
+            "persona": "maya_renter",
+            "title": "ONLINE TRANSFER TO SAV XXXXXX: $300.00 monthly",
+            "planted": "Savings transfer"
+          },
+          {
+            "persona": "maya_renter",
+            "title": "UBER*ONE MEMBERSHIP: $9.99/month, no other UBER spend for 288 days",
+            "planted": "Uber One"
+          },
+          {
+            "persona": "maya_renter",
+            "title": "VERIZON WRLS: $65.00 monthly",
+            "planted": "Verizon"
+          },
+          {
+            "persona": "ortiz_family",
+            "title": "AMAZON PRIME: $14.99 monthly",
+            "planted": "Amazon Prime"
+          },
+          {
+            "persona": "ortiz_family",
+            "title": "CITY OF AUSTIN UTIL WEB PMT: $240.86 monthly (amount varies)",
+            "planted": "City of Austin Utilities"
+          },
+          {
+            "persona": "ortiz_family",
+            "title": "DISNEY PLUS: $13.99 monthly",
+            "planted": "Disney+"
+          },
+          {
+            "persona": "ortiz_family",
+            "title": "GEICO*AUTO: $182.40 monthly",
+            "planted": "GEICO"
+          },
+          {
+            "persona": "ortiz_family",
+            "title": "LAKEVIEW LN SRV MTG PYMT: $2,640.18 monthly",
+            "planted": "Lakeview Loan Servicing"
+          },
+          {
+            "persona": "ortiz_family",
+            "title": "NETFLIX.COM: price up from $15.49 to $17.99 on 2026-04-12",
+            "planted": "Netflix"
+          },
+          {
+            "persona": "ortiz_family",
+            "title": "SPECTRUM: $79.99 monthly",
+            "planted": "Spectrum"
+          },
+          {
+            "persona": "ortiz_family",
+            "title": "T-MOBILE*AUTO PAY: $140.00 monthly",
+            "planted": "T-Mobile"
+          },
+          {
+            "persona": "ortiz_family",
+            "title": "ONLINE TRANSFER TO SAV XXXXXX: $500.00 monthly",
+            "planted": "Savings transfer"
+          },
+          {
+            "persona": "ortiz_family",
+            "title": "WALMART+ MEMBERSHIP: $12.95/month, no other WALMART spend for 222 days",
+            "planted": "Walmart+"
+          },
+          {
+            "persona": "ortiz_family",
+            "title": "YMCA OF AUSTIN DUES: $89.00 monthly",
+            "planted": "YMCA"
+          },
+          {
+            "persona": "sam_freelancer",
+            "title": "ADOBE*CREATIVE CLD: $59.99 monthly",
+            "planted": "Adobe"
+          },
+          {
+            "persona": "sam_freelancer",
+            "title": "APPFOLIO HARBOR PROPERTI WEB PMTS: $1,780.00 monthly",
+            "planted": "Harbor Properties"
+          },
+          {
+            "persona": "sam_freelancer",
+            "title": "COMCAST CABLE COMM: $80.00 monthly",
+            "planted": "Comcast"
+          },
+          {
+            "persona": "sam_freelancer",
+            "title": "DOORDASH DASHPASS: $9.99/month, no other DOORDASH spend for 184 days",
+            "planted": "DashPass"
+          },
+          {
+            "persona": "sam_freelancer",
+            "title": "HULU: $7.99 monthly",
+            "planted": "Hulu"
+          },
+          {
+            "persona": "sam_freelancer",
+            "title": "OSCAR HEALTH INS PREM: $412.00 monthly",
+            "planted": "Oscar Health"
+          },
+          {
+            "persona": "sam_freelancer",
+            "title": "PLANET FIT CLUB: $24.99 monthly",
+            "planted": "Planet Fitness"
+          },
+          {
+            "persona": "sam_freelancer",
+            "title": "SPOTIFY USA: $11.99 monthly",
+            "planted": "Spotify"
+          },
+          {
+            "persona": "sam_freelancer",
+            "title": "VISIBLE SERVICE: $25.00 monthly",
+            "planted": "Visible"
+          },
+          {
+            "persona": "sam_freelancer",
+            "title": "XCEL ENERGY-PSCO: $42.65 monthly (amount varies)",
+            "planted": "Xcel Energy"
+          }
+        ],
+        "fp": [],
+        "fn": []
+      },
+      "price_change": {
+        "tp": [
+          {
+            "persona": "maya_renter",
+            "title": "SPOTIFY USA: price up from $11.99 to $12.99 on 2026-03-03",
+            "planted": "Spotify"
+          },
+          {
+            "persona": "ortiz_family",
+            "title": "NETFLIX.COM: price up from $15.49 to $17.99 on 2026-04-12",
+            "planted": "Netflix"
+          }
+        ],
+        "fp": [],
+        "fn": []
+      },
+      "unused": {
+        "tp": [
+          {
+            "persona": "maya_renter",
+            "title": "UBER*ONE MEMBERSHIP: $9.99/month, no other UBER spend for 288 days",
+            "planted": "Uber One"
+          },
+          {
+            "persona": "ortiz_family",
+            "title": "WALMART+ MEMBERSHIP: $12.95/month, no other WALMART spend for 222 days",
+            "planted": "Walmart+"
+          },
+          {
+            "persona": "sam_freelancer",
+            "title": "DOORDASH DASHPASS: $9.99/month, no other DOORDASH spend for 184 days",
+            "planted": "DashPass"
+          }
+        ],
+        "fp": [],
+        "fn": []
+      },
+      "spike": {
+        "tp": [
+          {
+            "persona": "maya_renter",
+            "title": "Unusually large charge at TRADER JOES QPS: $412.37 vs typical $54.79",
+            "planted": "Trader Joe's"
+          },
+          {
+            "persona": "ortiz_family",
+            "title": "Unusually large charge at COSTCO WHSE ROUND ROCK TX: $1,184.56 vs typical $192.87",
+            "planted": "Costco"
+          },
+          {
+            "persona": "sam_freelancer",
+            "title": "Unusually large charge at LYFT*RIDE FRI: $187.40 vs typical $22.15",
+            "planted": "Lyft"
+          }
+        ],
+        "fp": [
+          {
+            "persona": "maya_renter",
+            "title": "Unusually large charge at SAFEWAY STORE: $62.46 vs typical $30.56",
+            "date": "2026-09-16"
+          }
+        ],
+        "fn": []
+      },
+      "duplicate": {
+        "tp": [
+          {
+            "persona": "maya_renter",
+            "title": "Possible duplicate charge: AMAZON.COM $89.99 charged twice on 2026-07-09",
+            "planted": "Amazon"
+          },
+          {
+            "persona": "ortiz_family",
+            "title": "Possible duplicate charge: GEICO*AUTO $182.40 charged twice on 2026-06-11",
+            "planted": "GEICO"
+          },
+          {
+            "persona": "sam_freelancer",
+            "title": "Possible duplicate charge: ADOBE*CREATIVE CLD $59.99 charged twice on 2026-05-06",
+            "planted": "Adobe"
+          }
+        ],
+        "fp": [
+          {
+            "persona": "sam_freelancer",
+            "title": "Possible duplicate charge: TRANSFER TO SAVINGS $1,000.00 charged twice on 2026-08-28",
+            "date": "2026-08-28"
+          }
+        ],
+        "fn": []
+      },
+      "new_merchant": {
+        "tp": [
+          {
+            "persona": "maya_renter",
+            "title": "New merchant BEST BUY: $1,249.99 on 2026-08-21, far above your typical purchase of $31.47",
+            "planted": "Best Buy"
+          },
+          {
+            "persona": "ortiz_family",
+            "title": "New merchant IKEA US: $1,450.00 on 2026-08-02, far above your typical purchase of $57.78",
+            "planted": "IKEA"
+          },
+          {
+            "persona": "sam_freelancer",
+            "title": "New merchant APPLE STORE BOULDER CO: $2,399.00 on 2026-07-15, far above your typical purchase of $26.48",
+            "planted": "Apple Store"
+          }
+        ],
+        "fp": [
+          {
+            "persona": "maya_renter",
+            "title": "New merchant AIRBNB: $640.00 on 2026-05-09, far above your typical purchase of $31.47",
+            "date": "2026-05-09"
+          },
+          {
+            "persona": "maya_renter",
+            "title": "New merchant UNITED AIRLINES: $389.40 on 2026-04-02, far above your typical purchase of $31.47",
+            "date": "2026-04-02"
+          },
+          {
+            "persona": "ortiz_family",
+            "title": "New merchant DELTA AIR: $1,248.60 on 2026-04-20, far above your typical purchase of $57.78",
+            "date": "2026-04-20"
+          },
+          {
+            "persona": "ortiz_family",
+            "title": "New merchant MARRIOTT ROUND ROCK TX: $980.22 on 2026-06-12, far above your typical purchase of $57.78",
+            "date": "2026-06-12"
+          }
+        ],
+        "fn": []
+      },
+      "trend": {
+        "tp": [
+          {
+            "persona": "maya_renter",
+            "title": "Food delivery spending rising: about $40.60 per month; $722.49 in 2026-09 vs $572.58 average of the prior 3 months (+26%)",
+            "mk_p": 0.0002
+          }
+        ],
+        "fp": [
+          {
+            "persona": "ortiz_family",
+            "title": "Utilities spending rising: about $8.38 per month; $452.65 in 2026-09 vs $455.71 average of the prior 3 months (-1%)",
+            "mk_p": 0.0467
+          },
+          {
+            "persona": "sam_freelancer",
+            "title": "Utilities spending falling: about $7.57 per month; $156.57 in 2026-09 vs $145.71 average of the prior 3 months (+7%)",
+            "mk_p": 0.0236
+          }
+        ],
+        "fn": []
+      }
+    },
+    "wall_seconds": 8.9
+  }
+}

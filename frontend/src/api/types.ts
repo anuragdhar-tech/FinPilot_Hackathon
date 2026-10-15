@@ -92,6 +92,29 @@ export interface TransactionList {
   total: number
 }
 
+// ---- forecast ----
+
+export interface ForecastPoint {
+  month: string
+  balance_p10: number
+  balance_p50: number
+  balance_p90: number
+  net_flow_cents: number
+  income_cents: number
+  spend_cents: number // positive = money out
+  // projected spend per category (positive cents). `one_off` is the allowance for one-off spending.
+  by_category: Record<string, number>
+}
+
+export interface Forecast {
+  id: number
+  as_of_month: string
+  horizon_months: number
+  method: string
+  start_balance_cents: number
+  points: ForecastPoint[]
+}
+
 // ---- eval ----
 
 export interface CategoryScore {
@@ -119,6 +142,19 @@ export interface CategorizationMetrics {
   per_persona: Record<string, number> | null
 }
 
+export interface ForecastMetrics {
+  mape: number // next-month total spend, rolling origin
+  naive_mape: number // last month's spend
+  naive_mean_mape: number | null // 3-month trailing mean
+  no_trend_mape: number | null
+  mean_error_cents: number | null // forecast minus actual; negative = under-forecast
+  baseline_mean_error_cents: { no_trend?: number; naive_last?: number; naive_mean?: number } | null
+  method_version: string | null
+  coverage_80: number | null
+  origins: number | null
+  horizon: number | null
+}
+
 export interface EvalSummary {
   run_at: string
   git_sha: string
@@ -126,4 +162,5 @@ export interface EvalSummary {
   seed: number | null
   models: Record<string, string>
   categorization: CategorizationMetrics | null
+  forecast?: ForecastMetrics | null
 }

@@ -1,4 +1,4 @@
-"""LangGraph coordinator. Today: ingest -> categorize; later nodes (analyze, forecast, advise, verify) extend it.
+"""LangGraph coordinator. Today: ingest -> categorize -> analyze -> forecast; advise and verify extend it later.
 
 Agents are plain functions (backend/agents/*); nodes here are thin wrappers that read state, call
 the agent, persist results and write agent_events. Persistence is our own runs + agent_events
@@ -6,6 +6,7 @@ tables; a LangGraph checkpointer is deferred to Oct 17 (advise <-> verify loop).
 """
 from __future__ import annotations
 
+import json
 import sqlite3
 import time
 import uuid
@@ -13,9 +14,11 @@ from typing import Any, TypedDict
 
 from langgraph.graph import END, START, StateGraph
 
-from backend.agents import categorizer
+from backend.agents import analyzer, categorizer, forecaster
+from backend.agents.analyzer import Detected, money
 from backend.agents.categorizer import LLM, BatchStat, MerchantCache, TxnIn
 from backend.db import connect
+from backend.ledger import count_after, load_txns
 from backend.llm.client import complete, get_model
 
 
@@ -27,8 +30,8 @@ class FinPilotState(TypedDict, total=False):
     as_of_month: str
     transactions: list[TxnIn]
     categorizations: list[categorizer.Label]
-    patterns: list[Any]
-    forecast: Any
+    patterns: list[Detected]
+    forecast: int  # forecasts.id
     goal: Any
     scenario: Any
     drafts: list[Any]
@@ -117,13 +120,69 @@ def build_graph(conn: sqlite3.Connection, categorizer_llm: LLM | None = None, us
             duration_ms=int((time.monotonic() - t0) * 1000)))
         return {"categorizations": res.labels, "audit_events": seqs}
 
+    def analyze(state: FinPilotState) -> FinPilotState:
+        t0 = time.monotonic()
+        run_id, uid, as_of = state["run_id"], state["user_id"], state["as_of_month"]
+        res = analyzer.analyze(load_txns(conn, uid, as_of), as_of)
+        save_patterns(conn, run_id, uid, res.patterns)
+        c = res.counts
+        seq = emit(conn, run_id, "analyze",
+                   summary=(f"as_of {as_of}: {res.n_txns} transactions read ({count_after(conn, uid, as_of)} after "
+                            f"as_of not read, {res.n_uncategorized} uncategorized left out of trends); "
+                            f"{c.get('recurring', 0)} recurring ({c['price_change']} price change, "
+                            f"{c['possibly_unused']} possibly unused), {c.get('spike', 0)} spike, "
+                            f"{c.get('duplicate', 0)} duplicate, {c.get('new_merchant', 0)} new merchant, "
+                            f"{c.get('trend', 0)} trend"),
+                   input_ref=f"user:{uid}/transactions?as_of={as_of}", output_ref=f"run:{run_id}/patterns",
+                   duration_ms=int((time.monotonic() - t0) * 1000))
+        return {"patterns": res.patterns, "audit_events": [*state.get("audit_events", []), seq]}
+
+    def forecast(state: FinPilotState) -> FinPilotState:
+        t0 = time.monotonic()
+        run_id, uid, as_of = state["run_id"], state["user_id"], state["as_of_month"]
+        opening = conn.execute("SELECT opening_balance_cents FROM users WHERE id = ?", (uid,)).fetchone()[0]
+        fc = forecaster.forecast(load_txns(conn, uid, as_of), state["patterns"], opening, as_of)
+        cur = conn.execute(
+            "INSERT INTO forecasts (run_id, user_id, as_of_month, horizon_months, method, params, output) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?)",
+            (run_id, uid, as_of, fc.horizon_months, forecaster.METHOD, json.dumps(fc.params()), json.dumps(fc.points)))
+        conn.commit()
+        flows, nxt = fc.inputs.flows, fc.points[0]
+        per_kind = {k: -sum(f.means[0] for f in flows if f.kind == k) for k in ("recurring", "variable", "one_off")}
+        seq = emit(conn, run_id, "forecast",
+                   summary=(f"{fc.version}, as_of {as_of}, horizon {fc.horizon_months}: start balance "
+                            f"{money(fc.inputs.start_balance_cents)}; next month recurring {money(per_kind['recurring'])}, "
+                            f"variable {money(per_kind['variable'])}, one-off allowance {money(per_kind['one_off'])}, "
+                            f"income {money(nxt['income_cents'])}; "
+                            f"{nxt['month']} balance p50 {money(nxt['balance_p50'])} "
+                            f"(p10 {money(nxt['balance_p10'])}, p90 {money(nxt['balance_p90'])}); "
+                            f"trend-adjusted: {', '.join(fc.trend_adjusted) or 'none'}"),
+                   input_ref=f"run:{run_id}/patterns", output_ref=f"forecast:{cur.lastrowid}",
+                   duration_ms=int((time.monotonic() - t0) * 1000))
+        return {"forecast": cur.lastrowid, "audit_events": [*state.get("audit_events", []), seq]}
+
     g = StateGraph(FinPilotState)
     g.add_node("ingest", ingest)
     g.add_node("categorize", categorize)
+    g.add_node("analyze", analyze)
+    g.add_node("forecast", forecast)
     g.add_edge(START, "ingest")
     g.add_edge("ingest", "categorize")
-    g.add_edge("categorize", END)
+    g.add_edge("categorize", "analyze")
+    g.add_edge("analyze", "forecast")
+    g.add_edge("forecast", END)
     return g.compile()
+
+
+def save_patterns(conn: sqlite3.Connection, run_id: str, user_id: int, patterns: list[Detected]) -> None:
+    """Append-only: one patterns row per detection plus its evidence rows; sets each Detected.id."""
+    for p in patterns:
+        cur = conn.execute("INSERT INTO patterns (run_id, user_id, type, title, params) VALUES (?, ?, ?, ?, ?)",
+                           (run_id, user_id, p.type, p.title, json.dumps(p.params)))
+        p.id = cur.lastrowid
+        conn.executemany("INSERT INTO pattern_evidence (pattern_id, txn_id) VALUES (?, ?)",
+                         [(p.id, t) for t in dict.fromkeys(p.evidence)])
+    conn.commit()
 
 
 # ---- runs ----

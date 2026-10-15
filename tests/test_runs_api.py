@@ -35,12 +35,12 @@ def test_run_categorizes_and_logs_ordered_events(api, llm):
     assert run["status"] == "done" and run["kind"] == "main"
     nodes = [e["node"] for e in run["events"]]
     # cat-v2: representatives batch, then the NETFLIX.COM confirmation look in its own batch
-    assert nodes == ["ingest", "categorize.batch", "categorize.batch", "categorize"]
-    assert [e["seq"] for e in run["events"]] == [1, 2, 3, 4]
+    assert nodes == ["ingest", "categorize.batch", "categorize.batch", "categorize", "analyze", "forecast"]
+    assert [e["seq"] for e in run["events"]] == [1, 2, 3, 4, 5, 6]
     assert run["events"][1]["summary"].startswith("representatives: 3 items")
     assert "echo_mismatch=0/3" in run["events"][1]["summary"]
     assert run["events"][2]["summary"].startswith("confirmations: 1 items")
-    last = run["events"][-1]["summary"]
+    last = run["events"][3]["summary"]
     assert "cat-v2: 4/4 categorized (4 by LLM, 0 from cache" in last and "confirm_agreed=1" in last
     assert run["events"][1]["prompt_tokens"] == 100
 
@@ -65,8 +65,10 @@ def test_uncategorized_rows_visible_and_event_flags_error(api, monkeypatch):
     monkeypatch.setenv("CATEGORIZER_MODEL", "openai/gpt-4o-mini")
     _, run_id = _upload_and_run(api)
     run = api.get(f"/api/runs/{run_id}").json()
-    assert run["status"] == "done" and run["events"][-1]["status"] == "error"
-    assert "4 left uncategorized" in run["events"][-1]["summary"]
+    cat = next(e for e in run["events"] if e["node"] == "categorize")
+    assert run["status"] == "done" and cat["status"] == "error"
+    assert "4 left uncategorized" in cat["summary"]
+    assert "4 uncategorized left out of trends" in run["events"][-2]["summary"]
     items = api.get("/api/transactions").json()["items"]
     assert len(items) == 4 and all(i["category"] is None for i in items)
 
@@ -94,3 +96,81 @@ def test_eval_latest_serves_script_output(api, tmp_path, monkeypatch):
     (tmp_path / "categorization.json").write_text(json.dumps({"summary": summary}))
     body = api.get("/api/eval/latest").json()
     assert body["categorization"]["lenient_accuracy"] == 0.92
+
+
+def test_run_list_newest_first_and_per_user(api, llm):
+    batch, first = _upload_and_run(api)
+    second = api.post("/api/runs", json={"batch_id": batch["batch_id"]}).json()["run_id"]
+    other = api.post("/api/transactions/upload", files={"file": ("o.csv", CSV, "text/csv")}).json()
+    third = api.post("/api/runs", json={"batch_id": other["batch_id"]}).json()["run_id"]
+
+    mine = api.get(f"/api/runs?user_id={batch['user_id']}").json()["items"]
+    assert [r["run_id"] for r in mine] == [second, first]  # same-second start: insertion order breaks the tie
+    assert mine[0]["status"] == "done" and mine[0]["batch_id"] == batch["batch_id"]
+    assert mine[0]["event_count"] == len(api.get(f"/api/runs/{second}").json()["events"])
+    assert [r["run_id"] for r in api.get("/api/runs").json()["items"]] == [third]  # default: active user
+    assert api.get("/api/runs?user_id=99").status_code == 404
+
+
+def _write_result(path, prompt_version, accuracy):
+    summary = {"run_at": "2026-10-15T00:00:00Z", "git_sha": "abc", "dataset": "synthetic", "seed": 42,
+               "models": {"categorizer": "openai/gpt-4o-mini"},
+               "categorization": {"accuracy": accuracy, "macro_f1": 0.8, "top_confusions": []}}
+    details = {"prompt_version": prompt_version,
+               "usage": {"prompt_tokens": 1000, "completion_tokens": 500, "estimated_cost": {"usd": 0.0012}}}
+    path.write_text(json.dumps({"summary": summary, "details": details}))
+
+
+def test_eval_latest_usage_and_version(api, tmp_path, monkeypatch):
+    monkeypatch.setattr(main, "EVAL_RESULTS", tmp_path)
+    _write_result(tmp_path / "categorization.json", "cat-v2", 0.95)
+    _write_result(tmp_path / "categorization_cat-v1.json", "cat-v1", 0.90)
+    cat = api.get("/api/eval/latest").json()["categorization"]
+    assert (cat["prompt_version"], cat["prompt_tokens"], cat["completion_tokens"], cat["cost_usd"]) == \
+        ("cat-v2", 1000, 500, 0.0012)
+    old = api.get("/api/eval/latest?version=cat-v1").json()["categorization"]
+    assert (old["prompt_version"], old["accuracy"]) == ("cat-v1", 0.90)
+    assert api.get("/api/eval/latest?version=cat-v9").status_code == 404
+    assert api.get("/api/eval/latest?version=../secrets").status_code == 422
+
+
+def test_patterns_and_forecast_endpoints_after_a_run(api, llm):
+    assert api.get("/api/forecast").status_code == 404  # no data yet
+    batch, run_id = _upload_and_run(api)
+    pats = api.get("/api/patterns").json()
+    assert pats["run_id"] == run_id and pats["as_of_month"] == "2026-02"
+    assert all(p["evidence_txn_ids"] for p in pats["items"])
+    fc = api.get("/api/forecast?horizon_months=3").json()
+    assert fc["as_of_month"] == "2026-02" and [p["month"] for p in fc["points"]] == ["2026-03", "2026-04", "2026-05"]
+    assert fc["start_balance_cents"] == -1549 - 1210 - 1549 - 2340  # opening 0 + the four outflows
+    assert len(api.get("/api/forecast").json()["points"]) == 6  # default horizon
+    assert api.get("/api/forecast?horizon_months=13").status_code == 422
+    run = api.get(f"/api/runs/{run_id}").json()
+    fc_event = run["events"][-1]
+    assert fc_event["node"] == "forecast" and fc_event["output_ref"] == f"forecast:{fc['id']}"
+
+
+def test_eval_latest_merges_pattern_and_forecast_results(api, tmp_path, monkeypatch):
+    monkeypatch.setattr(main, "EVAL_RESULTS", tmp_path)
+    _write_result(tmp_path / "categorization.json", "cat-v2", 0.95)
+    score = {"precision": 1.0, "recall": 0.5, "tp": 1, "fp": 0, "fn": 1}
+    (tmp_path / "patterns.json").write_text(json.dumps({"summary": {
+        "models": {"categorizer": "openai/gpt-4o-mini"}, "recurring": {"precision": 1.0, "recall": 0.5},
+        "unused": {"precision": None, "recall": 0.0}, "anomaly": {"precision": 1.0, "recall": 1.0},
+        "pattern_types": {"recurring": score}}}))
+    (tmp_path / "forecast.json").write_text(json.dumps({"summary": {"forecast": {
+        "mape": 0.1, "naive_mape": 0.2, "naive_mean_mape": 0.15, "no_trend_mape": 0.12, "coverage_80": 0.8,
+        "method_version": "fc-v2", "mean_error_cents": -400,
+        "baseline_mean_error_cents": {"no_trend": -410, "naive_last": -70, "naive_mean": -280},
+        "origins": 24, "horizon": 1}}}))
+    (tmp_path / "forecast_fc-v1.json").write_text(json.dumps({"summary": {"forecast": {
+        "mape": 0.12, "naive_mape": 0.2, "method_version": "fc-v1", "mean_error_cents": -600}}}))
+    body = api.get("/api/eval/latest").json()
+    assert body["categorization"]["accuracy"] == 0.95 and body["unused"]["precision"] is None
+    assert body["pattern_types"]["recurring"]["fn"] == 1 and body["forecast"]["coverage_80"] == 0.8
+    assert body["forecast"]["baseline_mean_error_cents"]["naive_mean"] == -280
+    old = api.get("/api/eval/latest?forecast_version=fc-v1").json()
+    assert (old["forecast"]["method_version"], old["forecast"]["mean_error_cents"]) == ("fc-v1", -600)
+    assert old["categorization"]["accuracy"] == 0.95  # everything else is unchanged
+    assert api.get("/api/eval/latest?forecast_version=fc-v9").status_code == 404
+    assert api.get("/api/eval/latest?forecast_version=latest").status_code == 422

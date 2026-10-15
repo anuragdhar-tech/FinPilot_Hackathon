@@ -93,7 +93,7 @@ CREATE TABLE IF NOT EXISTS patterns (
     id         INTEGER PRIMARY KEY,
     run_id     TEXT NOT NULL REFERENCES runs(id),
     user_id    INTEGER NOT NULL REFERENCES users(id),
-    type       TEXT NOT NULL CHECK (type IN ('recurring', 'mom_shift', 'anomaly', 'trend')),
+    type       TEXT NOT NULL CHECK (type IN ('recurring', 'anomaly', 'trend')),
     title      TEXT NOT NULL,
     params     TEXT NOT NULL,                         -- JSON, shape per type (backend/models.py)
     narration  TEXT NOT NULL DEFAULT '',

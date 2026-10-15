@@ -2,6 +2,7 @@ import type { ApiClient } from './client'
 import { ApiError } from './errors'
 import type {
   EvalSummary,
+  Forecast,
   Health,
   RunCreated,
   RunStatus,
@@ -76,5 +77,8 @@ export const realClient: ApiClient = {
   getRun: (id) => request<RunStatus>(`/api/runs/${id}`),
   getTransactions: (userId) =>
     request<TransactionList>(`/api/transactions${userId != null ? `?user_id=${userId}` : ''}`),
-  getEvalLatest: () => request<EvalSummary>('/api/eval/latest'),
+  getEvalLatest: (forecastVersion) =>
+    request<EvalSummary>(`/api/eval/latest${forecastVersion ? `?forecast_version=${forecastVersion}` : ''}`),
+  getForecast: (userId, horizonMonths = 6) =>
+    request<Forecast>(`/api/forecast?horizon_months=${horizonMonths}${userId != null ? `&user_id=${userId}` : ''}`),
 }

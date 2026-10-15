@@ -65,3 +65,33 @@ before any improvement is claimed. Iteration uses `--dev`; full runs only for co
 - **Confidence is still flat** (about 98% of rows at 0.90), so it is a weak "needs review" signal.
 - **Misalignment before/after is not measured.** The echo check rejected 0 of 520 cat-v2 answers on
   dev; cat-v1 has no echo field, and a rationale-based proxy was tried and dropped as too noisy.
+
+# Forecaster method changelog
+
+Every change to the forecast method is logged here. Numbers below are quoted from the script-written
+files named next to them (`python -m eval.analysis --reuse-db --forecast-version <v>`); both versions
+stay committed and reproducible.
+
+## fc-v1 (Oct 16): baseline
+
+- Active recurring charges at their current price + 3-month trailing variable spend per category
+  (Theil-Sen line for trend categories, floored at 0) + 6-month trailing income. Anomaly-flagged
+  transactions are left out of the variable spend. Designed before any backtest was run.
+- Backtest, 24 next-month forecasts (`eval/results/forecast_fc-v1.md`): total-spend MAPE 12.3%
+  (no trend line 12.4%, naive last month 13.2%, naive 3-month mean 11.4%); mean error -$645
+  (3-month mean -$286); 80% band coverage 54.2%.
+
+## fc-v2 (Oct 16): one-off allowance, **made after seeing the fc-v1 backtest**
+
+- Adds one flow: "one-off allowance" = 6-month trailing mean of the monthly spend the Analyzer
+  flagged as anomalies (spike, duplicate, new merchant), with the sample standard deviation of those
+  monthly totals as its spread. Shown as `by_category["one_off"]`. Nothing else in the engine changed.
+  The 6-month window was chosen before running fc-v2.
+- Evidence: fc-v1 under-forecast on average (-$645); its largest misses were months with one-off
+  purchases (Best Buy, IKEA, Delta, Apple Store, the Costco spike), which fc-v1 excludes and nothing
+  replaces.
+- Eval-fitting caveat: this change was motivated by the same 24 backtest points it is scored on, so
+  fc-v2's backtest score is not an unbiased estimate.
+- Backtest (`eval/results/forecast_fc-v2.md`): total-spend MAPE 11.2% (no trend line 11.3%; naive
+  baselines unchanged); mean error -$404; 80% band coverage 54.2% (bands widen, but one forecast
+  moved into the band and one moved out). Per-category MAPE unchanged (the allowance is its own bucket).

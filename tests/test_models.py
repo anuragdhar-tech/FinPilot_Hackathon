@@ -22,9 +22,13 @@ def test_simulate_request_requires_exactly_one():
 def test_pattern_discriminated_union():
     p = TypeAdapter(m.Pattern).validate_python({
         "id": 1, "type": "anomaly", "title": "Spike", "evidence_txn_ids": [7],
-        "params": {"txn_id": 7, "kind": "spike", "amount_cents": -90000, "baseline_cents": -8000},
+        "params": {"txn_id": 7, "kind": "spike", "date": "2026-06-13", "amount_cents": -90000,
+                   "baseline_cents": -8000},
     })
     assert isinstance(p, m.AnomalyPattern)
+    with pytest.raises(ValidationError):  # mom_shift was dropped from the contract (Oct 16)
+        TypeAdapter(m.Pattern).validate_python({"id": 2, "type": "mom_shift", "title": "x", "evidence_txn_ids": [],
+                                                "params": {}})
 
 
 def test_claim_source_ref_format():

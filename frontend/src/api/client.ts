@@ -2,6 +2,7 @@ import { mockClient } from './mock'
 import { realClient } from './real'
 import type {
   EvalSummary,
+  Forecast,
   Health,
   RunCreated,
   RunStatus,
@@ -28,7 +29,9 @@ export interface ApiClient {
   createRun(batchId: string): Promise<RunCreated>
   getRun(runId: string): Promise<RunStatus>
   getTransactions(userId?: number): Promise<TransactionList>
-  getEvalLatest(): Promise<EvalSummary>
+  /** forecastVersion: take the forecast metrics from that committed method version (e.g. 'fc-v1'). */
+  getEvalLatest(forecastVersion?: string): Promise<EvalSummary>
+  getForecast(userId?: number, horizonMonths?: number): Promise<Forecast>
 }
 
 // Real backend by default; set VITE_USE_MOCKS=true for the mocked API.

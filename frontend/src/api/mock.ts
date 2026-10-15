@@ -1,6 +1,6 @@
 import type { ApiClient } from './client'
 import { ApiError } from './errors'
-import type { AgentEvent, Category, EvalSummary, RunStatus, Transaction, User } from './types'
+import type { AgentEvent, Category, EvalSummary, Forecast, RunStatus, Transaction, User } from './types'
 
 // Mock mode: everything below is invented sample data for working without the backend.
 // Nothing here is a real result.
@@ -100,6 +100,21 @@ const mockEval: EvalSummary = {
     },
     per_persona: null,
   },
+  forecast: {
+    mape: 0.11, naive_mape: 0.13, naive_mean_mape: 0.115, no_trend_mape: 0.112, mean_error_cents: -40000,
+    baseline_mean_error_cents: { no_trend: -41000, naive_last: -7600, naive_mean: -28500 },
+    method_version: 'fc-v2', coverage_80: 0.54, origins: 24, horizon: 1,
+  },
+}
+
+const mockForecast: Forecast = {
+  id: 1, as_of_month: '2026-09', horizon_months: 6, method: 'mock', start_balance_cents: 900000,
+  points: ['2026-10', '2026-11', '2026-12', '2027-01', '2027-02', '2027-03'].map((month, k) => ({
+    month, balance_p50: 900000 + 30000 * (k + 1), balance_p10: 900000 + 30000 * (k + 1) - 60000 * Math.sqrt(k + 1),
+    balance_p90: 900000 + 30000 * (k + 1) + 60000 * Math.sqrt(k + 1), net_flow_cents: 30000,
+    income_cents: 470000, spend_cents: 440000,
+    by_category: { housing: 215000, groceries: 90000, dining: 60000, utilities: 40000, one_off: 35000 },
+  })),
 }
 
 export const mockClient: ApiClient = {
@@ -152,5 +167,10 @@ export const mockClient: ApiClient = {
     if (id == null || !txns[id]) throw new ApiError(404, 'no data uploaded yet')
     return delay({ items: txns[id], total: txns[id].length })
   },
-  getEvalLatest: () => delay(mockEval),
+  getEvalLatest: (forecastVersion) =>
+    delay(forecastVersion === 'fc-v1' && mockEval.forecast
+      ? { ...mockEval, forecast: { ...mockEval.forecast, method_version: 'fc-v1', mape: 0.123, mean_error_cents: -64000 } }
+      : mockEval),
+  getForecast: (_userId, horizonMonths = 6) =>
+    delay({ ...mockForecast, horizon_months: horizonMonths, points: mockForecast.points.slice(0, horizonMonths) }),
 }

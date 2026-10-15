@@ -6,6 +6,7 @@ import { balanceSeries, incomeVsSpend, OTHER_KEY, spendByCategory, spendOf, spen
 import { money, moneyCompact, moneyWhole, monthLabel } from '../lib/format'
 import { useProfileTransactions } from '../hooks/useProfileTransactions'
 import { ChartCard, LegendRow, TipBox } from '../components/ChartCard'
+import { ForecastCard } from '../components/ForecastCard'
 import { Empty, ErrorBox, Loading, PageTitle } from '../components/State'
 
 const SURFACE = '#ffffff'
@@ -248,6 +249,8 @@ export function DashboardPage() {
               rows: view.monthEnd.map(([m, b]) => [monthLabel(m), money(b)]),
             }}
           />
+
+          <ForecastCard userId={selected.id} className="lg:col-span-2" />
 
           <p className="text-xs text-slate-500 lg:col-span-2">
             Income = inflows categorized income. Spend = outflows in every other category except transfers (moving money between
