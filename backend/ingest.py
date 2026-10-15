@@ -3,16 +3,25 @@
 Amounts arrive as dollars ("-15.22") and are stored as integer cents via Decimal, never float.
 Duplicates are detected by external_id only: two identical-looking charges with different ids
 are both real (a double charge is exactly what the Analyzer must later flag).
+
+Validation is strict: a date must be written YYYY-MM-DD and be a real calendar day (Python's own
+date.fromisoformat also accepts 20260115 and 2026-W03-4, which would be silently rewritten), an
+amount must be a plain decimal, and external_id and description must not be blank. Any bad row
+rejects the whole upload and every bad line is listed.
 """
 import csv
 import io
+import re
 import sqlite3
 import uuid
 from dataclasses import dataclass
 from datetime import date
-from decimal import Decimal, InvalidOperation
+from decimal import Decimal
 
 REQUIRED_COLUMNS = ("external_id", "date", "description", "amount")
+
+ISO_DATE = re.compile(r"[0-9]{4}-[0-9]{2}-[0-9]{2}")
+PLAIN_DECIMAL = re.compile(r"[+-]?([0-9]+(\.[0-9]*)?|\.[0-9]+)")  # no NaN, Infinity or exponents
 
 
 class CsvError(ValueError):
@@ -31,11 +40,28 @@ class Row:
     amount_cents: int
 
 
+def parse_date(value: str) -> str:
+    """Strict YYYY-MM-DD, and a real calendar day."""
+    s = value.strip()
+    if not s:
+        raise ValueError("date is blank")
+    if not ISO_DATE.fullmatch(s):
+        raise ValueError(f"date {value!r} is not in YYYY-MM-DD form")
+    try:
+        return date.fromisoformat(s).isoformat()
+    except ValueError:
+        raise ValueError(f"date {value!r} is not a real calendar date") from None
+
+
 def to_cents(amount: str) -> int:
-    d = Decimal(amount.strip().replace(",", ""))
-    cents = d * 100
+    s = amount.strip().replace(",", "")
+    if not s:
+        raise ValueError("amount is blank")
+    if not PLAIN_DECIMAL.fullmatch(s):
+        raise ValueError(f"amount {amount!r} is not a number")
+    cents = Decimal(s) * 100
     if cents != cents.to_integral_value():
-        raise InvalidOperation(f"more than 2 decimal places: {amount!r}")
+        raise ValueError(f"amount {amount!r} has more than 2 decimal places")
     return int(cents)
 
 
@@ -47,14 +73,21 @@ def parse_csv(text: str) -> list[Row]:
     rows, errors = [], []
     for line, r in enumerate(reader, start=2):
         ext, desc = (r["external_id"] or "").strip(), (r["description"] or "").strip()
+        problems, day, cents = [], "", 0
+        if not ext:
+            problems.append("external_id is blank")
+        if not desc:
+            problems.append("description is blank")
         try:
-            day = date.fromisoformat((r["date"] or "").strip()).isoformat()
+            day = parse_date(r["date"] or "")
+        except ValueError as e:
+            problems.append(str(e))
+        try:
             cents = to_cents(r["amount"] or "")
-        except (ValueError, InvalidOperation) as e:
-            errors.append(f"line {line}: {e}")
-            continue
-        if not ext or not desc:
-            errors.append(f"line {line}: empty external_id or description")
+        except ValueError as e:
+            problems.append(str(e))
+        if problems:
+            errors.append(f"line {line}: {'; '.join(problems)}")
             continue
         rows.append(Row(ext, day, desc, cents))
     if errors:

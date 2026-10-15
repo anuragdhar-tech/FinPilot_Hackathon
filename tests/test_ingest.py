@@ -87,3 +87,91 @@ def test_upload_rejects_malformed_csv(api):
 def test_upload_unknown_user_404(api):
     r = api.post("/api/transactions/upload", files={"file": ("x.csv", CSV, "text/csv")}, data={"user_id": "99"})
     assert r.status_code == 404
+
+
+# ---- strict row validation: each case is rejected on its own, naming the line ----
+
+def _one_row(ext="r1", day="2026-01-15", desc="COFFEE", amount="-5.00"):
+    return f"external_id,date,description,amount\n{ext},{day},{desc},{amount}\n"
+
+
+@pytest.mark.parametrize("day,why", [
+    pytest.param("20260115", "YYYY-MM-DD", id="date-iso-basic-form"),
+    pytest.param("2026-W03-4", "YYYY-MM-DD", id="date-iso-week"),
+    pytest.param("2026-1-5", "YYYY-MM-DD", id="date-not-zero-padded"),
+    pytest.param("01/15/2026", "YYYY-MM-DD", id="date-us-slashes"),
+    pytest.param("2026-01-15T10:00:00", "YYYY-MM-DD", id="date-with-time"),
+    pytest.param("２０２６-０１-１５", "YYYY-MM-DD", id="date-non-ascii-digits"),
+    pytest.param("2026-02-30", "real calendar", id="date-impossible-day"),
+    pytest.param("2026-13-01", "real calendar", id="date-impossible-month"),
+    pytest.param("2025-02-29", "real calendar", id="date-leap-day-in-non-leap-year"),
+    pytest.param("", "blank", id="date-blank"),
+    pytest.param("not-a-date", "YYYY-MM-DD", id="date-garbage"),
+])
+def test_bad_date_rejected(day, why):
+    with pytest.raises(CsvError) as e:
+        parse_csv(_one_row(day=day))
+    assert len(e.value.errors) == 1 and e.value.errors[0].startswith("line 2:") and why in e.value.errors[0]
+
+
+def test_valid_leap_day_and_padded_date_accepted():
+    assert parse_csv(_one_row(day="2024-02-29"))[0].posted_date == "2024-02-29"
+
+
+@pytest.mark.parametrize("amount,why", [
+    pytest.param("", "blank", id="amount-blank"),
+    pytest.param("   ", "blank", id="amount-whitespace-only"),
+    pytest.param("abc", "not a number", id="amount-non-numeric"),
+    pytest.param("12abc", "not a number", id="amount-trailing-letters"),
+    pytest.param("$5.00", "not a number", id="amount-currency-symbol"),
+    pytest.param("NaN", "not a number", id="amount-nan"),
+    pytest.param("Infinity", "not a number", id="amount-infinity"),
+    pytest.param("1e3", "not a number", id="amount-exponent"),
+    pytest.param("--5", "not a number", id="amount-double-sign"),
+    pytest.param("5.005", "2 decimal places", id="amount-three-decimals"),
+])
+def test_bad_amount_rejected(amount, why):
+    with pytest.raises(CsvError) as e:
+        parse_csv(_one_row(amount=amount))
+    assert len(e.value.errors) == 1 and e.value.errors[0].startswith("line 2:") and why in e.value.errors[0]
+
+
+@pytest.mark.parametrize("desc", [
+    pytest.param("", id="description-blank"),
+    pytest.param("   ", id="description-whitespace-only"),
+])
+def test_blank_description_rejected(desc):
+    with pytest.raises(CsvError) as e:
+        parse_csv(_one_row(desc=desc))
+    assert e.value.errors == ["line 2: description is blank"]
+
+
+def test_blank_external_id_rejected():
+    with pytest.raises(CsvError) as e:
+        parse_csv(_one_row(ext=""))
+    assert e.value.errors == ["line 2: external_id is blank"]
+
+
+def test_row_with_several_problems_lists_them_all_on_its_line():
+    with pytest.raises(CsvError) as e:
+        parse_csv(_one_row(day="20260115", desc="", amount="abc"))
+    assert len(e.value.errors) == 1
+    assert all(w in e.value.errors[0] for w in ("description is blank", "YYYY-MM-DD", "not a number"))
+
+
+def test_upload_with_iso_basic_date_is_422_and_writes_nothing(api):
+    """The reported bug: 20260115 used to be accepted and silently rewritten as 2026-01-15."""
+    csv_text = ("external_id,date,description,amount\n"
+                "ok1,2026-01-14,COFFEE,-5.00\n"
+                "bad1,20260115,COFFEE,-5.00\n"
+                "bad2,2026-W03-4,COFFEE,-5.00\n")
+    r = api.post("/api/transactions/upload", files={"file": ("x.csv", csv_text, "text/csv")})
+    assert r.status_code == 422
+    assert [e.split(":")[0] for e in r.json()["detail"]["errors"]] == ["line 3", "line 4"]
+    assert api.get("/api/users").json()["items"] == []  # no user, batch or transactions were created
+
+
+def test_infinity_amount_is_422_not_a_server_error(api):
+    csv_text = "external_id,date,description,amount\nx,2026-01-15,COFFEE,Infinity\n"
+    r = api.post("/api/transactions/upload", files={"file": ("x.csv", csv_text, "text/csv")})
+    assert r.status_code == 422 and "not a number" in r.json()["detail"]["errors"][0]
