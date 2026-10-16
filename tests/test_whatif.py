@@ -79,6 +79,48 @@ def test_parse_retries_once_with_validation_errors():
         whatif.parse("x", "2026-09", fake_parser(bad, bad))
 
 
+def parsed(text: str, cents: int, kind: str = "one_off") -> int:
+    out = {"supported": True, "reason": "", "items": [item(kind=kind, amount_cents=cents)]}
+    return whatif.parse(text, "2026-09", fake_parser(out)).scenario.items[0].amount_cents
+
+
+def test_purchase_one_offs_are_outflows_whatever_sign_the_parser_wrote():
+    assert parsed("I want to buy something for $40,000 next month", 4000000) == -4000000
+    assert parsed("Can I afford a $2,000 trip next month?", 200000) == -200000
+    assert parsed("What if I purchase a $1,200 laptop?", -120000) == -120000
+    assert parsed("What if I get a $3,000 bonus next month?", 300000) == 300000  # windfall keeps its sign
+    assert parsed("Buy a $2,000 TV and get a $3,000 bonus", 300000) == 300000  # mixed: parser's signs kept
+
+
+def test_negative_purchase_amount_is_a_clear_error_without_an_llm_call():
+    def no_call(messages, **kw):
+        raise AssertionError("parser called")
+    for text in ("buy -$500", "buy $-500 shoes", "Can I afford a −$2,000 trip?"):
+        with pytest.raises(whatif.ScenarioError, match="purchase amount must be a positive number"):
+            whatif.parse(text, "2026-09", no_call)
+
+
+def test_non_finite_amount_is_rejected():
+    bad = '{"supported": true, "reason": "", "items": [{"kind": "one_off", "label": "x", "amount_cents": 1e999, ' \
+          '"start_month": "2026-10", "months": null}]}'
+    with pytest.raises(whatif.ScenarioError, match="could not parse"):
+        whatif.parse("buy x", "2026-09", lambda m, **kw: completion(bad))
+
+
+def test_check_rejects_a_negative_balance_stated_without_its_sign():
+    sc = one_off(-1500000, "2026-10")
+    sim = whatif.simulate(BASE, sc, 6)
+    fs, lo = whatif.facts(sc, sim), sim.lowest_p50["cents"]
+    assert lo < 0
+    shown = f"${-lo / 100:,.2f}"
+    bad = f"The expected balance dips below $0.00, reaching {shown} in {sim.lowest_p50['month']}."
+    assert whatif.check(bad, fs, "2026-09") == [f"'{shown}' is a negative balance written without its minus sign"]
+    for ok in (f"reaching -{shown} in {sim.lowest_p50['month']}", f"a negative balance of {shown}",
+               f"{shown} below zero", f"the purchase of $15,000.00 in 2026-10"):
+        assert whatif.check(ok, fs, "2026-09") == [], ok
+    assert whatif.check(whatif.template(sc, sim), fs, "2026-09") == []
+
+
 @pytest.fixture
 def api(tmp_path, monkeypatch):
     path = tmp_path / "app.db"
@@ -136,6 +178,17 @@ def test_template_numbers_are_all_facts():
     assert whatif.check(whatif.template(sc, sim), whatif.facts(sc, sim), "2026-09") == []
 
 
+def test_simulate_api_purchase_parsed_as_income_is_still_an_outflow(api, monkeypatch):
+    monkeypatch.setattr(graph, "default_parser_llm", fake_parser(
+        {"supported": True, "reason": "", "items": [item(label="Purchase", amount_cents=4000000)]}))
+    monkeypatch.setattr(graph, "default_explainer_llm", explainer("x $1.23", "y $4.56"))
+    body = api.post("/api/simulate", json={"text": "I want to buy something for $40,000 next month"}).json()
+    assert body["scenario"]["items"][0]["amount_cents"] == -4000000
+    assert body["end_delta_cents"] == -4000000 and body["verdict"] == "not_affordable"
+    r = api.post("/api/simulate", json={"text": "buy -$500"})
+    assert r.status_code == 422 and "positive number" in r.json()["detail"]["errors"][0]
+
+
 def test_simulate_api_errors(api, monkeypatch):
     monkeypatch.setattr(graph, "default_parser_llm", fake_parser({"supported": False, "reason": "no", "items": []}))
     r = api.post("/api/simulate", json={"text": "what is the weather"})
@@ -143,3 +196,13 @@ def test_simulate_api_errors(api, monkeypatch):
     r = api.post("/api/simulate", json={"scenario": {"items": [item(start_month="2030-01")]}})
     assert r.status_code == 422
     assert api.post("/api/simulate?user_id=99", json={"text": "x"}).status_code == 404
+
+
+def test_simulate_api_llm_timeout_is_a_readable_503(api, monkeypatch):
+    from backend.llm.client import LLMUnavailable
+
+    def down(messages, **kw):
+        raise LLMUnavailable("parser LLM call failed after 2 retries (60 s timeout each): Request timed out.")
+    monkeypatch.setattr(graph, "default_parser_llm", down)
+    r = api.post("/api/simulate", json={"text": "buy a $500 tv next month"})
+    assert r.status_code == 503 and "timed out" in r.json()["detail"]["errors"][0]

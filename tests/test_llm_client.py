@@ -48,3 +48,25 @@ def test_complete_returns_usage(monkeypatch):
     out = client.complete("categorizer", [{"role": "user", "content": "ping"}])
     assert (out.text, out.prompt_tokens, out.completion_tokens) == ("pong", 86, 14)
     assert out.model == "gpt-4o-mini-2024-07-18" and out.fallback_triggered is False
+
+
+def test_client_has_a_timeout_and_few_retries(monkeypatch):
+    monkeypatch.setenv("MESH_API_KEY", "test-key")
+    client.get_client.cache_clear()
+    c = client.get_client()
+    assert c.timeout == client.TIMEOUT_S == 60 and c.max_retries == client.MAX_RETRIES <= 2
+    client.get_client.cache_clear()
+
+
+def test_timeout_becomes_llm_unavailable(monkeypatch):
+    import httpx
+    import openai
+    from types import SimpleNamespace
+
+    def create(**kw):
+        raise openai.APITimeoutError(request=httpx.Request("POST", client.MESH_BASE_URL))
+    monkeypatch.setattr(client, "get_client", lambda: SimpleNamespace(chat=SimpleNamespace(
+        completions=SimpleNamespace(create=create))))
+    monkeypatch.setenv("ADVISOR_MODEL", "openai/gpt-4o")
+    with pytest.raises(client.LLMUnavailable, match="advisor LLM call failed after"):
+        client.complete("advisor", [{"role": "user", "content": "ping"}])

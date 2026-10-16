@@ -12,6 +12,7 @@ optimistic, which is why 'tight' exists.
 from __future__ import annotations
 
 import json
+import re
 from collections.abc import Callable
 from dataclasses import dataclass
 
@@ -19,7 +20,7 @@ from pydantic import ValidationError
 
 from backend.agents.analyzer import money
 from backend.agents.forecaster import MAX_HORIZON, Flow, ForecastInputs, project
-from backend.agents.verifier import ungrounded
+from backend.agents.verifier import _MONEY, Number, matches, ungrounded
 from backend.ledger import add_months, months_between
 from backend.llm.client import Completion
 from backend.models import Scenario
@@ -37,6 +38,7 @@ Items:
 - one_off: a single purchase or windfall in one month (months = null).
 - recurring_change: a monthly change from start_month on, for `months` months (null = open-ended).
 amount_cents is signed integer cents: negative = money out (purchase, higher bill), positive = money in.
+The user states purchase amounts as positive numbers: "buy a $40,000 car" is amount_cents -4000000.
 If the text is not a question about a purchase, income or spending change, set supported = false and say why."""
 
 PARSE_FORMAT = {"type": "json_schema", "json_schema": {"name": "scenario", "strict": True, "schema": {
@@ -60,6 +62,23 @@ class ScenarioError(ValueError):
     pass
 
 
+# The parser has written a purchase as money in (Oct 16 e2e: "buy something for $40,000" -> +$40,000), so the
+# sign of a one-off purchase is set in code from the user's words, not taken from the LLM.
+_PURCHASE = re.compile(r"\b(buy|buying|bought|purchas\w*|afford|spend|spending|spent|splurge|trip|vacation|pay for)\b", re.I)
+_INCOME = re.compile(r"\b(bonus|raise|refund|windfall|income|gift|inherit\w*|salary|paid|earn\w*|tax return)\b", re.I)
+_NEGATIVE_MONEY = re.compile(r"[-\u2212]\s?\$\s?\d|\$\s?[-\u2212]\s?\d")
+
+
+def is_purchase(text: str) -> bool:
+    """Purchase words and no income words; a mixed question keeps the parser's signs."""
+    return bool(_PURCHASE.search(text)) and not _INCOME.search(text)
+
+
+def as_outflows(scenario: Scenario) -> Scenario:
+    return Scenario(items=[it.model_copy(update={"amount_cents": -abs(it.amount_cents)}) if it.kind == "one_off"
+                           else it for it in scenario.items])
+
+
 @dataclass(frozen=True)
 class Fact:
     """A code-computed number the explanation may state (duck-types the Claim fields number checks read)."""
@@ -68,9 +87,12 @@ class Fact:
     unit: str  # cents | months
     month: str | None = None
     period: str | None = None
+    signed: bool = False  # a balance: a negative value must be written as negative (amounts carry 'out'/'in')
 
     def display(self) -> str:
-        return money(self.value) if self.unit == "cents" else f"{self.value} months"
+        if self.unit != "cents":
+            return f"{self.value} months"
+        return ("-" if self.signed and self.value < 0 else "") + money(self.value)
 
 
 # ---- parse ----
@@ -98,7 +120,10 @@ class ParseResult:
 
 
 def parse(text: str, as_of: str, llm: LLM) -> ParseResult:
-    """One LLM call; one retry with the validation errors; then ScenarioError."""
+    """One LLM call; one retry with the validation errors; then ScenarioError. One-off purchases become outflows."""
+    purchase = is_purchase(text)
+    if purchase and _NEGATIVE_MONEY.search(text):
+        raise ScenarioError("a purchase amount must be a positive number, e.g. 'buy a $500 TV'")
     system = PARSE_SYSTEM.format(as_of=as_of, next=add_months(as_of, 1), last=add_months(as_of, MAX_HORIZON))
     messages = [{"role": "system", "content": system}, {"role": "user", "content": text}]
     pt = ct = 0
@@ -118,7 +143,7 @@ def parse(text: str, as_of: str, llm: LLM) -> ParseResult:
             except ValidationError as e:
                 errs = [f"{'.'.join(map(str, x['loc']))}: {x['msg']}" for x in e.errors()]
             if not errs:
-                return ParseResult(scenario, c.model, pt, ct, attempt)
+                return ParseResult(as_outflows(scenario) if purchase else scenario, c.model, pt, ct, attempt)
         messages += [{"role": "assistant", "content": c.text},
                      {"role": "user", "content": "Fix these problems and answer again:\n- " + "\n- ".join(errs)}]
     raise ScenarioError("could not parse a valid scenario: " + "; ".join(errs))
@@ -190,9 +215,9 @@ def facts(scenario: Scenario, sim: Simulation) -> list[Fact]:
             out.append(Fact(f"item {i} duration", it.months, "months"))
     end = sim.projected[-1]["month"]
     out += [Fact("verdict floor", 0, "cents"),
-            Fact("lowest expected (p50) balance", sim.lowest_p50["cents"], "cents", sim.lowest_p50["month"]),
-            Fact("lowest low-end (p10) balance", sim.lowest_p10["cents"], "cents", sim.lowest_p10["month"]),
-            Fact("expected balance at the end", sim.projected[-1]["balance_p50"], "cents", end),
+            Fact("lowest expected (p50) balance", sim.lowest_p50["cents"], "cents", sim.lowest_p50["month"], signed=True),
+            Fact("lowest low-end (p10) balance", sim.lowest_p10["cents"], "cents", sim.lowest_p10["month"], signed=True),
+            Fact("expected balance at the end", sim.projected[-1]["balance_p50"], "cents", end, signed=True),
             Fact("change vs no scenario at the end", sim.end_delta_cents, "cents", end)]
     return out
 
@@ -203,9 +228,11 @@ def template(scenario: Scenario, sim: Simulation) -> str:
     why = {"affordable": "even the low-end projection stays above $0",
            "tight": "the expected balance stays above $0 but the low-end projection dips below it",
            "not_affordable": "the expected balance falls below $0"}[sim.verdict]
+    def bal(cents: int) -> str:
+        return ("-" if cents < 0 else "") + money(cents)
     return (f"Scenario ({items}). Verdict: {sim.verdict.replace('_', ' ')}: {why}. Lowest expected balance "
-            f"{money(sim.lowest_p50['cents'])} in {sim.lowest_p50['month']}; lowest low-end balance "
-            f"{money(sim.lowest_p10['cents'])} in {sim.lowest_p10['month']}. The low-end band has been optimistic "
+            f"{bal(sim.lowest_p50['cents'])} in {sim.lowest_p50['month']}; lowest low-end balance "
+            f"{bal(sim.lowest_p10['cents'])} in {sim.lowest_p10['month']}. The low-end band has been optimistic "
             f"in backtests.")
 
 
@@ -229,5 +256,22 @@ def explain(scenario: Scenario, sim: Simulation, fs: list[Fact], llm: LLM, issue
     return Explanation(c.text.strip(), c.model, c.prompt_tokens, c.completion_tokens)
 
 
+_NEG_BEFORE = re.compile(r"(?:[-\u2212]|\bminus\s|\bnegative\s(?:balance\s)?(?:of\s)?)$", re.I)
+_NEG_AFTER = re.compile(r"^\s?(?:below zero|in the negative|\(negative\))", re.I)
+
+
+def unsigned_negatives(text: str, fs: list[Fact], as_of: str) -> list[str]:
+    """Money in the text that only matches negative balances but is not written as negative right next to it."""
+    out = []
+    for m in _MONEY.finditer(text):
+        n = Number(m.group(0), "money", int(m.group(1).replace(",", "")) * 100
+                   + (int(m.group(2).ljust(2, "0")) if m.group(2) else 0), m.group(2) is not None)
+        hits = [f for f in fs if matches(n, f, as_of)]
+        if hits and all(f.signed and f.value < 0 for f in hits) and not (
+                _NEG_BEFORE.search(text[:m.start()]) or _NEG_AFTER.search(text[m.end():])):
+            out.append(f"'{n.text}' is a negative balance written without its minus sign")
+    return out
+
+
 def check(text: str, fs: list[Fact], as_of: str) -> list[str]:
-    return [f"'{n.text}' matches no fact" for n in ungrounded(text, fs, as_of)]
+    return [f"'{n.text}' matches no fact" for n in ungrounded(text, fs, as_of)] + unsigned_negatives(text, fs, as_of)

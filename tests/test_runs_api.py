@@ -35,9 +35,10 @@ def test_run_categorizes_and_logs_ordered_events(api, llm):
     assert run["status"] == "done" and run["kind"] == "main"
     nodes = [e["node"] for e in run["events"]]
     # cat-v2: representatives batch, then the NETFLIX.COM confirmation look in its own batch
+    # 2 months of data: the forecast says insufficient data and the Advisor is skipped
     assert nodes == ["ingest", "categorize.batch", "categorize.batch", "categorize", "analyze", "forecast",
-                     "advise", "persist"]  # the fake Advisor drafts nothing, so nothing to verify
-    assert [e["seq"] for e in run["events"]] == [1, 2, 3, 4, 5, 6, 7, 8]
+                     "persist"]
+    assert [e["seq"] for e in run["events"]] == [1, 2, 3, 4, 5, 6, 7]
     assert run["events"][1]["summary"].startswith("representatives: 3 items")
     assert "echo_mismatch=0/3" in run["events"][1]["summary"]
     assert run["events"][2]["summary"].startswith("confirmations: 1 items")
@@ -135,15 +136,22 @@ def test_eval_latest_usage_and_version(api, tmp_path, monkeypatch):
     assert api.get("/api/eval/latest?version=../secrets").status_code == 422
 
 
+CSV_3MO = CSV + """a5,2026-03-03,NETFLIX.COM,-15.49
+a6,2026-03-27,DOORDASH*SWEETGREEN,-23.40
+"""
+
+
 def test_patterns_and_forecast_endpoints_after_a_run(api, llm):
     assert api.get("/api/forecast").status_code == 404  # no data yet
-    batch, run_id = _upload_and_run(api)
+    batch = api.post("/api/transactions/upload", files={"file": ("u.csv", CSV_3MO, "text/csv")}).json()
+    run_id = api.post("/api/runs", json={"batch_id": batch["batch_id"]}).json()["run_id"]
     pats = api.get("/api/patterns").json()
-    assert pats["run_id"] == run_id and pats["as_of_month"] == "2026-02"
+    assert pats["run_id"] == run_id and pats["as_of_month"] == "2026-03"
     assert all(p["evidence_txn_ids"] for p in pats["items"])
     fc = api.get("/api/forecast?horizon_months=3").json()
-    assert fc["as_of_month"] == "2026-02" and [p["month"] for p in fc["points"]] == ["2026-03", "2026-04", "2026-05"]
-    assert fc["start_balance_cents"] == -1549 - 1210 - 1549 - 2340  # opening 0 + the four outflows
+    assert fc["as_of_month"] == "2026-03" and [p["month"] for p in fc["points"]] == ["2026-04", "2026-05", "2026-06"]
+    assert fc["insufficient_data"] is False and fc["reason"] is None
+    assert fc["start_balance_cents"] == -1549 - 1210 - 1549 - 2340 - 1549 - 2340  # opening 0 + the six outflows
     assert len(api.get("/api/forecast").json()["points"]) == 6  # default horizon
     assert api.get("/api/forecast?horizon_months=13").status_code == 422
     run = api.get(f"/api/runs/{run_id}").json()
@@ -175,3 +183,75 @@ def test_eval_latest_merges_pattern_and_forecast_results(api, tmp_path, monkeypa
     assert old["categorization"]["accuracy"] == 0.95  # everything else is unchanged
     assert api.get("/api/eval/latest?forecast_version=fc-v9").status_code == 404
     assert api.get("/api/eval/latest?forecast_version=latest").status_code == 422
+
+
+def test_llm_timeout_fails_the_run_with_its_message(api, monkeypatch):
+    import httpx
+    import openai
+    from types import SimpleNamespace
+
+    from backend.llm import client
+
+    def create(**kw):
+        raise openai.APITimeoutError(request=httpx.Request("POST", client.MESH_BASE_URL))
+    monkeypatch.setattr(client, "get_client", lambda: SimpleNamespace(chat=SimpleNamespace(
+        completions=SimpleNamespace(create=create))))
+    monkeypatch.setenv("CATEGORIZER_MODEL", "openai/gpt-4o-mini")
+    _, run_id = _upload_and_run(api)
+    run = api.get(f"/api/runs/{run_id}").json()
+    assert run["status"] == "failed" and run["finished_at"]
+    assert run["error"].startswith("LLMUnavailable: categorizer LLM call failed after") and "timed out" in run["error"]
+    assert run["events"][-1]["node"] == "coordinator"
+
+
+def test_startup_marks_stale_running_runs_failed(tmp_path, monkeypatch):
+    from fastapi.testclient import TestClient
+
+    from backend.db import connect, init_db
+    path = tmp_path / "app.db"
+    conn = connect(path)
+    init_db(conn)
+    uid = conn.execute("INSERT INTO users (name, opening_balance_cents, opening_date, as_of_month) "
+                       "VALUES ('t', 0, '2026-01-01', '2026-02')").lastrowid
+    for rid, age, status in (("old", 20, "running"), ("new", 5, "running"), ("pend", 20, "pending")):
+        conn.execute("INSERT INTO runs (id, user_id, kind, status, as_of_month, started_at) "
+                     f"VALUES (?, ?, 'main', ?, '2026-02', datetime('now', '-{age} minutes'))", (rid, uid, status))
+    conn.commit()
+    conn.close()
+    monkeypatch.setenv("FINPILOT_DB", str(path))
+    with TestClient(main.app) as c:
+        runs = {r["run_id"]: r for r in c.get(f"/api/runs?user_id={uid}").json()["items"]}
+    assert runs["old"]["status"] == "failed" and "still running 15+ minutes" in runs["old"]["error"]
+    assert runs["new"]["status"] == "running" and runs["pend"]["status"] == "pending"
+
+
+def test_under_3_complete_months_means_insufficient_data(api, llm, monkeypatch):
+    def no_advisor(messages, **kw):
+        raise AssertionError("Advisor called on insufficient data")
+    monkeypatch.setattr(graph, "default_advisor_llm", no_advisor)
+    _, run_id = _upload_and_run(api)  # 2026-01-03 .. 2026-02-09
+    run = api.get(f"/api/runs/{run_id}").json()
+    assert run["status"] == "done"
+    fc_event = next(e for e in run["events"] if e["node"] == "forecast")
+    assert "insufficient data" in fc_event["summary"] and "advice skipped" in fc_event["summary"]
+    fc = api.get("/api/forecast").json()
+    assert fc["insufficient_data"] is True and fc["points"] == []
+    assert fc["reason"] == "Not enough history yet, need at least 3 months (have 1 complete month up to 2026-02)."
+    assert api.get("/api/recommendations").json()["items"] == []
+    r = api.post("/api/simulate", json={"text": "buy a $500 tv next month"})
+    assert r.status_code == 422 and r.json()["detail"]["errors"] == [fc["reason"]]
+
+
+def test_complete_months():
+    from datetime import date
+
+    from backend.agents.forecaster import complete_months
+    from backend.ledger import Txn
+
+    def span(first: str, last: str) -> list[Txn]:
+        return [Txn(i, date.fromisoformat(d), "X", -100, None, None) for i, d in enumerate((first, last))]
+    assert complete_months(span("2025-10-01", "2025-11-30"), "2025-11") == 2  # Maya's first two months
+    assert complete_months(span("2025-10-07", "2025-12-25"), "2025-12") == 3  # a week of slack at each edge
+    assert complete_months(span("2025-10-08", "2025-12-24"), "2025-12") == 1  # both edge months partial
+    assert complete_months(span("2025-10-01", "2025-12-31"), "2026-01") == 3  # as_of month with no data
+    assert complete_months([], "2025-12") == 0

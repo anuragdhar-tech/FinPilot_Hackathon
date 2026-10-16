@@ -119,6 +119,15 @@ def test_target_must_name_the_trigger(ctx):
     assert verify(draft(uber_rec(ctx), target="UBER ONE membership"), ctx).verdict == "pass"
 
 
+def test_rule_notes_never_contradict_ok(ctx):
+    for target in ("UBER*ONE MEMBERSHIP", "UBER ONE membership"):
+        rep = verify(draft(uber_rec(ctx), target=target), ctx)
+        assert next(r for r in rep.rule_checks if r["rule"] == "target") == {"rule": "target", "ok": True, "note": ""}
+        assert all(r["note"] == "" for r in rep.rule_checks if r["ok"]), rep.rule_checks
+    bad = next(r for r in verify(draft(uber_rec(ctx), target="Netflix"), ctx).rule_checks if r["rule"] == "target")
+    assert not bad["ok"] and bad["note"].startswith("target 'Netflix' does not name UBER")
+
+
 def test_cancel_a_used_membership_is_unsupported(ctx):
     pid = pattern_id(ctx, "DASHPASS")
     claims = [figure(ctx, pid, "recurring_cost", period="month")]

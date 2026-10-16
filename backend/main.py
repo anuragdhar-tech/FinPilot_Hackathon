@@ -7,8 +7,9 @@ from fastapi import BackgroundTasks, Depends, FastAPI, File, Form, HTTPException
 
 from backend.db import connect, init_db
 from backend.agents.whatif import ScenarioError
-from backend.graph import create_run, execute_run, ranked_recommendations, run_whatif
+from backend.graph import create_run, execute_run, fail_stale_runs, ranked_recommendations, run_whatif
 from backend.ingest import CsvError, active_user_id, ingest_csv
+from backend.llm.client import LLMUnavailable
 from backend.agents.forecaster import MAX_HORIZON
 from backend.models import (AuditRecord, Category, EvalSummary, Forecast, Month, PatternList, RecommendationList,
                             RunCreate, RunCreated, RunList, RunStatus, SimulateRequest, SimulateResponse,
@@ -22,6 +23,7 @@ EVAL_RESULTS = Path(__file__).resolve().parents[1] / "eval" / "results"
 async def lifespan(_app: FastAPI):
     conn = connect()
     init_db(conn)
+    fail_stale_runs(conn)
     conn.close()
     yield
 
@@ -171,7 +173,8 @@ def get_forecast(horizon_months: int = Query(6, ge=1, le=MAX_HORIZON), user_id: 
     params = json.loads(row["params"])
     return {"id": row["id"], "as_of_month": row["as_of_month"], "horizon_months": horizon_months,
             "method": row["method"], "start_balance_cents": params["start_balance_cents"],
-            "points": json.loads(row["output"])[:horizon_months]}
+            "points": json.loads(row["output"])[:horizon_months],
+            "insufficient_data": params.get("insufficient_data", False), "reason": params.get("reason")}
 
 
 def latest_main_run(conn: sqlite3.Connection, uid: int):
@@ -228,6 +231,8 @@ def simulate(body: SimulateRequest, user_id: int | None = None, conn: sqlite3.Co
         raise HTTPException(404, str(e))
     except ScenarioError as e:
         raise HTTPException(422, {"errors": [str(e)]})
+    except LLMUnavailable as e:
+        raise HTTPException(503, {"errors": [str(e)]})
 
 
 @app.get("/api/eval/latest", response_model=EvalSummary)

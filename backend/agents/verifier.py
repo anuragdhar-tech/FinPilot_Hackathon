@@ -443,9 +443,9 @@ def verify(d: Draft, ctx: Context) -> Report:
 
     supported = False
     if p is not None:
-        rule("target", _target_ok(d.target, p),
-             f"target {d.target!r} does not name " + (p.params["merchant"] if p.type == "recurring"
-                                                      else p.params["category"]))
+        named = _target_ok(d.target, p)
+        rule("target", named, "" if named else f"target {d.target!r} does not name "
+             + (p.params["merchant"] if p.type == "recurring" else p.params["category"]))
         if d.action in ACTIONS:
             supported, why = _action_supported(d, p, ctx)
             rule("action", supported, why)

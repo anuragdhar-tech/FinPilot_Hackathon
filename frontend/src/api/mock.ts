@@ -117,6 +117,7 @@ const mockEval: EvalSummary = {
 
 const mockForecast: Forecast = {
   id: 1, as_of_month: '2026-09', horizon_months: 6, method: 'mock', start_balance_cents: 900000,
+  insufficient_data: false, reason: null,
   points: ['2026-10', '2026-11', '2026-12', '2027-01', '2027-02', '2027-03'].map((month, k) => ({
     month, balance_p50: 900000 + 30000 * (k + 1), balance_p10: 900000 + 30000 * (k + 1) - 60000 * Math.sqrt(k + 1),
     balance_p90: 900000 + 30000 * (k + 1) + 60000 * Math.sqrt(k + 1), net_flow_cents: 30000,

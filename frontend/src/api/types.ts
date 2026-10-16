@@ -112,7 +112,9 @@ export interface Forecast {
   horizon_months: number
   method: string
   start_balance_cents: number
-  points: ForecastPoint[]
+  points: ForecastPoint[] // empty when insufficient_data
+  insufficient_data: boolean // under 3 complete months of history: no projection and no advice
+  reason: string | null
 }
 
 // ---- what-if ----

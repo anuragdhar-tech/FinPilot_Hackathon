@@ -5,9 +5,11 @@ from functools import lru_cache
 from pathlib import Path
 
 from dotenv import load_dotenv
-from openai import OpenAI
+from openai import APIConnectionError, OpenAI
 
 MESH_BASE_URL = "https://api.meshapi.ai/v1"
+TIMEOUT_S = 60  # per request; a hung call once left a run in 'running' for hours
+MAX_RETRIES = 2  # SDK retries on timeouts, connection errors, 429 and 5xx
 
 ENV_PATH = Path(__file__).resolve().parents[2] / ".env"
 
@@ -25,7 +27,7 @@ def get_client() -> OpenAI:
     api_key = os.environ.get("MESH_API_KEY")
     if not api_key:
         raise _missing("MESH_API_KEY")
-    return OpenAI(base_url=MESH_BASE_URL, api_key=api_key)
+    return OpenAI(base_url=MESH_BASE_URL, api_key=api_key, timeout=TIMEOUT_S, max_retries=MAX_RETRIES)
 
 
 def get_model(agent: str) -> str:
@@ -54,11 +56,19 @@ class Completion:
     tool_calls: tuple[ToolCall, ...] = field(default_factory=tuple)  # when called with tools=
 
 
+class LLMUnavailable(RuntimeError):
+    """Mesh could not be reached or timed out after the SDK's retries; callers should fail, not retry again."""
+
+
 def complete(agent: str, messages: list[dict], **kwargs) -> Completion:
     """One chat completion for the given agent, with token usage for agent_events and eval cost."""
-    resp = get_client().chat.completions.create(
-        model=get_model(agent), messages=messages, **kwargs
-    )
+    try:
+        resp = get_client().chat.completions.create(
+            model=get_model(agent), messages=messages, **kwargs
+        )
+    except APIConnectionError as e:  # includes APITimeoutError
+        raise LLMUnavailable(f"{agent} LLM call failed after {MAX_RETRIES} retries "
+                             f"({TIMEOUT_S} s timeout each): {e}") from e
     usage = resp.usage
     msg = resp.choices[0].message
     return Completion(

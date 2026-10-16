@@ -4,7 +4,7 @@ import { api, ApiError, type ForecastPoint } from '../api'
 import { useAsync } from '../hooks/useAsync'
 import { money, moneyCompact, monthLabel } from '../lib/format'
 import { ChartCard, LegendRow, TipBox } from './ChartCard'
-import { Empty, ErrorBox, Loading } from './State'
+import { Empty, ErrorBox, InsufficientData, Loading } from './State'
 
 const GRID = '#e2e8f0'
 const AXIS_TEXT = { fontSize: 11, fill: '#64748b' }
@@ -56,6 +56,13 @@ export function ForecastCard({ userId, className = '' }: { userId?: number; clas
       <Empty title="No forecast yet">
         The forecast is produced by an analysis run on this profile's uploaded transactions.
       </Empty>
+    )
+  }
+  if (data.insufficient_data) {
+    return (
+      <div className={className}>
+        <InsufficientData reason={data.reason} />
+      </div>
     )
   }
 

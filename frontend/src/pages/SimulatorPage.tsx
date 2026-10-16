@@ -6,7 +6,7 @@ import { useUsers } from '../context/user-context'
 import { useAsync } from '../hooks/useAsync'
 import { errorMessage, money, moneyCompact, monthLabel, pct } from '../lib/format'
 import { ChartCard, LegendRow, TipBox } from '../components/ChartCard'
-import { ErrorBox, Loading, PageTitle } from '../components/State'
+import { ErrorBox, InsufficientData, Loading, PageTitle } from '../components/State'
 
 const EXAMPLES = [
   'Can I afford a $2,000 trip next month?',
@@ -205,10 +205,19 @@ function Simulator({ userId }: { userId: number }) {
     }
   }, [])
   const { data: coverage } = useAsync(loadCoverage)
+  const loadForecast = useCallback(async () => {
+    try {
+      return await api.getForecast(userId)
+    } catch {
+      return null // no run yet or not reachable: the simulate call reports it
+    }
+  }, [userId])
+  const { data: forecast } = useAsync(loadForecast)
+  const tooLittle = forecast?.insufficient_data === true
 
   async function run(question: string) {
     const q = question.trim()
-    if (!q || busy) return
+    if (!q || busy || tooLittle) return
     setBusy(true)
     setError(null)
     try {
@@ -230,6 +239,12 @@ function Simulator({ userId }: { userId: number }) {
     <div className="max-w-4xl">
       <PageTitle title="Simulator" subtitle="Ask a what-if in plain words. It is added to your forecast and the verdict comes from a fixed rule, not from the model." />
 
+      {tooLittle && (
+        <div className="mb-4">
+          <InsufficientData reason={forecast.reason} />
+        </div>
+      )}
+
       <form onSubmit={onSubmit} className="rounded-lg border border-slate-200 bg-white p-5">
         <label htmlFor="whatif" className="text-sm font-medium">What do you want to try?</label>
         <textarea
@@ -246,7 +261,7 @@ function Simulator({ userId }: { userId: number }) {
         <div className="mt-3 flex flex-wrap items-center gap-2">
           <button
             type="submit"
-            disabled={!text.trim() || busy}
+            disabled={!text.trim() || busy || tooLittle}
             className="rounded-md bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700 disabled:cursor-not-allowed disabled:bg-slate-300"
           >
             {busy ? 'Simulating…' : 'Simulate'}
@@ -256,7 +271,7 @@ function Simulator({ userId }: { userId: number }) {
             <button
               key={ex}
               type="button"
-              disabled={busy}
+              disabled={busy || tooLittle}
               onClick={() => {
                 setText(ex)
                 void run(ex)

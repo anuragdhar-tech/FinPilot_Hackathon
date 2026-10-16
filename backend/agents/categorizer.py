@@ -30,7 +30,7 @@ from typing import Callable
 
 from pydantic import BaseModel, Field, ValidationError
 
-from backend.llm.client import Completion
+from backend.llm.client import Completion, LLMUnavailable
 from backend.models import CATEGORIES, Category
 
 PROMPT_VERSION = "cat-v2"  # active version; see VERSIONS below
@@ -307,7 +307,9 @@ def run_batch(items: list[TxnIn], llm: LLM, model: str, phase: str, version: Ver
         messages, local = _messages(pending, version)
         try:
             comp = llm(messages, version.response_format)
-        except Exception as e:  # transport errors already retried by the SDK
+        except LLMUnavailable:  # already retried by the SDK: fail the run instead of waiting through more attempts
+            raise
+        except Exception as e:
             stat.problems.append(f"llm error: {type(e).__name__}")
             continue
         stat.prompt_tokens += comp.prompt_tokens

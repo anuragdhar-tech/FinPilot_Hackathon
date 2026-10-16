@@ -27,6 +27,8 @@ VARIABLE_MONTHS = 3  # (J)
 INCOME_MONTHS = 6  # approved
 ONE_OFF_MONTHS = 6  # (J) one-offs are rare; a shorter window is mostly zeros
 Z80 = 1.2816  # p10/p90 of a normal
+MIN_HISTORY_MONTHS = 3  # fewer complete months: no projection and no advice (approved Oct 16)
+EDGE_SLACK_DAYS = 7  # an edge month counts as complete if the data reaches within a week of its start/end
 # fc-v1: Day 3 baseline. fc-v2: adds the one-off allowance flow (added after seeing the fc-v1 backtest).
 VERSIONS = ("fc-v1", "fc-v2")
 METHOD_VERSION = "fc-v2"
@@ -99,6 +101,27 @@ def inputs_from_params(params: dict) -> ForecastInputs:
     flows = tuple(Flow(f["label"], f["kind"], f["category"], f["source_ref"], tuple(f["means"]), f["sd_cents"])
                   for f in params["flows"])
     return ForecastInputs(params["as_of_month"], params["start_balance_cents"], flows)
+
+
+def complete_months(txns: list[Txn], as_of_month: str) -> int:
+    """Calendar months on or before as_of fully covered by the data. The first month counts if the first
+    transaction is in its first week, the last month if the last one is in its last week (bank exports start
+    and end mid-month); every month in between counts, months after the last transaction do not."""
+    txns = [t for t in txns if t.day <= month_end(as_of_month)]
+    if not txns:
+        return 0
+    first, last = min(t.day for t in txns), max(t.day for t in txns)
+    n = (len(months_between(f"{first:%Y-%m}", f"{last:%Y-%m}")) - (first.day > EDGE_SLACK_DAYS)
+         - ((month_end(f"{last:%Y-%m}") - last).days >= EDGE_SLACK_DAYS))
+    return max(0, n)
+
+
+def insufficient_reason(txns: list[Txn], as_of_month: str) -> str | None:
+    n = complete_months(txns, as_of_month)
+    if n >= MIN_HISTORY_MONTHS:
+        return None
+    return (f"Not enough history yet, need at least {MIN_HISTORY_MONTHS} months "
+            f"(have {n} complete month{'' if n == 1 else 's'} up to {as_of_month}).")
 
 
 def _monthly(txns: list[Txn], months: list[str]) -> list[int]:

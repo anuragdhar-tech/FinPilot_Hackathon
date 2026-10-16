@@ -27,6 +27,21 @@ export function ErrorBox({ error, onRetry }: { error: unknown; onRetry?: () => v
   )
 }
 
+export const NOT_ENOUGH_HISTORY = 'Not enough history yet, need at least 3 months'
+
+/** Shown instead of a projection when the profile has under 3 complete months of transactions. */
+export function InsufficientData({ reason }: { reason: string | null }) {
+  return (
+    <div role="status" className="rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900">
+      <div className="font-medium">{NOT_ENOUGH_HISTORY}</div>
+      <p className="mt-1 text-amber-800">
+        {reason ?? 'The forecast needs at least 3 complete months of transactions.'} Upload more history to get a forecast,
+        what-if results and recommendations.
+      </p>
+    </div>
+  )
+}
+
 export function Empty({ title, children }: { title: string; children?: ReactNode }) {
   return (
     <div className="rounded-lg border border-dashed border-slate-300 bg-white p-8 text-center">

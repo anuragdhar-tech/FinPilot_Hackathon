@@ -223,7 +223,9 @@ class Forecast(BaseModel):
     horizon_months: int = Field(gt=0)
     method: str
     start_balance_cents: int  # balance at the end of as_of_month
-    points: list[ForecastPoint]
+    points: list[ForecastPoint]  # empty when insufficient_data
+    insufficient_data: bool = False  # under 3 complete months on or before as_of: no projection, no advice
+    reason: str | None = None
 
 
 class ScenarioItem(BaseModel):

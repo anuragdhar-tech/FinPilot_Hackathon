@@ -34,6 +34,7 @@ class FinPilotState(TypedDict, total=False):
     categorizations: list[categorizer.Label]
     patterns: list[Detected]
     forecast: int  # forecasts.id
+    insufficient_data: bool  # under MIN_HISTORY_MONTHS complete months: no projection, advice skipped
     goal: Any
     scenario: Any
     drafts: list[Any]
@@ -150,12 +151,23 @@ def build_graph(conn: sqlite3.Connection, categorizer_llm: LLM | None = None, us
         t0 = time.monotonic()
         run_id, uid, as_of = state["run_id"], state["user_id"], state["as_of_month"]
         opening = conn.execute("SELECT opening_balance_cents FROM users WHERE id = ?", (uid,)).fetchone()[0]
-        fc = forecaster.forecast(load_txns(conn, uid, as_of), state["patterns"], opening, as_of)
+        txns = load_txns(conn, uid, as_of)
+        fc = forecaster.forecast(txns, state["patterns"], opening, as_of)
+        reason = forecaster.insufficient_reason(txns, as_of)
+        params = fc.params() | ({"insufficient_data": True, "reason": reason} if reason else {})
         cur = conn.execute(
             "INSERT INTO forecasts (run_id, user_id, as_of_month, horizon_months, method, params, output) "
             "VALUES (?, ?, ?, ?, ?, ?, ?)",
-            (run_id, uid, as_of, fc.horizon_months, forecaster.METHOD, json.dumps(fc.params()), json.dumps(fc.points)))
+            (run_id, uid, as_of, fc.horizon_months, forecaster.METHOD, json.dumps(params),
+             json.dumps([] if reason else fc.points)))
         conn.commit()
+        if reason:
+            seq = emit(conn, run_id, "forecast",
+                       summary=f"{fc.version}, as_of {as_of}: insufficient data, no projection; advice skipped. {reason}",
+                       input_ref=f"run:{run_id}/patterns", output_ref=f"forecast:{cur.lastrowid}",
+                       duration_ms=int((time.monotonic() - t0) * 1000))
+            return {"forecast": cur.lastrowid, "insufficient_data": True,
+                    "audit_events": [*state.get("audit_events", []), seq]}
         flows, nxt = fc.inputs.flows, fc.points[0]
         per_kind = {k: -sum(f.means[0] for f in flows if f.kind == k) for k in ("recurring", "variable", "one_off")}
         seq = emit(conn, run_id, "forecast",
@@ -168,7 +180,8 @@ def build_graph(conn: sqlite3.Connection, categorizer_llm: LLM | None = None, us
                             f"trend-adjusted: {', '.join(fc.trend_adjusted) or 'none'}"),
                    input_ref=f"run:{run_id}/patterns", output_ref=f"forecast:{cur.lastrowid}",
                    duration_ms=int((time.monotonic() - t0) * 1000))
-        return {"forecast": cur.lastrowid, "audit_events": [*state.get("audit_events", []), seq]}
+        return {"forecast": cur.lastrowid, "insufficient_data": False,
+                "audit_events": [*state.get("audit_events", []), seq]}
 
     def advise(state: FinPilotState) -> FinPilotState:
         run_id, attempt = state["run_id"], state.get("attempt", 0) + 1
@@ -265,6 +278,9 @@ def build_graph(conn: sqlite3.Connection, categorizer_llm: LLM | None = None, us
     def route(state: FinPilotState) -> str:
         return "advise" if state.get("verifier_reports") else "persist"
 
+    def after_forecast(state: FinPilotState) -> str:
+        return "persist" if state.get("insufficient_data") else "advise"
+
     g = StateGraph(FinPilotState)
     g.add_node("ingest", ingest)
     g.add_node("categorize", categorize)
@@ -277,7 +293,7 @@ def build_graph(conn: sqlite3.Connection, categorizer_llm: LLM | None = None, us
     g.add_edge("ingest", "categorize")
     g.add_edge("categorize", "analyze")
     g.add_edge("analyze", "forecast")
-    g.add_edge("forecast", "advise")
+    g.add_conditional_edges("forecast", after_forecast, {"advise": "advise", "persist": "persist"})
     g.add_edge("advise", "verify")
     g.add_conditional_edges("verify", route, {"advise": "advise", "persist": "persist"})
     g.add_edge("persist", END)
@@ -369,12 +385,28 @@ def execute_run(run_id: str, *, db_path: str | None = None, categorizer_llm: LLM
             conn.execute("UPDATE runs SET status = 'done', finished_at = datetime('now') WHERE id = ?", (run_id,))
         except Exception as e:
             conn.rollback()
-            emit(conn, run_id, "coordinator", status="error", summary=f"run failed: {type(e).__name__}: {e}"[:500])
+            # status first, so a failing event write cannot leave the run in 'running'
             conn.execute("UPDATE runs SET status = 'failed', finished_at = datetime('now'), error = ? WHERE id = ?",
                          (f"{type(e).__name__}: {e}"[:500], run_id))
+            conn.commit()
+            emit(conn, run_id, "coordinator", status="error", summary=f"run failed: {type(e).__name__}: {e}"[:500])
         conn.commit()
     finally:
         conn.close()
+
+
+STALE_RUN_MINUTES = 15
+
+
+def fail_stale_runs(conn: sqlite3.Connection, minutes: int = STALE_RUN_MINUTES) -> int:
+    """On startup: runs still 'running' after `minutes` died with an earlier server process."""
+    cur = conn.execute(
+        "UPDATE runs SET status = 'failed', finished_at = datetime('now'), error = ? "
+        "WHERE status = 'running' AND started_at < datetime('now', ?)",
+        (f"still running {minutes}+ minutes at server startup; the process that ran it is gone",
+         f"-{minutes} minutes"))
+    conn.commit()
+    return cur.rowcount
 
 
 # ---- what-if: parse -> simulate -> explain -> number_check (-> explain once more, then template) ----
@@ -502,6 +534,9 @@ def run_whatif(conn: sqlite3.Connection, user_id: int, *, text: str | None = Non
                         (user_id,)).fetchone()
     if base is None:
         raise LookupError("no forecast yet; start a run")
+    base_params = json.loads(base["params"])
+    if base_params.get("insufficient_data"):
+        raise whatif.ScenarioError(base_params["reason"])
     run_id = uuid.uuid4().hex
     conn.execute("INSERT INTO runs (id, user_id, kind, status, as_of_month) VALUES (?, ?, 'whatif', 'running', ?)",
                  (run_id, user_id, base["as_of_month"]))
@@ -509,7 +544,7 @@ def run_whatif(conn: sqlite3.Connection, user_id: int, *, text: str | None = Non
     try:
         out = build_whatif_graph(conn, parser_llm, explainer_llm).invoke({
             "run_id": run_id, "as_of_month": base["as_of_month"], "text": text, "scenario": scenario,
-            "horizon": horizon_months, "base_forecast_id": base["id"], "base_params": json.loads(base["params"])})
+            "horizon": horizon_months, "base_forecast_id": base["id"], "base_params": base_params})
     except Exception as e:
         conn.rollback()
         conn.execute("UPDATE runs SET status = 'failed', finished_at = datetime('now'), error = ? WHERE id = ?",

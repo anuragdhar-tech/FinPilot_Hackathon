@@ -3,14 +3,15 @@ import { Link } from 'react-router-dom'
 import { api, ApiError, type Recommendation } from '../api'
 import { useUsers } from '../context/user-context'
 import { useAsync } from '../hooks/useAsync'
-import { IMPACT_HINT } from '../lib/advice'
+import { headline } from '../lib/advice'
 import { moneyWhole, monthLabel } from '../lib/format'
 import { ActionChip } from '../components/ActionChip'
 import { AuditPanel } from '../components/AuditPanel'
 import { Empty, ErrorBox, Loading, PageTitle } from '../components/State'
 
-function Card({ rec, userId, defaultOpen }: { rec: Recommendation; userId: number; defaultOpen: boolean }) {
+function Card({ rec, userId, defaultOpen, asOf }: { rec: Recommendation; userId: number; defaultOpen: boolean; asOf?: string | null }) {
   const [open, setOpen] = useState(defaultOpen)
+  const head = headline(rec, asOf)
   const revised = rec.attempts - 1
   return (
     <li className="rounded-lg border border-slate-200 bg-white">
@@ -32,9 +33,9 @@ function Card({ rec, userId, defaultOpen }: { rec: Recommendation; userId: numbe
           <p className="mt-1 whitespace-pre-line text-sm text-slate-700">{rec.body}</p>
         </div>
         <div className="shrink-0 sm:text-right">
-          <div className="text-2xl font-semibold tabular-nums">{moneyWhole(rec.impact_annual_cents)}</div>
-          <div className="text-xs text-slate-500">annual impact</div>
-          <div className="text-xs text-slate-400">{IMPACT_HINT[rec.action]}</div>
+          <div className="text-2xl font-semibold tabular-nums">{moneyWhole(head.cents)}</div>
+          <div className="max-w-[14rem] text-xs text-slate-500 sm:ml-auto">{head.label}</div>
+          {head.hint && <div className="text-xs text-slate-400">{head.hint}</div>}
         </div>
       </div>
       <div className="border-t border-slate-100 px-5 py-3">
@@ -110,7 +111,7 @@ export function RecommendationsPage() {
               {data.items.map((r) => (
                 // keyed on the run too, so a new run collapses the old audit panels; the first revised
                 // recommendation (a rejection then an accepted redraft) starts open, else the top one
-                <Card key={`${data.run_id}-${r.id}`} rec={r} userId={userId!} defaultOpen={r.id === openId} />
+                <Card key={`${data.run_id}-${r.id}`} rec={r} userId={userId!} defaultOpen={r.id === openId} asOf={data.as_of_month} />
               ))}
             </ul>
           )}
