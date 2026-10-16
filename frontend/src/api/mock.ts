@@ -1,6 +1,9 @@
 import type { ApiClient } from './client'
 import { ApiError } from './errors'
-import type { AgentEvent, Category, EvalSummary, Forecast, RunStatus, Transaction, User } from './types'
+import type {
+  AgentEvent, AuditRecord, Category, Claim, EvalSummary, Forecast, RecommendationList, RunStatus, SimulateResponse,
+  Transaction, User,
+} from './types'
 
 // Mock mode: everything below is invented sample data for working without the backend.
 // Nothing here is a real result.
@@ -100,6 +103,11 @@ const mockEval: EvalSummary = {
     },
     per_persona: null,
   },
+  verifier: {
+    first_draft_fail_rate: 0.333, drafts: 24, rejected: 6, lineages: 18, accepted: 18, dropped: 0,
+    by_check: { numbers: 6 },
+  },
+  grounded_number_rate: 0.94,
   forecast: {
     mape: 0.11, naive_mape: 0.13, naive_mean_mape: 0.115, no_trend_mape: 0.112, mean_error_cents: -40000,
     baseline_mean_error_cents: { no_trend: -41000, naive_last: -7600, naive_mean: -28500 },
@@ -115,6 +123,86 @@ const mockForecast: Forecast = {
     income_cents: 470000, spend_cents: 440000,
     by_category: { housing: 215000, groceries: 90000, dining: 60000, utilities: 40000, one_off: 35000 },
   })),
+}
+
+const claim = (kind: Claim['kind'], value: number, unit: Claim['unit'], ref: string, extra: Partial<Claim> = {}): Claim =>
+  ({ kind, value, unit, source_ref: ref, month: null, period: null, ...extra })
+
+const mockRecs: RecommendationList = {
+  run_id: 'mock-run-main', as_of_month: '2026-09',
+  items: [
+    {
+      id: 11, lineage_id: 'mock-lin-1', action: 'cancel', target: 'UBER*ONE MEMBERSHIP',
+      title: 'Cancel Uber One ($9.99/month)',
+      body: 'No other Uber spend for 288 days. Cancelling would leave your balance $59.94 higher by 2027-03.',
+      claims: [], trigger_type: 'pattern', trigger_id: '3', goal_id: null, rank: 1, impact_annual_cents: 11988,
+      attempts: 2, created_at: '2026-10-15 09:30:00',
+    },
+    {
+      id: 14, lineage_id: 'mock-lin-2', action: 'review_price_increase', target: 'SPOTIFY USA',
+      title: 'Spotify went up $1.00/month', body: 'The price rose by $1.00 per month. Check whether the plan is still worth it.',
+      claims: [], trigger_type: 'pattern', trigger_id: '2', goal_id: null, rank: 2, impact_annual_cents: 1200,
+      attempts: 1, created_at: '2026-10-15 09:30:05',
+    },
+  ],
+}
+
+const mockAudit = (recId: number): AuditRecord => {
+  const ref = 'pattern:3'
+  const good = [claim('recurring_cost', 999, 'cents', ref, { period: 'month' }),
+    claim('days_since_parent_spend', 288, 'days', ref),
+    claim('projected_balance_delta', 5994, 'cents', 'forecast:1', { month: '2027-03' })]
+  const bad = [claim('recurring_cost', 1299, 'cents', ref, { period: 'month' }), good[2]]
+  return {
+    recommendation_id: recId, lineage_id: 'mock-lin-1', run_id: 'mock-run-main', trigger_type: 'pattern', trigger_id: '3',
+    trigger: { title: 'UBER*ONE MEMBERSHIP: $9.99/month, no other UBER spend for 288 days', evidence_txn_ids: (txns[2] ?? []).slice(0, 4).map((t) => t.id) },
+    inputs: { pattern_ids: [3], forecast_id: 1, as_of_month: '2026-09' }, model: 'mock-model', prompt_version: 'mock',
+    attempts: [
+      {
+        attempt: 1, rec_id: recId - 1, status: 'rejected', action: 'cancel', target: 'UBER*ONE MEMBERSHIP',
+        title: 'Cancel Uber One ($12.99/month)', body: 'Cancelling would leave your balance $59.94 higher by 2027-03, about $150 a year.',
+        claims: bad, verdict: 'reject',
+        reasons: ['claim recurring_cost (pattern:3): claimed 1299, recomputed 999', "numbers: '$150' in the text matches no claim"],
+        checks: [
+          { claim: bad[0], recomputed: 999, tolerance: 1, ok: false, note: 'claimed 1299, recomputed 999' },
+          { claim: bad[1], recomputed: 5994, tolerance: 0, ok: true, note: null },
+        ],
+        rule_checks: [
+          { rule: 'schema', ok: true, note: '' }, { rule: 'trigger', ok: true, note: '' }, { rule: 'target', ok: true, note: '' },
+          { rule: 'action', ok: true, note: '' }, { rule: 'required_claims', ok: true, note: '' },
+          { rule: 'numbers', ok: false, note: "'$150' in the text matches no claim" },
+        ],
+        ts: '2026-10-15 09:29:40',
+      },
+      {
+        attempt: 2, rec_id: recId, status: 'accepted', action: 'cancel', target: 'UBER*ONE MEMBERSHIP',
+        title: 'Cancel Uber One ($9.99/month)', body: 'No other Uber spend for 288 days. Cancelling would leave your balance $59.94 higher by 2027-03.',
+        claims: good, verdict: 'pass', reasons: [],
+        checks: [
+          { claim: good[0], recomputed: 999, tolerance: 1, ok: true, note: null },
+          { claim: good[1], recomputed: 288, tolerance: 0, ok: true, note: null },
+          { claim: good[2], recomputed: 5994, tolerance: 0, ok: true, note: null },
+        ],
+        rule_checks: ['schema', 'trigger', 'target', 'action', 'required_claims', 'numbers'].map((rule) => ({ rule: rule as 'schema', ok: true, note: '' })),
+        ts: '2026-10-15 09:29:52',
+      },
+    ],
+  }
+}
+
+const mockSimulate = (text: string): SimulateResponse => {
+  const base = mockForecast.points
+  const proj = base.map((p, k) => (k >= 1
+    ? { ...p, balance_p10: p.balance_p10 - 200000, balance_p50: p.balance_p50 - 200000, balance_p90: p.balance_p90 - 200000 }
+    : p))
+  return {
+    scenario: { items: [{ kind: 'one_off', label: text.slice(0, 40), amount_cents: -200000, start_month: '2026-11', months: null }] },
+    baseline: base, projected: proj, end_delta_cents: -200000, verdict: 'affordable',
+    lowest_p50: { month: '2026-11', cents: proj[1].balance_p50 }, lowest_p10: { month: '2026-11', cents: proj[1].balance_p10 },
+    baseline_forecast_id: 1, scenario_forecast_id: 2, run_id: 'mock-run-whatif',
+    explanation: 'Mock explanation: the purchase keeps even the low-end balance above $0.00.', explanation_source: 'llm',
+    number_check: { passed: true, issues: [] },
+  }
 }
 
 export const mockClient: ApiClient = {
@@ -171,6 +259,18 @@ export const mockClient: ApiClient = {
     delay(forecastVersion === 'fc-v1' && mockEval.forecast
       ? { ...mockEval, forecast: { ...mockEval.forecast, method_version: 'fc-v1', mape: 0.123, mean_error_cents: -64000 } }
       : mockEval),
+  getRecommendations: () => delay(mockRecs),
+  getAudit: async (recId) => {
+    if (!mockRecs.items.some((r) => r.id === recId)) throw new ApiError(404, 'recommendation not found')
+    return delay(mockAudit(recId))
+  },
+  simulate: async (body) => {
+    if (!('text' in body)) return delay(mockSimulate('scenario'), 600)
+    if (!/\$\s?\d/.test(body.text)) {
+      throw new ApiError(422, 'not a what-if scenario: no purchase or amount found', ['not a what-if scenario: no purchase or amount found'])
+    }
+    return delay(mockSimulate(body.text), 600)
+  },
   getForecast: (_userId, horizonMonths = 6) =>
     delay({ ...mockForecast, horizon_months: horizonMonths, points: mockForecast.points.slice(0, horizonMonths) }),
 }

@@ -1,6 +1,7 @@
 import { useCallback } from 'react'
-import { api, ApiError, type CategorizationMetrics, type EvalSummary, type ForecastMetrics } from '../api'
+import { api, ApiError, type CategorizationMetrics, type EvalSummary, type ForecastMetrics, type VerifierMetrics } from '../api'
 import { useAsync } from '../hooks/useAsync'
+import { checkLabel } from '../lib/advice'
 import { dateTime, moneyWhole, pct } from '../lib/format'
 import { CategoryChip } from '../components/CategoryChip'
 import { Empty, ErrorBox, Loading, PageTitle } from '../components/State'
@@ -64,6 +65,62 @@ function ForecastBacktest({ f, before }: { f: ForecastMetrics; before: ForecastM
   )
 }
 
+/** Advisor <-> Verifier loop metrics (eval/advice.py). The API serves only the summary block of that file. */
+function VerifierSection({ v, grounded, advisorModel }: { v: VerifierMetrics; grounded: number | null | undefined; advisorModel?: string }) {
+  const checks = Object.entries(v.by_check ?? {}).sort(([, a], [, b]) => b - a)
+  const n = (x: number | null) => (x == null ? '—' : x.toLocaleString())
+  return (
+    <section>
+      <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500">Advisor and Verifier loop · development set</h2>
+      <div role="note" className="mb-3 rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+        <span className="font-semibold">Development set; the Advisor prompt was revised after seeing these results.</span> Three synthetic
+        personas, {v.lineages != null ? `${v.lineages} recommendations` : 'a small number of recommendations'} in total
+        {advisorModel && <> (advisor model {advisorModel})</>}; treat the numbers as optimistic and too few to separate small differences.
+      </div>
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <Tile label="First-draft failure rate" value={pct(v.first_draft_fail_rate)} hint="recommendations whose first draft the Verifier rejected" />
+        <Tile label="Accepted" value={v.accepted != null && v.lineages != null ? `${v.accepted} / ${v.lineages}` : n(v.accepted)} hint="recommendations that passed the Verifier" />
+        <Tile label="Dropped" value={n(v.dropped)} hint="3 rejected drafts, or withdrawn by the Advisor" />
+        <Tile label="Grounded-number rate" value={pct(grounded)} hint="numbers in first-draft text that match a correct claim" />
+      </div>
+      <p className="mt-3 text-sm text-slate-600">
+        {v.drafts.toLocaleString()} drafts in total, {v.rejected.toLocaleString()} rejected (a recommendation can be drafted up to 3 times).
+      </p>
+
+      <h3 className="mb-2 mt-4 text-xs font-semibold uppercase tracking-wide text-slate-500">First-draft failures by check</h3>
+      {checks.length === 0 ? (
+        <Empty title="No first-draft failures" />
+      ) : (
+        <div className="overflow-hidden rounded-lg border border-slate-200 bg-white">
+          <table className="w-full text-left text-sm">
+            <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+              <tr>
+                <th className="px-4 py-2 font-medium">Check that failed</th>
+                <th className="px-4 py-2 text-right font-medium">Recommendations</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {checks.map(([name, count]) => (
+                <tr key={name}>
+                  <td className="px-4 py-2">
+                    {checkLabel(name)} <span className="font-mono text-xs text-slate-400">{name}</span>
+                  </td>
+                  <td className="px-4 py-2 text-right font-semibold tabular-nums">{count}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+      <p className="mt-3 text-xs text-slate-500">
+        A recommendation can fail more than one check, so the counts can add up to more than the number of rejected first drafts. The
+        unused-membership hits and control checks (no cancel on a membership that is in use) are in the eval results file, but the API
+        does not serve them yet, so they are not shown here.
+      </p>
+    </section>
+  )
+}
+
 function Results({ summary, c, before }: { summary: EvalSummary; c: CategorizationMetrics; before: ForecastMetrics | null }) {
   const rows = Object.entries(c.per_category ?? {}).sort(([, a], [, b]) => b.support - a.support)
   return (
@@ -91,6 +148,10 @@ function Results({ summary, c, before }: { summary: EvalSummary; c: Categorizati
       </section>
 
       {summary.forecast && <ForecastBacktest f={summary.forecast} before={before} />}
+
+      {summary.verifier && (
+        <VerifierSection v={summary.verifier} grounded={summary.grounded_number_rate} advisorModel={summary.models.advisor} />
+      )}
 
       <div className="grid gap-6 lg:grid-cols-5">
         <section className="lg:col-span-3">

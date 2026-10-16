@@ -241,6 +241,7 @@ class Scenario(BaseModel):
 class SimulateRequest(BaseModel):
     text: str | None = None
     scenario: Scenario | None = None
+    horizon_months: int = Field(default=6, ge=1, le=12)  # extended to cover the scenario's start month
 
     @model_validator(mode="after")
     def exactly_one(self):
@@ -250,8 +251,13 @@ class SimulateRequest(BaseModel):
 
 
 class NumberCheck(BaseModel):
-    passed: bool
-    issues: list[str] = []
+    passed: bool  # the LLM explanation's numbers all match code-computed facts
+    issues: list[str] = []  # every failed attempt's unmatched numbers, also when the template was used
+
+
+class LowPoint(BaseModel):
+    month: Month
+    cents: int
 
 
 class SimulateResponse(BaseModel):
@@ -259,51 +265,89 @@ class SimulateResponse(BaseModel):
     baseline: list[ForecastPoint]
     projected: list[ForecastPoint]
     end_delta_cents: int
+    # code rule over the scenario trajectory: p10 >= $0 every month -> affordable; else p50 >= $0 -> tight;
+    # else not_affordable
+    verdict: Literal["affordable", "tight", "not_affordable"]
+    lowest_p50: LowPoint
+    lowest_p10: LowPoint
+    baseline_forecast_id: int
+    scenario_forecast_id: int
+    run_id: str
     explanation: str
+    explanation_source: Literal["llm", "template"]  # template = the LLM text failed the number check twice
     number_check: NumberCheck
 
 
 # ---- recommendations / audit ----
 
+ClaimKind = Literal[
+    "recurring_cost", "prev_recurring_cost", "price_change", "days_since_parent_spend",  # recurring pattern
+    "category_spend", "excess_spend", "percent_change",  # trend pattern
+    "forecast_balance", "forecast_balance_p10", "projected_balance_delta",  # the run's forecast
+]
+Action = Literal["cancel", "review_price_increase", "reduce_spending"]
+
+
 class Claim(BaseModel):
-    kind: Literal["monthly_savings", "annual_savings", "goal_date", "amount", "percent"]
-    value: int | str  # int cents, ISO date string, or int percent
-    unit: Literal["cents", "date", "percent"]
+    """One number in a recommendation; the Verifier recomputes it from the DB (backend/agents/verifier.py)."""
+    kind: ClaimKind
+    value: int  # cents, days or integer percent (see unit)
+    unit: Literal["cents", "days", "percent"]
     source_ref: Annotated[str, Field(pattern=r"^(pattern|forecast|goal|scenario|txn):\d+$")]
+    month: Month | None = None  # category_spend, forecast_balance*, projected_balance_delta
+    period: Literal["month", "year"] | None = None  # year = 12 x the monthly figure
 
 
 class Recommendation(BaseModel):
     id: int
     lineage_id: str
+    action: Action
+    target: str
     title: str
     body: str
     claims: list[Claim]
     trigger_type: TriggerType
     trigger_id: str
     goal_id: int | None = None
+    rank: int  # 1 = largest verifier-recomputed annual impact
+    impact_annual_cents: int  # recomputed by the Verifier, not taken from the LLM
+    attempts: int  # drafts in this lineage (2+ = revised after a rejection)
     created_at: str
 
 
 class RecommendationList(BaseModel):
-    items: list[Recommendation]
+    items: list[Recommendation]  # accepted only, ranked
+    run_id: str | None = None
+    as_of_month: Month | None = None
 
 
 class ClaimCheck(BaseModel):
     claim: Claim
-    recomputed: int | str | None
-    tolerance: int | float
+    recomputed: int | None
+    tolerance: int
     ok: bool
     note: str | None = None
+
+
+class RuleCheck(BaseModel):
+    rule: Literal["schema", "trigger", "target", "action", "required_claims", "numbers"]
+    ok: bool
+    note: str = ""
 
 
 class AuditAttempt(BaseModel):
     attempt: int
     rec_id: int
+    status: Literal["draft", "rejected", "accepted", "dropped"]
+    action: str
+    target: str
     title: str
     body: str
+    claims: list[Claim]
     verdict: Literal["pass", "reject"]
     reasons: list[str]
     checks: list[ClaimCheck]
+    rule_checks: list[RuleCheck]
     ts: str
 
 
@@ -313,15 +357,22 @@ class AuditInputs(BaseModel):
     as_of_month: Month
 
 
+class AuditTrigger(BaseModel):
+    title: str
+    evidence_txn_ids: list[int] = []
+
+
 class AuditRecord(BaseModel):
     recommendation_id: int
     lineage_id: str
+    run_id: str
     trigger_type: TriggerType
     trigger_id: str
+    trigger: AuditTrigger | None = None
     inputs: AuditInputs
     model: str
     prompt_version: str
-    attempts: list[AuditAttempt]
+    attempts: list[AuditAttempt]  # every draft of the lineage, rejected ones included
 
 
 # ---- goals ----
@@ -428,9 +479,13 @@ class ForecastMetrics(BaseModel):
 
 
 class VerifierMetrics(BaseModel):
-    first_draft_fail_rate: float
+    first_draft_fail_rate: float  # lineages rejected on attempt 1 / lineages
     drafts: int
     rejected: int
+    lineages: int | None = None
+    accepted: int | None = None
+    dropped: int | None = None  # 3 rejected attempts, or withdrawn by the Advisor after a rejection
+    by_check: dict[str, int] | None = None  # first-draft failures per check
 
 
 class EvalSummary(BaseModel):

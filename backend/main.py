@@ -6,11 +6,13 @@ from pathlib import Path
 from fastapi import BackgroundTasks, Depends, FastAPI, File, Form, HTTPException, Query, UploadFile
 
 from backend.db import connect, init_db
-from backend.graph import create_run, execute_run
+from backend.agents.whatif import ScenarioError
+from backend.graph import create_run, execute_run, ranked_recommendations, run_whatif
 from backend.ingest import CsvError, active_user_id, ingest_csv
 from backend.agents.forecaster import MAX_HORIZON
-from backend.models import (Category, EvalSummary, Forecast, Month, PatternList, RunCreate, RunCreated, RunList,
-                            RunStatus, TransactionList, UploadResponse, User, UserDeleted, UserList)
+from backend.models import (AuditRecord, Category, EvalSummary, Forecast, Month, PatternList, RecommendationList,
+                            RunCreate, RunCreated, RunList, RunStatus, SimulateRequest, SimulateResponse,
+                            TransactionList, UploadResponse, User, UserDeleted, UserList)
 from backend.users import delete_user
 
 EVAL_RESULTS = Path(__file__).resolve().parents[1] / "eval" / "results"
@@ -172,6 +174,62 @@ def get_forecast(horizon_months: int = Query(6, ge=1, le=MAX_HORIZON), user_id: 
             "points": json.loads(row["output"])[:horizon_months]}
 
 
+def latest_main_run(conn: sqlite3.Connection, uid: int):
+    return conn.execute("SELECT id, as_of_month FROM runs WHERE user_id = ? AND kind = 'main' AND status = 'done' "
+                        "ORDER BY started_at DESC, rowid DESC LIMIT 1", (uid,)).fetchone()
+
+
+@app.get("/api/recommendations", response_model=RecommendationList)
+def list_recommendations(user_id: int | None = None, conn: sqlite3.Connection = Depends(get_conn)):
+    """Accepted recommendations from the user's latest finished main run, ranked by verifier-recomputed impact."""
+    uid = resolve_user(conn, user_id)
+    run = latest_main_run(conn, uid)
+    if run is None:
+        return {"items": []}
+    return {"items": ranked_recommendations(conn, run["id"]), "run_id": run["id"], "as_of_month": run["as_of_month"]}
+
+
+@app.get("/api/recommendations/{rec_id}/audit", response_model=AuditRecord)
+def recommendation_audit(rec_id: int, conn: sqlite3.Connection = Depends(get_conn)):
+    """Why this was recommended: the trigger pattern and every draft of the lineage with its verifier checks."""
+    rec = conn.execute("SELECT * FROM recommendations WHERE id = ?", (rec_id,)).fetchone()
+    if rec is None:
+        raise HTTPException(404, "recommendation not found")
+    rows = conn.execute(
+        "SELECT r.*, a.verifier_verdict, a.reasons, a.checks, a.rule_checks, a.inputs, a.ts AS audit_ts "
+        "FROM recommendations r JOIN audit_trail a ON a.rec_id = r.id WHERE r.lineage_id = ? ORDER BY r.attempt",
+        (rec["lineage_id"],)).fetchall()
+    trigger = None
+    if rec["trigger_type"] == "pattern" and rec["trigger_id"].isdigit():
+        p = conn.execute("SELECT title FROM patterns WHERE id = ? AND run_id = ?",
+                         (int(rec["trigger_id"]), rec["run_id"])).fetchone()
+        if p:
+            ev = [r[0] for r in conn.execute("SELECT txn_id FROM pattern_evidence WHERE pattern_id = ? ORDER BY txn_id",
+                                             (int(rec["trigger_id"]),))]
+            trigger = {"title": p["title"], "evidence_txn_ids": ev}
+    last = rows[-1]
+    return {"recommendation_id": rec_id, "lineage_id": rec["lineage_id"], "run_id": rec["run_id"],
+            "trigger_type": rec["trigger_type"], "trigger_id": rec["trigger_id"], "trigger": trigger,
+            "inputs": json.loads(last["inputs"]), "model": last["model"], "prompt_version": last["prompt_version"],
+            "attempts": [{"attempt": r["attempt"], "rec_id": r["id"], "status": r["status"], "action": r["action"],
+                          "target": r["target"], "title": r["title"], "body": r["body"],
+                          "claims": json.loads(r["claims"]), "verdict": r["verifier_verdict"],
+                          "reasons": json.loads(r["reasons"]), "checks": json.loads(r["checks"]),
+                          "rule_checks": json.loads(r["rule_checks"]), "ts": r["audit_ts"]} for r in rows]}
+
+
+@app.post("/api/simulate", response_model=SimulateResponse)
+def simulate(body: SimulateRequest, user_id: int | None = None, conn: sqlite3.Connection = Depends(get_conn)):
+    """What-if on the user's latest baseline forecast. Synchronous: one parse call and up to two explain calls."""
+    uid = resolve_user(conn, user_id)
+    try:
+        return run_whatif(conn, uid, text=body.text, scenario=body.scenario, horizon_months=body.horizon_months)
+    except LookupError as e:
+        raise HTTPException(404, str(e))
+    except ScenarioError as e:
+        raise HTTPException(422, {"errors": [str(e)]})
+
+
 @app.get("/api/eval/latest", response_model=EvalSummary)
 def eval_latest(version: str | None = Query(None, pattern=r"^cat-v\d+$"),
                 forecast_version: str | None = Query(None, pattern=r"^fc-v\d+$")):
@@ -180,7 +238,8 @@ def eval_latest(version: str | None = Query(None, pattern=r"^cat-v\d+$"),
     ?version=cat-v1 serves the committed categorization_cat-v1.json instead. Prompt version, tokens and
     cost come from the same file's details block. Pattern and forecast metrics are merged in from
     patterns.json and forecast.json (eval/analysis.py); ?forecast_version=fc-v1 takes the forecast
-    metrics from the committed forecast_fc-v1.json instead.
+    metrics from the committed forecast_fc-v1.json instead. Verifier loop metrics come from advice.json
+    (eval/advice.py).
     """
     path = EVAL_RESULTS / ("categorization.json" if version is None else f"categorization_{version}.json")
     if not path.exists():
@@ -200,7 +259,8 @@ def eval_latest(version: str | None = Query(None, pattern=r"^cat-v\d+$"),
     forecast_file = "forecast" if forecast_version is None else f"forecast_{forecast_version}"
     if forecast_version and not (EVAL_RESULTS / f"{forecast_file}.json").exists():
         raise HTTPException(404, f"no committed forecast results for {forecast_version}")
-    for name, keys in (("patterns", ("recurring", "unused", "anomaly", "pattern_types")), (forecast_file, ("forecast",))):
+    for name, keys in (("patterns", ("recurring", "unused", "anomaly", "pattern_types")), (forecast_file, ("forecast",)),
+                       ("advice", ("verifier", "grounded_number_rate"))):
         extra = EVAL_RESULTS / f"{name}.json"
         if extra.exists():
             s = json.loads(extra.read_text())["summary"]

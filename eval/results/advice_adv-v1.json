@@ -1,0 +1,699 @@
+{
+  "summary": {
+    "run_at": "2026-10-15T23:58:51+00:00",
+    "git_sha": "3e45a48-dirty",
+    "dataset": "synthetic",
+    "seed": 42,
+    "models": {
+      "advisor": "openai/gpt-4o",
+      "parser": "openai/gpt-4o-mini"
+    },
+    "verifier": {
+      "first_draft_fail_rate": 0.6842,
+      "drafts": 35,
+      "rejected": 19,
+      "lineages": 19,
+      "accepted": 16,
+      "dropped": 3,
+      "by_check": {
+        "numbers": 13,
+        "action": 1,
+        "required_claims": 1
+      }
+    },
+    "grounded_number_rate": 0.8473
+  },
+  "details": {
+    "withdrawn": 1,
+    "dropped_after_max_attempts": 2,
+    "first_draft_numbers": 131,
+    "first_draft_numbers_grounded": 111,
+    "first_draft_claims": 68,
+    "first_draft_claims_ok": 68,
+    "first_draft_claim_correct_rate": 1.0,
+    "accepted_grounded_number_rate": 1.0,
+    "unused_recall": 1.0,
+    "controls_passed": "6/6",
+    "cancel_precision": 1.0,
+    "price_rise_recall": 1.0,
+    "trend_recall": 0.3333,
+    "reduce_on_unplanted_trend": 0,
+    "per_persona": {
+      "maya_renter": {
+        "unused_hit": 3,
+        "unused_n": 3,
+        "control_ok": 3,
+        "control_n": 3,
+        "cancel_n": 3,
+        "cancel_tp": 3,
+        "price_hit": 3,
+        "price_n": 3,
+        "trend_hit": 1,
+        "trend_n": 3,
+        "accepted": 7,
+        "reduce_other": 0
+      },
+      "ortiz_family": {
+        "unused_hit": 3,
+        "unused_n": 3,
+        "control_ok": 3,
+        "control_n": 3,
+        "cancel_n": 3,
+        "cancel_tp": 3,
+        "price_hit": 3,
+        "price_n": 3,
+        "accepted": 6,
+        "reduce_other": 0
+      },
+      "sam_freelancer": {
+        "unused_hit": 3,
+        "unused_n": 3,
+        "cancel_n": 3,
+        "cancel_tp": 3,
+        "accepted": 3,
+        "reduce_other": 0
+      }
+    },
+    "planted_checks": [
+      {
+        "persona": "maya_renter",
+        "repeat": 1,
+        "planted": "Uber One",
+        "kind": "unused",
+        "ok": true
+      },
+      {
+        "persona": "maya_renter",
+        "repeat": 1,
+        "planted": "DashPass",
+        "kind": "used control",
+        "ok": true
+      },
+      {
+        "persona": "maya_renter",
+        "repeat": 2,
+        "planted": "Uber One",
+        "kind": "unused",
+        "ok": true
+      },
+      {
+        "persona": "maya_renter",
+        "repeat": 2,
+        "planted": "DashPass",
+        "kind": "used control",
+        "ok": true
+      },
+      {
+        "persona": "maya_renter",
+        "repeat": 3,
+        "planted": "Uber One",
+        "kind": "unused",
+        "ok": true
+      },
+      {
+        "persona": "maya_renter",
+        "repeat": 3,
+        "planted": "DashPass",
+        "kind": "used control",
+        "ok": true
+      },
+      {
+        "persona": "ortiz_family",
+        "repeat": 1,
+        "planted": "Walmart+",
+        "kind": "unused",
+        "ok": true
+      },
+      {
+        "persona": "ortiz_family",
+        "repeat": 1,
+        "planted": "Amazon Prime",
+        "kind": "used control",
+        "ok": true
+      },
+      {
+        "persona": "ortiz_family",
+        "repeat": 2,
+        "planted": "Walmart+",
+        "kind": "unused",
+        "ok": true
+      },
+      {
+        "persona": "ortiz_family",
+        "repeat": 2,
+        "planted": "Amazon Prime",
+        "kind": "used control",
+        "ok": true
+      },
+      {
+        "persona": "ortiz_family",
+        "repeat": 3,
+        "planted": "Walmart+",
+        "kind": "unused",
+        "ok": true
+      },
+      {
+        "persona": "ortiz_family",
+        "repeat": 3,
+        "planted": "Amazon Prime",
+        "kind": "used control",
+        "ok": true
+      },
+      {
+        "persona": "sam_freelancer",
+        "repeat": 1,
+        "planted": "DashPass",
+        "kind": "unused",
+        "ok": true
+      },
+      {
+        "persona": "sam_freelancer",
+        "repeat": 2,
+        "planted": "DashPass",
+        "kind": "unused",
+        "ok": true
+      },
+      {
+        "persona": "sam_freelancer",
+        "repeat": 3,
+        "planted": "DashPass",
+        "kind": "unused",
+        "ok": true
+      }
+    ],
+    "failures": [
+      {
+        "persona": "maya_renter",
+        "repeat": 1,
+        "action": "cancel",
+        "target": "UBER*ONE MEMBERSHIP",
+        "checks": [
+          "numbers"
+        ],
+        "reasons": [
+          "numbers: '288 days' in the text matches no claim"
+        ],
+        "outcome": "accepted",
+        "attempts": 2
+      },
+      {
+        "persona": "maya_renter",
+        "repeat": 1,
+        "action": "reduce_spending",
+        "target": "food_delivery",
+        "checks": [
+          "numbers"
+        ],
+        "reasons": [
+          "numbers: '2026-09' in the text matches no claim; '$722.49' in the text matches no claim"
+        ],
+        "outcome": "accepted",
+        "attempts": 2
+      },
+      {
+        "persona": "maya_renter",
+        "repeat": 1,
+        "action": "review_price_increase",
+        "target": "SPOTIFY USA",
+        "checks": [
+          "numbers"
+        ],
+        "reasons": [
+          "numbers: '2026-03' in the text matches no claim; '$11.99' in the text matches no claim; '$12.99' in the text matches no claim; '$12' in the text matches no claim"
+        ],
+        "outcome": "accepted",
+        "attempts": 3
+      },
+      {
+        "persona": "maya_renter",
+        "repeat": 2,
+        "action": "review_price_increase",
+        "target": "SPOTIFY USA",
+        "checks": [
+          "numbers"
+        ],
+        "reasons": [
+          "numbers: '2026-03' in the text matches no claim; '$156' in the text matches no claim"
+        ],
+        "outcome": "accepted",
+        "attempts": 3
+      },
+      {
+        "persona": "maya_renter",
+        "repeat": 2,
+        "action": "cancel",
+        "target": "UBER*ONE MEMBERSHIP",
+        "checks": [
+          "numbers"
+        ],
+        "reasons": [
+          "numbers: '$9.99' in the text matches no claim"
+        ],
+        "outcome": "accepted",
+        "attempts": 2
+      },
+      {
+        "persona": "maya_renter",
+        "repeat": 2,
+        "action": "reduce_spending",
+        "target": "food_delivery",
+        "checks": [
+          "numbers"
+        ],
+        "reasons": [
+          "numbers: '$120' in the text matches no claim"
+        ],
+        "outcome": "dropped",
+        "attempts": 3
+      },
+      {
+        "persona": "maya_renter",
+        "repeat": 3,
+        "action": "reduce_spending",
+        "target": "food_delivery",
+        "checks": [
+          "numbers"
+        ],
+        "reasons": [
+          "numbers: '3 months' in the text matches no claim"
+        ],
+        "outcome": "dropped",
+        "attempts": 3
+      },
+      {
+        "persona": "maya_renter",
+        "repeat": 3,
+        "action": "review_price_increase",
+        "target": "SPOTIFY USA",
+        "checks": [
+          "numbers"
+        ],
+        "reasons": [
+          "numbers: '2026-03' in the text matches no claim"
+        ],
+        "outcome": "accepted",
+        "attempts": 2
+      },
+      {
+        "persona": "ortiz_family",
+        "repeat": 1,
+        "action": "review_price_increase",
+        "target": "NETFLIX.COM",
+        "checks": [
+          "numbers"
+        ],
+        "reasons": [
+          "numbers: '2026-04' in the text matches no claim"
+        ],
+        "outcome": "accepted",
+        "attempts": 2
+      },
+      {
+        "persona": "ortiz_family",
+        "repeat": 1,
+        "action": "cancel",
+        "target": "WALMART+ MEMBERSHIP",
+        "checks": [
+          "numbers"
+        ],
+        "reasons": [
+          "numbers: '$130' in the text matches no claim; '$130' in the text matches no claim"
+        ],
+        "outcome": "accepted",
+        "attempts": 2
+      },
+      {
+        "persona": "ortiz_family",
+        "repeat": 2,
+        "action": "review_price_increase",
+        "target": "NETFLIX.COM",
+        "checks": [
+          "numbers"
+        ],
+        "reasons": [
+          "numbers: '2026-04-12' in the text matches no claim"
+        ],
+        "outcome": "accepted",
+        "attempts": 2
+      },
+      {
+        "persona": "ortiz_family",
+        "repeat": 3,
+        "action": "review_price_increase",
+        "target": "NETFLIX.COM",
+        "checks": [
+          "numbers"
+        ],
+        "reasons": [
+          "numbers: '2026-04-12' in the text matches no claim; '$30.00' in the text matches no claim"
+        ],
+        "outcome": "accepted",
+        "attempts": 2
+      },
+      {
+        "persona": "sam_freelancer",
+        "repeat": 3,
+        "action": "reduce_spending",
+        "target": "utilities",
+        "checks": [
+          "action",
+          "required_claims",
+          "numbers"
+        ],
+        "reasons": [
+          "action: utilities is not rising above its recent level (slope -757, latest 15657 vs prior-3 mean 14571)",
+          "required_claims: reduce_spending needs claims: projected_balance_delta",
+          "numbers: '3 months' in the text matches no claim"
+        ],
+        "outcome": "withdrawn",
+        "attempts": 1
+      }
+    ],
+    "usage": {
+      "model": "openai/gpt-4o",
+      "prompt_tokens": 107023,
+      "completion_tokens": 8617,
+      "estimated_cost": {
+        "usd": 0.35373,
+        "note": "Estimated at OpenAI list prices (USD per 1M tokens) for the configured model; Mesh BYOK fees, if any, are not included. Check the OpenAI pricing page before quoting.",
+        "prices_as_of": "2026-10-15"
+      }
+    },
+    "repeats": 3,
+    "prompt_version": "adv-v1",
+    "runs": {
+      "maya_renter": [
+        "b292e4d298a14f12b2641c643bdb9cdf",
+        "c839c0593e574b4b8ed6d8bd6e81fb53",
+        "a20ef1d740ba4b33a38e905844f68b2e"
+      ],
+      "ortiz_family": [
+        "5d1f07ad1c3f4616897c4afa8f0effa5",
+        "bc6866897c2149d5868fc8ef1b87f4d7",
+        "520ff33174e5441f9d8f6bb03f8d715d"
+      ],
+      "sam_freelancer": [
+        "3c2b0e72be8440b2b278becb0c372189",
+        "46423f91166b4586a6d8a45e1d84ccae",
+        "a1c4ec124d8b4c7695ab5f52cbad960a"
+      ]
+    },
+    "whatif_sanity": [
+      {
+        "persona": "maya_renter",
+        "check": "$2,000 one-off in 2026-11: p50 and p10 move by exactly -$2,000 from 2026-11",
+        "ok": true
+      },
+      {
+        "persona": "maya_renter",
+        "check": "-$40/month for 3 months accumulates to -$120 and stays",
+        "ok": true
+      },
+      {
+        "persona": "maya_renter",
+        "check": "verdict flips at the computed thresholds (p10 456641, p50 770567 cents)",
+        "ok": true,
+        "got": [
+          "affordable",
+          "tight",
+          "tight",
+          "not_affordable"
+        ]
+      },
+      {
+        "persona": "ortiz_family",
+        "check": "$2,000 one-off in 2026-11: p50 and p10 move by exactly -$2,000 from 2026-11",
+        "ok": true
+      },
+      {
+        "persona": "ortiz_family",
+        "check": "-$40/month for 3 months accumulates to -$120 and stays",
+        "ok": true
+      },
+      {
+        "persona": "ortiz_family",
+        "check": "verdict flips at the computed thresholds (p10 2285237, p50 2384742 cents)",
+        "ok": true,
+        "got": [
+          "affordable",
+          "tight",
+          "tight",
+          "not_affordable"
+        ]
+      },
+      {
+        "persona": "sam_freelancer",
+        "check": "$2,000 one-off in 2026-11: p50 and p10 move by exactly -$2,000 from 2026-11",
+        "ok": true
+      },
+      {
+        "persona": "sam_freelancer",
+        "check": "-$40/month for 3 months accumulates to -$120 and stays",
+        "ok": true
+      },
+      {
+        "persona": "sam_freelancer",
+        "check": "verdict flips at the computed thresholds (p10 1995850, p50 2319556 cents)",
+        "ok": true,
+        "got": [
+          "affordable",
+          "tight",
+          "tight",
+          "not_affordable"
+        ]
+      }
+    ],
+    "whatif_llm": {
+      "parse_accuracy": 1.0,
+      "n": 8,
+      "explain_first_try_pass_rate": 1.0,
+      "explain_template_used": 0,
+      "cases": [
+        {
+          "text": "Can I afford a $2,000 trip next month?",
+          "expected": [
+            [
+              "one_off",
+              -200000,
+              "2026-10",
+              null
+            ]
+          ],
+          "got": [
+            [
+              "one_off",
+              -200000,
+              "2026-10",
+              null
+            ]
+          ],
+          "parse_ok": true,
+          "verdict": "affordable",
+          "explanation": "The trip costing $2,000.00 in 2026-10 is affordable. The lowest expected balance remains above $0.00, reaching $5,705.67 in 2027-03. The low-end balance also stays above $0.00, with a minimum of $2,566.41 in 2027-03.",
+          "explanation_source": "llm",
+          "number_check": {
+            "passed": true,
+            "issues": []
+          },
+          "first_explain_ok": true
+        },
+        {
+          "text": "What if I buy a $1,200 laptop in December?",
+          "expected": [
+            [
+              "one_off",
+              -120000,
+              "2026-12",
+              null
+            ]
+          ],
+          "got": [
+            [
+              "one_off",
+              -120000,
+              "2026-12",
+              null
+            ]
+          ],
+          "parse_ok": true,
+          "verdict": "affordable",
+          "explanation": "The purchase of the laptop for $1,200.00 in 2026-12 is affordable. Your expected balance remains above $0, with the lowest expected balance being $6,505.67 in 2027-03. The low-end balance also stays above $0, ensuring affordability.",
+          "explanation_source": "llm",
+          "number_check": {
+            "passed": true,
+            "issues": []
+          },
+          "first_explain_ok": true
+        },
+        {
+          "text": "I'm thinking of spending $500 on a concert in 2026-11",
+          "expected": [
+            [
+              "one_off",
+              -50000,
+              "2026-11",
+              null
+            ]
+          ],
+          "got": [
+            [
+              "one_off",
+              -50000,
+              "2026-11",
+              null
+            ]
+          ],
+          "parse_ok": true,
+          "verdict": "affordable",
+          "explanation": "The purchase of the concert ticket for $500.00 in 2026-11 is affordable. The expected balance remains above $0.00, with the lowest expected balance being $7,205.67 in 2027-03. The low-end balance also stays above $0.00, with the lowest being $4,066.41 in 2027-03.",
+          "explanation_source": "llm",
+          "number_check": {
+            "passed": true,
+            "issues": []
+          },
+          "first_explain_ok": true
+        },
+        {
+          "text": "What if my rent goes up by $150 a month starting January?",
+          "expected": [
+            [
+              "recurring_change",
+              -15000,
+              "2027-01",
+              null
+            ]
+          ],
+          "got": [
+            [
+              "recurring_change",
+              -15000,
+              "2027-01",
+              null
+            ]
+          ],
+          "parse_ok": true,
+          "verdict": "affordable",
+          "explanation": "The increased rent of $150.00 per month starting 2027-01 is affordable. The lowest expected balance remains above $0.00, with $7,255.67 in 2027-03. The low-end balance also stays above $0.00, with $4,116.41 in 2027-03.",
+          "explanation_source": "llm",
+          "number_check": {
+            "passed": true,
+            "issues": []
+          },
+          "first_explain_ok": true
+        },
+        {
+          "text": "What if I get a $300 monthly raise starting next month?",
+          "expected": [
+            [
+              "recurring_change",
+              30000,
+              "2026-10",
+              null
+            ]
+          ],
+          "got": [
+            [
+              "recurring_change",
+              30000,
+              "2026-10",
+              null
+            ]
+          ],
+          "parse_ok": true,
+          "verdict": "affordable",
+          "explanation": "The scenario is affordable. The lowest expected balance is $9,325.87 in 2026-10, which stays above $0. The low-end balance also remains above $0 every month.",
+          "explanation_source": "llm",
+          "number_check": {
+            "passed": true,
+            "issues": []
+          },
+          "first_explain_ok": true
+        },
+        {
+          "text": "Can I afford a $40/month gym membership for 6 months starting next month?",
+          "expected": [
+            [
+              "recurring_change",
+              -4000,
+              "2026-10",
+              6
+            ]
+          ],
+          "got": [
+            [
+              "recurring_change",
+              -4000,
+              "2026-10",
+              6
+            ]
+          ],
+          "parse_ok": true,
+          "verdict": "affordable",
+          "explanation": "The gym membership is affordable. The lowest expected balance remains above $0, with $7,465.67 in 2027-03. The low-end balance also stays above $0, with $4,326.41 in 2027-03.",
+          "explanation_source": "llm",
+          "number_check": {
+            "passed": true,
+            "issues": []
+          },
+          "first_explain_ok": true
+        },
+        {
+          "text": "What happens if I get a $3,000 bonus in March?",
+          "expected": [
+            [
+              "one_off",
+              300000,
+              "2027-03",
+              null
+            ]
+          ],
+          "got": [
+            [
+              "one_off",
+              300000,
+              "2027-03",
+              null
+            ]
+          ],
+          "parse_ok": true,
+          "verdict": "affordable",
+          "explanation": "The scenario is affordable. The lowest expected balance is $8,050.91 in 2027-02, which stays above $0. The low-end balance also remains above $0, with the lowest being $5,185.17 in 2027-02.",
+          "explanation_source": "llm",
+          "number_check": {
+            "passed": true,
+            "issues": []
+          },
+          "first_explain_ok": true
+        },
+        {
+          "text": "Should I buy a $25,000 car next month?",
+          "expected": [
+            [
+              "one_off",
+              -2500000,
+              "2026-10",
+              null
+            ]
+          ],
+          "got": [
+            [
+              "one_off",
+              -2500000,
+              "2026-10",
+              null
+            ]
+          ],
+          "parse_ok": true,
+          "verdict": "not_affordable",
+          "explanation": "The purchase of a car for $25,000.00 is not affordable. The expected balance dips below $0.00, making it unsustainable. The lowest expected balance is $17,294.33 in 2027-03.",
+          "explanation_source": "llm",
+          "number_check": {
+            "passed": true,
+            "issues": []
+          },
+          "first_explain_ok": true
+        }
+      ]
+    }
+  }
+}

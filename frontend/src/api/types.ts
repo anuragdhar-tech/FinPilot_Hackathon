@@ -115,6 +115,138 @@ export interface Forecast {
   points: ForecastPoint[]
 }
 
+// ---- what-if ----
+
+export interface ScenarioItem {
+  kind: 'one_off' | 'recurring_change'
+  label: string
+  amount_cents: number // signed: negative = money out
+  start_month: string
+  months: number | null // recurring_change only; null = open-ended
+}
+
+export interface Scenario {
+  items: ScenarioItem[]
+}
+
+export type SimulateRequest = { text: string; horizon_months?: number } | { scenario: Scenario; horizon_months?: number }
+
+export type Verdict = 'affordable' | 'tight' | 'not_affordable'
+
+export interface LowPoint {
+  month: string
+  cents: number
+}
+
+export interface NumberCheck {
+  passed: boolean // the LLM explanation's numbers all matched code-computed facts
+  issues: string[] // every failed attempt's unmatched numbers, also when the template was used
+}
+
+export interface SimulateResponse {
+  scenario: Scenario // what the parser understood
+  baseline: ForecastPoint[]
+  projected: ForecastPoint[]
+  end_delta_cents: number
+  verdict: Verdict
+  lowest_p50: LowPoint
+  lowest_p10: LowPoint
+  baseline_forecast_id: number
+  scenario_forecast_id: number
+  run_id: string
+  explanation: string
+  explanation_source: 'llm' | 'template'
+  number_check: NumberCheck
+}
+
+// ---- recommendations / audit ----
+
+export type ClaimKind =
+  | 'recurring_cost' | 'prev_recurring_cost' | 'price_change' | 'days_since_parent_spend'
+  | 'category_spend' | 'excess_spend' | 'percent_change'
+  | 'forecast_balance' | 'forecast_balance_p10' | 'projected_balance_delta'
+export type Action = 'cancel' | 'review_price_increase' | 'reduce_spending'
+export type TriggerType = 'pattern' | 'forecast' | 'goal' | 'scenario'
+
+export interface Claim {
+  kind: ClaimKind
+  value: number // cents, days or integer percent (see unit)
+  unit: 'cents' | 'days' | 'percent'
+  source_ref: string
+  month: string | null
+  period: 'month' | 'year' | null // year = 12 x the monthly figure
+}
+
+export interface Recommendation {
+  id: number
+  lineage_id: string
+  action: Action
+  target: string
+  title: string
+  body: string
+  claims: Claim[]
+  trigger_type: TriggerType
+  trigger_id: string
+  goal_id: number | null
+  rank: number // 1 = largest verifier-recomputed annual impact
+  impact_annual_cents: number // recomputed by the Verifier, not taken from the LLM
+  attempts: number // drafts in this lineage (2+ = revised after a rejection)
+  created_at: string
+}
+
+export interface RecommendationList {
+  items: Recommendation[] // accepted only, ranked
+  run_id: string | null // null = no finished run yet
+  as_of_month: string | null
+}
+
+export interface ClaimCheck {
+  claim: Claim
+  recomputed: number | null
+  tolerance: number
+  ok: boolean
+  note: string | null
+}
+
+export type RuleName = 'schema' | 'trigger' | 'target' | 'action' | 'required_claims' | 'numbers'
+
+export interface RuleCheck {
+  rule: RuleName
+  ok: boolean
+  note: string
+}
+
+export type DraftStatus = 'draft' | 'rejected' | 'accepted' | 'dropped'
+
+export interface AuditAttempt {
+  attempt: number
+  rec_id: number
+  status: DraftStatus
+  action: string
+  target: string
+  title: string
+  body: string
+  claims: Claim[]
+  verdict: 'pass' | 'reject'
+  reasons: string[]
+  checks: ClaimCheck[]
+  rule_checks: RuleCheck[]
+  ts: string
+}
+
+export interface AuditRecord {
+  recommendation_id: number
+  lineage_id: string
+  run_id: string
+  trigger_type: TriggerType
+  trigger_id: string
+  trigger: { title: string; evidence_txn_ids: number[] } | null
+  inputs: { pattern_ids: number[]; forecast_id: number | null; as_of_month: string }
+  model: string
+  prompt_version: string
+  attempts: AuditAttempt[] // every draft of the lineage, rejected ones included
+}
+
 // ---- eval ----
 
 export interface CategoryScore {
@@ -155,6 +287,16 @@ export interface ForecastMetrics {
   horizon: number | null
 }
 
+export interface VerifierMetrics {
+  first_draft_fail_rate: number // lineages rejected on attempt 1 / lineages
+  drafts: number
+  rejected: number
+  lineages: number | null
+  accepted: number | null
+  dropped: number | null // 3 rejected attempts, or withdrawn by the Advisor after a rejection
+  by_check: Record<string, number> | null // first-draft failures per check
+}
+
 export interface EvalSummary {
   run_at: string
   git_sha: string
@@ -163,4 +305,6 @@ export interface EvalSummary {
   models: Record<string, string>
   categorization: CategorizationMetrics | null
   forecast?: ForecastMetrics | null
+  verifier?: VerifierMetrics | null
+  grounded_number_rate?: number | null
 }

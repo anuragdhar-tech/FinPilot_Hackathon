@@ -24,7 +24,20 @@ def connect(path: str | Path | None = None) -> sqlite3.Connection:
     return conn
 
 
+# Columns added after a table first shipped; CREATE TABLE IF NOT EXISTS does not add them to older DBs.
+ADDED_COLUMNS = {
+    "recommendations": [("action", "TEXT NOT NULL DEFAULT ''"), ("target", "TEXT NOT NULL DEFAULT ''"),
+                        ("impact_annual_cents", "INTEGER")],
+    "audit_trail": [("rule_checks", "TEXT NOT NULL DEFAULT '[]'")],
+}
+
+
 def init_db(conn: sqlite3.Connection) -> None:
-    """Create all tables. Idempotent."""
+    """Create all tables and add any missing later columns. Idempotent."""
     conn.executescript(SCHEMA_PATH.read_text())
+    for table, cols in ADDED_COLUMNS.items():
+        have = {r["name"] for r in conn.execute(f"PRAGMA table_info({table})")}
+        for name, ddl in cols:
+            if name not in have:
+                conn.execute(f"ALTER TABLE {table} ADD COLUMN {name} {ddl}")
     conn.commit()

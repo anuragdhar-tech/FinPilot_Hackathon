@@ -1,6 +1,6 @@
 """The single place an LLM client is created. Everything goes through Mesh API."""
 import os
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from functools import lru_cache
 from pathlib import Path
 
@@ -38,12 +38,20 @@ def get_model(agent: str) -> str:
 
 
 @dataclass(frozen=True)
+class ToolCall:
+    id: str
+    name: str
+    arguments: str  # JSON text, as the model wrote it
+
+
+@dataclass(frozen=True)
 class Completion:
     text: str
     model: str  # model that actually answered (Mesh may report a dated snapshot)
     prompt_tokens: int
     completion_tokens: int
     fallback_triggered: bool  # Mesh-specific usage field; True means Mesh swapped models
+    tool_calls: tuple[ToolCall, ...] = field(default_factory=tuple)  # when called with tools=
 
 
 def complete(agent: str, messages: list[dict], **kwargs) -> Completion:
@@ -52,12 +60,15 @@ def complete(agent: str, messages: list[dict], **kwargs) -> Completion:
         model=get_model(agent), messages=messages, **kwargs
     )
     usage = resp.usage
+    msg = resp.choices[0].message
     return Completion(
-        text=resp.choices[0].message.content or "",
+        text=msg.content or "",
         model=resp.model or get_model(agent),
         prompt_tokens=usage.prompt_tokens if usage else 0,
         completion_tokens=usage.completion_tokens if usage else 0,
         fallback_triggered=bool(getattr(usage, "fallback_triggered", False)),
+        tool_calls=tuple(ToolCall(c.id, c.function.name, c.function.arguments)
+                         for c in getattr(msg, "tool_calls", None) or ()),
     )
 
 

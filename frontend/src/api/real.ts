@@ -3,9 +3,12 @@ import { ApiError } from './errors'
 import type {
   EvalSummary,
   Forecast,
+  AuditRecord,
   Health,
+  RecommendationList,
   RunCreated,
   RunStatus,
+  SimulateResponse,
   TransactionList,
   UploadResult,
   User,
@@ -81,4 +84,9 @@ export const realClient: ApiClient = {
     request<EvalSummary>(`/api/eval/latest${forecastVersion ? `?forecast_version=${forecastVersion}` : ''}`),
   getForecast: (userId, horizonMonths = 6) =>
     request<Forecast>(`/api/forecast?horizon_months=${horizonMonths}${userId != null ? `&user_id=${userId}` : ''}`),
+  getRecommendations: (userId) =>
+    request<RecommendationList>(`/api/recommendations${userId != null ? `?user_id=${userId}` : ''}`),
+  getAudit: (recId) => request<AuditRecord>(`/api/recommendations/${recId}/audit`),
+  simulate: (body, userId) =>
+    request<SimulateResponse>(`/api/simulate${userId != null ? `?user_id=${userId}` : ''}`, post(body)),
 }

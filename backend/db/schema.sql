@@ -152,6 +152,9 @@ CREATE TABLE IF NOT EXISTS recommendations (
     trigger_type   TEXT NOT NULL CHECK (trigger_type IN ('pattern', 'forecast', 'goal', 'scenario')),
     trigger_id     TEXT NOT NULL,
     goal_id        INTEGER REFERENCES goals(id),
+    action         TEXT NOT NULL DEFAULT '',          -- cancel | review_price_increase | reduce_spending
+    target         TEXT NOT NULL DEFAULT '',          -- merchant or category the action is about
+    impact_annual_cents INTEGER,                      -- verifier-recomputed; NULL when rejected
     title          TEXT NOT NULL,
     body           TEXT NOT NULL,
     claims         TEXT NOT NULL,                     -- JSON list of Claim
@@ -172,6 +175,7 @@ CREATE TABLE IF NOT EXISTS audit_trail (
     verifier_verdict TEXT NOT NULL CHECK (verifier_verdict IN ('pass', 'reject')),
     reasons          TEXT NOT NULL,                   -- JSON list of str
     checks           TEXT NOT NULL,                   -- JSON list of ClaimCheck
+    rule_checks      TEXT NOT NULL DEFAULT '[]',      -- JSON list of RuleCheck
     inputs           TEXT NOT NULL,                   -- JSON {pattern_ids, forecast_id, as_of_month}
     ts               TEXT NOT NULL DEFAULT (datetime('now'))
 );

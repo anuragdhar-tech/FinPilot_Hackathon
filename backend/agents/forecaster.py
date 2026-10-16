@@ -94,6 +94,13 @@ def project(inputs: ForecastInputs, horizon: int) -> list[dict]:
     return points
 
 
+def inputs_from_params(params: dict) -> ForecastInputs:
+    """Rebuild the engine inputs from a stored forecasts.params row (what-if and the Verifier re-run project())."""
+    flows = tuple(Flow(f["label"], f["kind"], f["category"], f["source_ref"], tuple(f["means"]), f["sd_cents"])
+                  for f in params["flows"])
+    return ForecastInputs(params["as_of_month"], params["start_balance_cents"], flows)
+
+
 def _monthly(txns: list[Txn], months: list[str]) -> list[int]:
     totals = dict.fromkeys(months, 0)
     for t in txns:

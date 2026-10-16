@@ -1,8 +1,10 @@
-"""LangGraph coordinator. Today: ingest -> categorize -> analyze -> forecast; advise and verify extend it later.
+"""LangGraph coordinator: ingest -> categorize -> analyze -> forecast -> advise -> verify -> persist, where
+verify routes rejected drafts back to advise (at most MAX_ATTEMPTS drafts per recommendation lineage).
 
 Agents are plain functions (backend/agents/*); nodes here are thin wrappers that read state, call
-the agent, persist results and write agent_events. Persistence is our own runs + agent_events
-tables; a LangGraph checkpointer is deferred to Oct 17 (advise <-> verify loop).
+the agent, persist results and write agent_events. Persistence is our own tables (runs, agent_events,
+recommendations, audit_trail); no LangGraph checkpointer: runs are short, need no pause/resume, and
+every draft and verdict is already stored append-only.
 """
 from __future__ import annotations
 
@@ -14,7 +16,7 @@ from typing import Any, TypedDict
 
 from langgraph.graph import END, START, StateGraph
 
-from backend.agents import analyzer, categorizer, forecaster
+from backend.agents import advisor, analyzer, categorizer, forecaster, verifier, whatif
 from backend.agents.analyzer import Detected, money
 from backend.agents.categorizer import LLM, BatchStat, MerchantCache, TxnIn
 from backend.db import connect
@@ -61,10 +63,17 @@ def default_categorizer_llm(messages: list[dict], response_format: dict):
     return complete("categorizer", messages, temperature=0, response_format=response_format)
 
 
+def default_advisor_llm(messages: list[dict], **kwargs):
+    return complete("advisor", messages, temperature=0, **kwargs)
+
+
 def build_graph(conn: sqlite3.Connection, categorizer_llm: LLM | None = None, use_cache: bool = True,
-                categorizer_version: str = categorizer.PROMPT_VERSION):
-    # late lookup of the default so tests can monkeypatch it
+                categorizer_version: str = categorizer.PROMPT_VERSION, advisor_llm: advisor.LLM | None = None,
+                entry: str = "ingest", advisor_version: str = advisor.PROMPT_VERSION):
+    """entry='analyze' starts from the stored categorizations (eval reuse; no Categorizer calls)."""
+    # late lookup of the defaults so tests can monkeypatch them
     llm = categorizer_llm or (lambda m, rf: default_categorizer_llm(m, rf))
+    adv_llm = advisor_llm or (lambda m, **kw: default_advisor_llm(m, **kw))
 
     def ingest(state: FinPilotState) -> FinPilotState:
         t0 = time.monotonic()
@@ -161,17 +170,159 @@ def build_graph(conn: sqlite3.Connection, categorizer_llm: LLM | None = None, us
                    duration_ms=int((time.monotonic() - t0) * 1000))
         return {"forecast": cur.lastrowid, "audit_events": [*state.get("audit_events", []), seq]}
 
+    def advise(state: FinPilotState) -> FinPilotState:
+        run_id, attempt = state["run_id"], state.get("attempt", 0) + 1
+        ctx = verifier.Context.load(conn, run_id)
+        seqs = list(state.get("audit_events", []))
+
+        def on_tool(name: str, args: dict, result: dict) -> None:
+            shown = ", ".join(f"{k}={v}" for k, v in args.items())
+            n = len(result.get("patterns", result.get("figures", [])))
+            seqs.append(emit(conn, run_id, "advise.tool", attempt=attempt,
+                             status="error" if "error" in result else "ok",
+                             summary=f"{name}({shown}) -> " + (result["error"] if "error" in result else f"{n} items"),
+                             input_ref=f"run:{run_id}"))
+
+        def log(sess: advisor.Session, summary: str) -> None:
+            seqs.append(emit(conn, run_id, "advise", attempt=attempt, summary=summary, model=sess.model,
+                             prompt_tokens=sess.prompt_tokens, completion_tokens=sess.completion_tokens,
+                             duration_ms=sess.duration_ms, input_ref=f"run:{run_id}/patterns",
+                             output_ref=f"forecast:{ctx.forecast_id}"))
+
+        def draft(rec: dict, lineage: str, sess: advisor.Session, trigger: str | None = None) -> verifier.Draft:
+            return verifier.Draft(lineage, attempt, rec.get("action", ""), rec.get("target", ""),
+                                  rec.get("title", ""), rec.get("body", ""), rec.get("trigger_type", ""),
+                                  str(rec.get("trigger_id", "")), rec.get("claims", []), sess.model,
+                                  advisor_version, trigger)
+
+        drafts: list[verifier.Draft] = []
+        if attempt == 1:
+            sess = advisor.first_draft(ctx, adv_llm, on_tool, advisor_version)
+            seen, extra = set(), []
+            for rec in sess.recs:
+                key = (str(rec.get("trigger_id")), rec.get("action"))
+                if key in seen or len(drafts) == advisor.MAX_RECS:
+                    extra.append(key)
+                    continue
+                seen.add(key)
+                drafts.append(draft(rec, uuid.uuid4().hex, sess))
+            log(sess, f"{advisor_version} first draft: {len(drafts)} recommendation(s) after "
+                      f"{len(sess.tool_calls)} tool call(s)"
+                      + (f"; ignored {len(extra)} repeated or over the cap of {advisor.MAX_RECS}" if extra else ""))
+        else:
+            for prev, feedback in state["verifier_reports"]:
+                sess = advisor.redraft(ctx, adv_llm, prev.lineage_id, prev.attempt, prev.as_json(), feedback,
+                                       on_tool, advisor_version)
+                if not sess.recs:
+                    log(sess, f"redraft of {prev.lineage_id[:8]} ({prev.action} {prev.target}): withdrawn by the "
+                              f"Advisor, no allowed action fits")
+                    continue
+                drafts.append(draft(sess.recs[0], prev.lineage_id, sess, prev.lineage_trigger or prev.trigger_id))
+                log(sess, f"redraft of {prev.lineage_id[:8]} ({prev.action} {prev.target}) after "
+                          f"{len(feedback)} failed check(s), {len(sess.tool_calls)} tool call(s)"
+                          + (f"; ignored {len(sess.recs) - 1} extra" if len(sess.recs) > 1 else ""))
+        return {"drafts": drafts, "attempt": attempt, "audit_events": seqs}
+
+    def verify(state: FinPilotState) -> FinPilotState:
+        run_id = state["run_id"]
+        ctx = verifier.Context.load(conn, run_id)
+        seqs, pending = list(state.get("audit_events", [])), []
+        for d in state.get("drafts", []):
+            t0 = time.monotonic()
+            rep = verifier.verify(d, ctx)
+            status = ("accepted" if rep.verdict == "pass" else
+                      "dropped" if d.attempt >= verifier.MAX_ATTEMPTS else "rejected")
+            rec_id = save_draft(conn, run_id, d, rep, status, ctx)
+            if status == "rejected":
+                pending.append((d, rep.feedback(per_number=advisor_version != "adv-v1")))
+            what = f"{d.action} {d.target!r} (lineage {d.lineage_id[:8]}, rec {rec_id})"
+            summary = (f"{what}: pass, {len(rep.checks)} claim(s) recomputed, annual impact "
+                       f"{analyzer.money(rep.impact_annual_cents)}" if rep.verdict == "pass" else
+                       f"{what}: {status}; " + " | ".join(rep.reasons)[:400])
+            seqs.append(emit(conn, run_id, "verify", attempt=d.attempt,
+                             status="ok" if rep.verdict == "pass" else "rejected", summary=summary,
+                             input_ref=f"rec:{rec_id}", output_ref=f"audit:{rec_id}",
+                             duration_ms=int((time.monotonic() - t0) * 1000)))
+        return {"drafts": [], "verifier_reports": pending, "audit_events": seqs}
+
+    def persist(state: FinPilotState) -> FinPilotState:
+        run_id = state["run_id"]
+        ranked = ranked_recommendations(conn, run_id)
+        counts = dict(conn.execute("SELECT status, COUNT(*) FROM recommendations WHERE run_id = ? GROUP BY status",
+                                   (run_id,)).fetchall())
+        lineages = conn.execute("SELECT COUNT(DISTINCT lineage_id) FROM recommendations WHERE run_id = ?",
+                                (run_id,)).fetchone()[0]
+        order = "; ".join(f"#{r['rank']} {r['action']} {r['target']} ({analyzer.money(r['impact_annual_cents'])}/yr)"
+                          for r in ranked)
+        seq = emit(conn, run_id, "persist",
+                   summary=(f"{len(ranked)} of {lineages} recommendation(s) accepted; "
+                            f"{counts.get('rejected', 0)} draft(s) rejected and revised, "
+                            f"{lineages - len({r['lineage_id'] for r in ranked})} lineage(s) dropped or withdrawn"
+                            + (f". Ranked: {order}" if order else "")),
+                   output_ref=f"run:{run_id}/recommendations")
+        return {"final_recs": [r["id"] for r in ranked], "audit_events": [*state.get("audit_events", []), seq]}
+
+    def route(state: FinPilotState) -> str:
+        return "advise" if state.get("verifier_reports") else "persist"
+
     g = StateGraph(FinPilotState)
     g.add_node("ingest", ingest)
     g.add_node("categorize", categorize)
     g.add_node("analyze", analyze)
     g.add_node("forecast", forecast)
-    g.add_edge(START, "ingest")
+    g.add_node("advise", advise)
+    g.add_node("verify", verify)
+    g.add_node("persist", persist)
+    g.add_edge(START, entry)
     g.add_edge("ingest", "categorize")
     g.add_edge("categorize", "analyze")
     g.add_edge("analyze", "forecast")
-    g.add_edge("forecast", END)
+    g.add_edge("forecast", "advise")
+    g.add_edge("advise", "verify")
+    g.add_conditional_edges("verify", route, {"advise": "advise", "persist": "persist"})
+    g.add_edge("persist", END)
     return g.compile()
+
+
+def save_draft(conn: sqlite3.Connection, run_id: str, d: verifier.Draft, rep: verifier.Report, status: str,
+               ctx: verifier.Context) -> int:
+    """Append-only: one recommendations row per draft (with its final status) and its audit_trail row."""
+    cur = conn.execute(
+        "INSERT INTO recommendations (run_id, lineage_id, attempt, status, trigger_type, trigger_id, action, target, "
+        "impact_annual_cents, title, body, claims, model, prompt_version) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        (run_id, d.lineage_id, d.attempt, status, d.trigger_type if d.trigger_type in TRIGGER_TYPES else "pattern",
+         d.trigger_id, d.action, d.target, rep.impact_annual_cents, d.title, d.body,
+         json.dumps([c.model_dump() for c in rep.claims]), d.model, d.prompt_version))
+    rec_id = cur.lastrowid
+    cited = sorted({int(c.source_ref.split(":")[1]) for c in rep.claims if c.source_ref.startswith("pattern:")}
+                   | ({int(d.trigger_id)} if d.trigger_id.isdigit() else set()))
+    conn.execute(
+        "INSERT INTO audit_trail (rec_id, lineage_id, run_id, trigger_type, trigger_id, attempt, verifier_verdict, "
+        "reasons, checks, rule_checks, inputs) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        (rec_id, d.lineage_id, run_id, d.trigger_type, d.trigger_id, d.attempt, rep.verdict, json.dumps(rep.reasons),
+         json.dumps(rep.checks), json.dumps(rep.rule_checks),
+         json.dumps({"pattern_ids": cited, "forecast_id": ctx.forecast_id, "as_of_month": ctx.as_of_month})))
+    conn.commit()
+    return rec_id
+
+
+TRIGGER_TYPES = ("pattern", "forecast", "goal", "scenario")
+
+
+def ranked_recommendations(conn: sqlite3.Connection, run_id: str) -> list[dict]:
+    """Accepted recommendations of a run, largest verifier-recomputed annual impact first; one per (trigger, action)."""
+    rows = conn.execute(
+        "SELECT r.*, (SELECT COUNT(*) FROM recommendations x WHERE x.lineage_id = r.lineage_id) AS attempts "
+        "FROM recommendations r WHERE r.run_id = ? AND r.status = 'accepted' "
+        "ORDER BY r.impact_annual_cents DESC, r.id", (run_id,)).fetchall()
+    out, seen = [], set()
+    for r in rows:
+        key = (r["trigger_type"], r["trigger_id"], r["action"])
+        if key in seen:
+            continue
+        seen.add(key)
+        out.append({**dict(r), "claims": json.loads(r["claims"]), "rank": len(out) + 1})
+    return out
 
 
 def save_patterns(conn: sqlite3.Connection, run_id: str, user_id: int, patterns: list[Detected]) -> None:
@@ -201,7 +352,9 @@ def create_run(conn: sqlite3.Connection, batch_id: str) -> str:
 
 
 def execute_run(run_id: str, *, db_path: str | None = None, categorizer_llm: LLM | None = None,
-                use_cache: bool = True, categorizer_version: str = categorizer.PROMPT_VERSION) -> None:
+                use_cache: bool = True, categorizer_version: str = categorizer.PROMPT_VERSION,
+                advisor_llm: advisor.LLM | None = None, entry: str = "ingest",
+                advisor_version: str = advisor.PROMPT_VERSION) -> None:
     """Run the graph for a pending run. Called as a background task; opens its own connection."""
     conn = connect(db_path)
     try:
@@ -209,7 +362,8 @@ def execute_run(run_id: str, *, db_path: str | None = None, categorizer_llm: LLM
         conn.execute("UPDATE runs SET status = 'running' WHERE id = ?", (run_id,))
         conn.commit()
         try:
-            build_graph(conn, categorizer_llm, use_cache, categorizer_version).invoke({
+            build_graph(conn, categorizer_llm, use_cache, categorizer_version, advisor_llm, entry,
+                        advisor_version).invoke({
                 "run_id": run_id, "user_id": run["user_id"], "batch_id": run["batch_id"],
                 "as_of_month": run["as_of_month"], "audit_events": []})
             conn.execute("UPDATE runs SET status = 'done', finished_at = datetime('now') WHERE id = ?", (run_id,))
@@ -221,3 +375,153 @@ def execute_run(run_id: str, *, db_path: str | None = None, categorizer_llm: LLM
         conn.commit()
     finally:
         conn.close()
+
+
+# ---- what-if: parse -> simulate -> explain -> number_check (-> explain once more, then template) ----
+
+class WhatIfState(TypedDict, total=False):
+    run_id: str
+    as_of_month: str
+    text: str | None
+    scenario: Any  # models.Scenario
+    horizon: int
+    base_forecast_id: int
+    base_params: dict
+    sim: Any  # whatif.Simulation
+    scenario_forecast_id: int
+    facts: list[Any]
+    explanation: str
+    explanation_source: str
+    explain_attempts: int
+    issues: list[str]
+    passed: bool
+
+
+def default_parser_llm(messages: list[dict], **kwargs):
+    return complete("parser", messages, temperature=0, **kwargs)
+
+
+def default_explainer_llm(messages: list[dict], **kwargs):
+    return complete("advisor", messages, temperature=0, **kwargs)
+
+
+def build_whatif_graph(conn: sqlite3.Connection, parser_llm: whatif.LLM | None = None,
+                       explainer_llm: whatif.LLM | None = None):
+    p_llm = parser_llm or (lambda m, **kw: default_parser_llm(m, **kw))
+    e_llm = explainer_llm or (lambda m, **kw: default_explainer_llm(m, **kw))
+
+    def parse(state: WhatIfState) -> WhatIfState:
+        t0, as_of = time.monotonic(), state["as_of_month"]
+        if state.get("scenario") is not None:
+            errs = whatif.validate(state["scenario"], as_of)
+            if errs:
+                emit(conn, state["run_id"], "parse", status="error", summary="; ".join(errs))
+                raise whatif.ScenarioError("; ".join(errs))
+            emit(conn, state["run_id"], "parse", summary="structured scenario given; validated, no LLM call")
+            return {}
+        try:
+            res = whatif.parse(state["text"], as_of, p_llm)
+        except whatif.ScenarioError as e:
+            emit(conn, state["run_id"], "parse", status="error", summary=str(e)[:500], input_ref="text")
+            raise
+        items = "; ".join(f"{i.kind} {i.label} {'-' if i.amount_cents < 0 else '+'}{money(i.amount_cents)} from "
+                          f"{i.start_month}" + (f" for {i.months} months" if i.months else "") for i in res.scenario.items)
+        emit(conn, state["run_id"], "parse", attempt=res.attempts, summary=f"{whatif.PARSE_VERSION}: {items}",
+             input_ref="text", model=res.model, prompt_tokens=res.prompt_tokens,
+             completion_tokens=res.completion_tokens, duration_ms=int((time.monotonic() - t0) * 1000))
+        return {"scenario": res.scenario}
+
+    def simulate(state: WhatIfState) -> WhatIfState:
+        scenario, as_of = state["scenario"], state["as_of_month"]
+        horizon = whatif.horizon_for(scenario, as_of, state["horizon"])
+        sim = whatif.simulate(forecaster.inputs_from_params(state["base_params"]), scenario, horizon)
+        params = forecaster.ForecastResult(sim.inputs, forecaster.MAX_HORIZON, [], []).params() | {
+            "baseline_forecast_id": state["base_forecast_id"]}
+        uid = conn.execute("SELECT user_id FROM runs WHERE id = ?", (state["run_id"],)).fetchone()[0]
+        cur = conn.execute(
+            "INSERT INTO forecasts (run_id, user_id, as_of_month, horizon_months, method, params, scenario, output) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+            (state["run_id"], uid, as_of, forecaster.MAX_HORIZON, forecaster.METHOD + " + scenario flows",
+             json.dumps(params), scenario.model_dump_json(), json.dumps(forecaster.project(sim.inputs, forecaster.MAX_HORIZON))))
+        conn.commit()
+        emit(conn, state["run_id"], "simulate",
+             summary=(f"{sim.verdict}: lowest p50 {money(sim.lowest_p50['cents'])} in {sim.lowest_p50['month']}, "
+                      f"lowest p10 {money(sim.lowest_p10['cents'])} in {sim.lowest_p10['month']}; end delta "
+                      f"{'-' if sim.end_delta_cents < 0 else '+'}{money(sim.end_delta_cents)} over {horizon} months"),
+             input_ref=f"forecast:{state['base_forecast_id']}", output_ref=f"forecast:{cur.lastrowid}")
+        return {"sim": sim, "scenario_forecast_id": cur.lastrowid, "horizon": horizon,
+                "facts": whatif.facts(scenario, sim), "explain_attempts": 0, "issues": []}
+
+    def explain(state: WhatIfState) -> WhatIfState:
+        t0, attempt = time.monotonic(), state["explain_attempts"] + 1
+        last = [i.split(": ", 1)[1] for i in state["issues"] if i.startswith(f"attempt {attempt - 1}: ")]
+        ex = whatif.explain(state["scenario"], state["sim"], state["facts"], e_llm, last or None)
+        emit(conn, state["run_id"], "explain", attempt=attempt, summary=ex.text[:300], model=ex.model,
+             prompt_tokens=ex.prompt_tokens, completion_tokens=ex.completion_tokens,
+             duration_ms=int((time.monotonic() - t0) * 1000))
+        return {"explanation": ex.text, "explain_attempts": attempt}
+
+    def number_check(state: WhatIfState) -> WhatIfState:
+        attempt = state["explain_attempts"]
+        bad = whatif.check(state["explanation"], state["facts"], state["as_of_month"])
+        issues = state["issues"] + [f"attempt {attempt}: {b}" for b in bad]
+        if not bad:
+            emit(conn, state["run_id"], "number_check", attempt=attempt, summary="every number matches a code fact")
+            return {"issues": issues, "passed": True, "explanation_source": "llm"}
+        done = attempt >= whatif.MAX_EXPLAIN_ATTEMPTS
+        emit(conn, state["run_id"], "number_check", attempt=attempt, status="rejected",
+             summary="; ".join(bad)[:400] + ("; using the code template" if done else "; asking for a rewrite"))
+        if done:
+            return {"issues": issues, "passed": False, "explanation_source": "template",
+                    "explanation": whatif.template(state["scenario"], state["sim"])}
+        return {"issues": issues, "passed": False}
+
+    def route(state: WhatIfState) -> str:
+        return END if state["passed"] or state["explain_attempts"] >= whatif.MAX_EXPLAIN_ATTEMPTS else "explain"
+
+    g = StateGraph(WhatIfState)
+    g.add_node("parse", parse)
+    g.add_node("simulate", simulate)
+    g.add_node("explain", explain)
+    g.add_node("number_check", number_check)
+    g.add_edge(START, "parse")
+    g.add_edge("parse", "simulate")
+    g.add_edge("simulate", "explain")
+    g.add_edge("explain", "number_check")
+    g.add_conditional_edges("number_check", route, {"explain": "explain", END: END})
+    return g.compile()
+
+
+def run_whatif(conn: sqlite3.Connection, user_id: int, *, text: str | None = None, scenario=None,
+               horizon_months: int = 6, parser_llm: whatif.LLM | None = None,
+               explainer_llm: whatif.LLM | None = None) -> dict:
+    """Synchronous what-if run on the user's latest baseline forecast (the one GET /api/forecast serves).
+
+    Raises LookupError (no forecast yet) or whatif.ScenarioError (text is not a valid scenario)."""
+    base = conn.execute("SELECT * FROM forecasts WHERE user_id = ? AND scenario IS NULL ORDER BY id DESC LIMIT 1",
+                        (user_id,)).fetchone()
+    if base is None:
+        raise LookupError("no forecast yet; start a run")
+    run_id = uuid.uuid4().hex
+    conn.execute("INSERT INTO runs (id, user_id, kind, status, as_of_month) VALUES (?, ?, 'whatif', 'running', ?)",
+                 (run_id, user_id, base["as_of_month"]))
+    conn.commit()
+    try:
+        out = build_whatif_graph(conn, parser_llm, explainer_llm).invoke({
+            "run_id": run_id, "as_of_month": base["as_of_month"], "text": text, "scenario": scenario,
+            "horizon": horizon_months, "base_forecast_id": base["id"], "base_params": json.loads(base["params"])})
+    except Exception as e:
+        conn.rollback()
+        conn.execute("UPDATE runs SET status = 'failed', finished_at = datetime('now'), error = ? WHERE id = ?",
+                     (f"{type(e).__name__}: {e}"[:500], run_id))
+        conn.commit()
+        raise
+    conn.execute("UPDATE runs SET status = 'done', finished_at = datetime('now') WHERE id = ?", (run_id,))
+    conn.commit()
+    sim = out["sim"]
+    return {"scenario": out["scenario"].model_dump(), "baseline": sim.baseline, "projected": sim.projected,
+            "end_delta_cents": sim.end_delta_cents, "verdict": sim.verdict, "lowest_p50": sim.lowest_p50,
+            "lowest_p10": sim.lowest_p10, "baseline_forecast_id": base["id"],
+            "scenario_forecast_id": out["scenario_forecast_id"], "run_id": run_id,
+            "explanation": out["explanation"], "explanation_source": out["explanation_source"],
+            "number_check": {"passed": out["passed"], "issues": out["issues"]}}

@@ -81,7 +81,7 @@ export function UploadPage() {
 
   return (
     <div className="max-w-3xl">
-      <PageTitle title="Upload" subtitle="Load a bank CSV (external_id, date, description, amount), then categorize it." />
+      <PageTitle title="Upload" subtitle="Load a bank CSV (external_id, date, description, amount), then run the pipeline: categorize, analyze, forecast, advise and verify." />
 
       <form onSubmit={onUpload} className="space-y-4">
         <div className={card}>
@@ -182,7 +182,7 @@ export function UploadPage() {
               disabled={starting || runId != null}
               className="mt-4 rounded-md bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700 disabled:cursor-not-allowed disabled:bg-slate-300"
             >
-              {starting ? 'Starting…' : runId ? 'Run started' : 'Run categorization'}
+              {starting ? 'Starting…' : runId ? 'Run started' : 'Run pipeline'}
             </button>
           )}
           {runError != null && <p role="alert" className="mt-3 text-sm text-rose-700">Could not start the run: {errorMessage(runError)}</p>}
@@ -192,13 +192,18 @@ export function UploadPage() {
       {runId && (
         <div className={`${card} mt-6`}>
           <div className="flex flex-wrap items-center gap-3">
-            <span className="text-sm font-medium">Categorization run</span>
+            <span className="text-sm font-medium">Pipeline run</span>
             {run && <StatusChip status={run.status} />}
             <Link to={`/runs/${runId}`} className="text-xs text-emerald-700 hover:underline">open in Agent Runs</Link>
             {run?.status === 'done' && (
-              <Link to="/transactions" className="ml-auto rounded-md bg-emerald-50 px-3 py-1.5 text-sm font-medium text-emerald-700 hover:bg-emerald-100">
-                View transactions →
-              </Link>
+              <span className="ml-auto flex flex-wrap gap-2">
+                <Link to="/recommendations" className="rounded-md bg-emerald-50 px-3 py-1.5 text-sm font-medium text-emerald-700 hover:bg-emerald-100">
+                  View recommendations →
+                </Link>
+                <Link to="/transactions" className="rounded-md bg-emerald-50 px-3 py-1.5 text-sm font-medium text-emerald-700 hover:bg-emerald-100">
+                  View transactions →
+                </Link>
+              </span>
             )}
           </div>
           {run?.error && <p role="alert" className="mt-3 text-sm text-rose-700">Run failed: {run.error}</p>}

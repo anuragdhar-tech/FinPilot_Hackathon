@@ -95,3 +95,54 @@ stay committed and reproducible.
 - Backtest (`eval/results/forecast_fc-v2.md`): total-spend MAPE 11.2% (no trend line 11.3%; naive
   baselines unchanged); mean error -$404; 80% band coverage 54.2% (bands widen, but one forecast
   moved into the band and one moved out). Per-category MAPE unchanged (the allowance is its own bucket).
+
+# Advisor and what-if prompt changelog
+
+Numbers are quoted from `eval/results/advice.md` (`python -m eval.advice --repeats 3`).
+
+## adv-v1, wif-parse-v1, wif-explain-v1 (Oct 15): baseline
+
+- Advisor (`backend/agents/advisor.py`): one LLM with three read-only tools (`list_patterns`, `get_pattern`,
+  `get_forecast`) that hand it every figure as a ready-made claim; strict JSON output; temperature 0. Redraft
+  prompt = the rejected draft + the Verifier's structured failed checks. Designed before any eval run.
+- What-if parser (`backend/agents/whatif.py`): strict JSON scenario, one retry with validation errors.
+  Explanation: facts as display strings, number-checked, one rewrite, then a code template.
+- Eval (19 lineages, 3 runs per persona): first-draft failure rate 68.4%, all on the text-number rule
+  (13 numbers, 1 action + required claims); claims themselves 100% correct on first drafts; 16 accepted,
+  2 dropped after 3 attempts, 1 withdrawn. Parser 8/8 exact; explanations 8/8 passed on the first try.
+- Not changed after seeing the results (needs approval first); evidence for possible adv-v2 is in the
+  Day 4 report: unclaimed "3 months" from the tool's own wording, "$120" for $121.80 under "you may round
+  dollars", and 4 of 16 redrafts identical to the rejected draft.
+
+## adv-v2 (Oct 15): **made after seeing the adv-v1 eval**, one approved round, no threshold changes
+
+- Evidence (`eval/results/advice_adv-v1.md`): all 13 first-draft failures were the text-number rule; "3 months"
+  came from the tool's own wording; "$120" for $121.80 followed the prompt's "you may round dollars"; 4 of 16
+  redrafts were identical to the rejected draft and caused both drops.
+- Changes (only these three):
+  1. Tool text is number-free: `get_pattern`/`list_patterns` show a label instead of the Analyzer's title
+     (which carries amounts and dates no claim backs), no first/last-seen dates, and figure meanings say
+     "your recent average" instead of "the 3 months before it"; the get_pattern description says every
+     number written must be a figure's value.
+  2. Rounding rule stated as the Verifier checks it: exact to the cent, or the nearest whole dollar.
+  3. Redraft feedback: one entry per unbacked number with the nearest claim of the same unit and the exact
+     accepted forms, or an instruction to remove the phrase.
+- adv-v1 stays selectable (`python -m eval.advice --prompt-version adv-v1`); its results stay committed as
+  `advice_adv-v1.*`. Eval-fitting caveat: adv-v2 is scored on the same personas that motivated it.
+
+## adv-v3 (Oct 15): wording-accuracy fix, not a tuning round
+
+- Why: in all 3 accepted adv-v2 reduce_spending drafts (Maya, food delivery) the text said "Reducing this excess
+  could improve your balance by $121.80 by 2026-12" and the title "Save $150 Monthly". The projected_balance_delta
+  measures the trend stopping (the trend flow held at next month's projected level: 3 x the $40.60 slope by
+  2026-12), not cutting the $149.91 excess. The numbers were right; the meaning was overstated. The Verifier
+  matches numbers by value, so it cannot catch this (known limitation; Verifier unchanged).
+- Change (reduce_spending wording only): the system prompt says to describe the delta as what stopping the rise
+  is worth and never as savings from cutting spending, and that excess_spend is not a monthly saving; the
+  reduce_spending delta figure's meaning says "if this category stops rising and stays at next month's projected
+  level (not if you cut the excess)". Nothing else changed; adv-v1 and adv-v2 stay selectable.
+- Result (`eval/results/advice_adv-v3.md`, one run of 3 repeats): all 3 accepted Maya reduce_spending drafts now
+  say the gain comes from the rise stopping ("If you stop this rise and maintain next month's projected level...")
+  and no title says "Save $150 Monthly". First-draft failure rate 33.3% (6/18) vs adv-v2 22.2% (4/18); the extra
+  failures are unclaimed "N days" on cancel drafts, which this change did not touch, so the difference is read as
+  run-to-run variation at n = 18, not as an effect. No improvement in the loop metrics is claimed.

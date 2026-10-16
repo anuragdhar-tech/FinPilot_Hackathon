@@ -35,8 +35,9 @@ def test_run_categorizes_and_logs_ordered_events(api, llm):
     assert run["status"] == "done" and run["kind"] == "main"
     nodes = [e["node"] for e in run["events"]]
     # cat-v2: representatives batch, then the NETFLIX.COM confirmation look in its own batch
-    assert nodes == ["ingest", "categorize.batch", "categorize.batch", "categorize", "analyze", "forecast"]
-    assert [e["seq"] for e in run["events"]] == [1, 2, 3, 4, 5, 6]
+    assert nodes == ["ingest", "categorize.batch", "categorize.batch", "categorize", "analyze", "forecast",
+                     "advise", "persist"]  # the fake Advisor drafts nothing, so nothing to verify
+    assert [e["seq"] for e in run["events"]] == [1, 2, 3, 4, 5, 6, 7, 8]
     assert run["events"][1]["summary"].startswith("representatives: 3 items")
     assert "echo_mismatch=0/3" in run["events"][1]["summary"]
     assert run["events"][2]["summary"].startswith("confirmations: 1 items")
@@ -68,7 +69,7 @@ def test_uncategorized_rows_visible_and_event_flags_error(api, monkeypatch):
     cat = next(e for e in run["events"] if e["node"] == "categorize")
     assert run["status"] == "done" and cat["status"] == "error"
     assert "4 left uncategorized" in cat["summary"]
-    assert "4 uncategorized left out of trends" in run["events"][-2]["summary"]
+    assert "4 uncategorized left out of trends" in next(e for e in run["events"] if e["node"] == "analyze")["summary"]
     items = api.get("/api/transactions").json()["items"]
     assert len(items) == 4 and all(i["category"] is None for i in items)
 
@@ -146,7 +147,7 @@ def test_patterns_and_forecast_endpoints_after_a_run(api, llm):
     assert len(api.get("/api/forecast").json()["points"]) == 6  # default horizon
     assert api.get("/api/forecast?horizon_months=13").status_code == 422
     run = api.get(f"/api/runs/{run_id}").json()
-    fc_event = run["events"][-1]
+    fc_event = next(e for e in run["events"] if e["node"] == "forecast")
     assert fc_event["node"] == "forecast" and fc_event["output_ref"] == f"forecast:{fc['id']}"
 
 

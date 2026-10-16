@@ -32,9 +32,11 @@ def test_pattern_discriminated_union():
 
 
 def test_claim_source_ref_format():
-    m.Claim(kind="monthly_savings", value=1599, unit="cents", source_ref="pattern:12")
+    m.Claim(kind="recurring_cost", value=1599, unit="cents", source_ref="pattern:12", period="month")
     with pytest.raises(ValidationError):
-        m.Claim(kind="monthly_savings", value=1599, unit="cents", source_ref="somewhere")
+        m.Claim(kind="recurring_cost", value=1599, unit="cents", source_ref="somewhere")
+    with pytest.raises(ValidationError):  # removed kinds stay out of the contract (Day 4)
+        m.Claim(kind="monthly_savings", value=1599, unit="cents", source_ref="pattern:12")
 
 
 def test_month_format():
