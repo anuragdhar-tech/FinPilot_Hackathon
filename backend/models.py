@@ -286,6 +286,7 @@ ClaimKind = Literal[
     "recurring_cost", "prev_recurring_cost", "price_change", "days_since_parent_spend",  # recurring pattern
     "category_spend", "excess_spend", "percent_change",  # trend pattern
     "forecast_balance", "forecast_balance_p10", "projected_balance_delta",  # the run's forecast
+    "goal_target", "goal_saved", "goal_gap", "goal_gap_after",  # the goal of a goal_check run
 ]
 Action = Literal["cancel", "review_price_increase", "reduce_spending"]
 
@@ -296,7 +297,8 @@ class Claim(BaseModel):
     value: int  # cents, days or integer percent (see unit)
     unit: Literal["cents", "days", "percent"]
     source_ref: Annotated[str, Field(pattern=r"^(pattern|forecast|goal|scenario|txn):\d+$")]
-    month: Month | None = None  # category_spend, forecast_balance*, projected_balance_delta
+    month: Month | None = None  # category_spend, forecast_balance*, projected_balance_delta, goal_* (target month;
+    # goal_saved: as_of)
     period: Literal["month", "year"] | None = None  # year = 12 x the monthly figure
 
 
@@ -357,6 +359,7 @@ class AuditInputs(BaseModel):
     pattern_ids: list[int] = []
     forecast_id: int | None = None
     as_of_month: Month
+    goal_id: int | None = None  # goal_check runs
 
 
 class AuditTrigger(BaseModel):
@@ -379,39 +382,69 @@ class AuditRecord(BaseModel):
 
 # ---- goals ----
 
+GoalStatus = Literal["ahead", "on_track", "behind", "achieved", "missed"]
+
+
 class GoalCreate(BaseModel):
-    name: str
+    """Save target_cents (balance growth of this account) between the end of start_month and the end of
+    target_month. start_month defaults to the profile's as_of; an earlier one rewinds the clock for replay."""
+    name: str = Field(min_length=1, max_length=80)
     target_cents: int = Field(gt=0)
-    target_date: IsoDate
-    monthly_contribution_cents: int = Field(ge=0)
+    target_month: Month
+    start_month: Month | None = None
 
 
-class Goal(GoalCreate):
+class Goal(BaseModel):
     id: int
+    user_id: int
+    name: str
+    target_cents: int
     start_month: Month
+    target_month: Month
     created_at: str
 
 
-class GoalSnapshot(BaseModel):
+class GoalList(BaseModel):
+    items: list[Goal]  # at most one: one active goal per profile
+
+
+class GoalMonth(BaseModel):
+    """One goal check (one replayed month). Status and figures are computed in code from that month's forecast."""
     month: Month
-    planned_cents: int
-    actual_cents: int
-    projected_completion: IsoDate | None
-    on_track: bool
+    status: GoalStatus
+    saved_cents: int
+    planned_cents: int  # straight-line plan
+    projected_p50_cents: int | None  # projected savings at target_month; None once final
+    projected_p10_cents: int | None
+    gap_cents: int  # target - projected p50 savings (final: target - saved); negative = ahead
+    projected_completion: Month | None
+    run_id: str
+    run_status: RunState
+    decision: Literal["advise", "carry", "final"]  # advise = Advisor called this month; carry = unchanged
+    reason: str  # why the Advisor was or was not called
+    advice_from_month: Month | None  # month whose advice applies (this month, or the one carried from)
+    recommendations: list[Recommendation]  # accepted, ranked, from advice_from_month's run
 
 
 class GoalProgress(BaseModel):
     goal: Goal
-    as_of_month: Month
-    snapshots: list[GoalSnapshot]
-    projected_completion: IsoDate | None
-    on_track: bool
-    recommendations: list[Recommendation]
+    as_of_month: Month  # the profile's clock
+    latest_data_month: Month  # last month with transactions; replay cannot pass it
+    next_month: Month | None  # what advance would check; None when it cannot
+    advance_blocked: str | None  # why advance is not possible, if it is not
+    current: GoalMonth | None  # latest check
+    months: list[GoalMonth]  # oldest first
 
 
 class GoalAdvance(BaseModel):
-    run_id: str  # advice for the new month arrives via this run
+    run_id: str | None  # the goal_check run; advice arrives via this run (None: nothing was checked)
     progress: GoalProgress
+
+
+class GoalDeleted(BaseModel):
+    goal_id: int
+    as_of_month: Month  # the profile's clock after the delete (restored)
+    deleted_rows: dict[str, int]
 
 
 # ---- eval ----

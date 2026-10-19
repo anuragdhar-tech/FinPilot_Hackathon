@@ -21,8 +21,8 @@ DELETE_STEPS: list[tuple[str, str]] = [
     ("categorizations", f"txn_id IN ({_TXNS}) OR run_id IN ({_RUNS})"),
     ("agent_events", f"run_id IN ({_RUNS})"),
     ("forecasts", "user_id = :u"),
+    ("runs", "user_id = :u"),  # goal_check runs reference goals
     ("goals", "user_id = :u"),
-    ("runs", "user_id = :u"),
     ("transactions", "user_id = :u"),
     ("batches", "user_id = :u"),
     ("users", "id = :u"),

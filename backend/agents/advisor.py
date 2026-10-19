@@ -5,6 +5,10 @@ pattern and structured claims. The tools hand it every figure it may use, alread
 pattern params and forecast flows, labelled with the claim fields to copy. The Verifier then recomputes each
 claim independently from the raw transactions and the forecast engine (backend/agents/verifier.py).
 
+In a goal_check run (Context.goal set) the Advisor also gets get_goal, a goal_gap_after figure per cancel/reduce
+action, and the GOAL_V1 prompt section; the recorded prompt version is then e.g. "adv-v3+goal-v1". Main runs are
+unchanged.
+
 The LLM is injected (an `LLM` callable) so the loop can be tested with scripted drafts.
 """
 from __future__ import annotations
@@ -16,8 +20,9 @@ from dataclasses import dataclass, field
 
 from typing import get_args
 
+from backend.agents import goal_tracker
 from backend.agents.forecaster import MAX_HORIZON, project
-from backend.agents.verifier import ACTIONS, Context, PatternRow, acted_inputs
+from backend.agents.verifier import ACTIONS, Context, PatternRow, acted_inputs, goal_base, goal_gap
 from backend.ledger import add_months
 from backend.llm.client import Completion
 from backend.models import ClaimKind
@@ -79,6 +84,29 @@ SYSTEM_V3 = SYSTEM_V2.replace(V2_REDUCE, V2_REDUCE + """
   far the latest month is above the recent average, not a monthly saving.""")
 SYSTEMS = {"adv-v1": SYSTEM_V1, "adv-v2": SYSTEM_V2, "adv-v3": SYSTEM_V3}
 
+# goal-v1: appended to the system prompt in goal_check runs only. Status is computed in code, never by the LLM.
+GOAL_VERSION = "goal-v1"
+GOAL_V1 = """
+
+The user has a savings goal. Call get_goal first. Its status is computed in code from the forecast:
+- behind: lead with the recommendations that close the most of the goal's gap. For each cancel or
+  reduce_spending recommendation also claim its goal_gap_after figure (from get_pattern) and say what gap it
+  leaves by the goal's target month; state the goal_gap itself in at least one recommendation.
+- on_track or ahead: the goal needs no cuts. Mention in at most one recommendation that the goal is on course,
+  and do not urge cuts for the goal's sake.
+Goal figures are claims like any other (kinds goal_target, goal_saved, goal_gap, goal_gap_after with source_ref
+goal:<id>); copy them exactly. The allowed actions and triggers do not change."""
+
+STATUS_MEANING = {
+    "ahead": "even the low-end projection reaches the target by the target month",
+    "on_track": "the expected projection reaches the target by the target month; the low-end one does not",
+    "behind": "the expected projection falls short of the target by the target month",
+}
+
+
+def prompt_version(ctx: Context, version: str = PROMPT_VERSION) -> str:
+    return f"{version}+{GOAL_VERSION}" if ctx.goal is not None else version
+
 REDRAFT = """The Verifier rejected this draft (lineage {lineage}, attempt {attempt}):
 {draft}
 
@@ -138,6 +166,8 @@ TOOLS_BY_VERSION = {
 }
 TOOLS_BY_VERSION["adv-v3"] = TOOLS_BY_VERSION["adv-v2"]
 TOOLS = TOOLS_BY_VERSION[PROMPT_VERSION]
+GOAL_TOOL = _fn("get_goal", "The user's savings goal: its code-computed status and the goal figures you may cite.",
+                {}, [])
 
 # what each figure means; adv-v1 wording named counts ("3 months") that no claim backs
 MEANINGS = {
@@ -193,6 +223,13 @@ def _deltas(ctx: Context, p: PatternRow, action: str, version: str) -> list[dict
                         meaning=MEANINGS[version].get("delta_reduce" if action == "reduce_spending" else "delta",
                                                       MEANINGS[version]["delta"]).format(
                             m=m, action=action.replace("_", " "))))
+    g = ctx.goal
+    if g is not None and g.target_month > ctx.as_of_month:
+        what = ("this category stops rising and stays at next month's projected level" if action == "reduce_spending"
+                else f"you {action.replace('_', ' ')}")
+        out.append(_fig("goal_gap_after", goal_gap(ctx, acted), "cents", f"goal:{g.id}", g.target_month,
+                        meaning=f"goal shortfall left at the goal's target month if {what} (negative = ahead of "
+                                "the target by that much)"))
     return out
 
 
@@ -246,6 +283,25 @@ def get_forecast(ctx: Context) -> dict:
             _fig("forecast_balance_p10", p["balance_p10"], "cents", ref, p["month"], meaning="low-end balance"))]}
 
 
+def get_goal(ctx: Context) -> dict:
+    g = ctx.goal
+    if g is None:
+        return {"error": "this run tracks no goal"}
+    ref = f"goal:{g.id}"
+    saved = goal_tracker.balance_at(ctx.txns, ctx.opening_balance_cents, ctx.as_of_month) - goal_base(ctx)
+    figs = [_fig("goal_target", g.target_cents, "cents", ref, g.target_month,
+                 meaning="the goal's savings target, due by this figure's month"),
+            _fig("goal_saved", saved, "cents", ref, ctx.as_of_month,
+                 meaning="saved so far since the goal started (growth of this account's balance)")]
+    if ctx.inputs is not None and g.target_month > ctx.as_of_month:
+        figs.append(_fig("goal_gap", goal_gap(ctx, ctx.inputs), "cents", ref, g.target_month,
+                         meaning="shortfall at the target month on the expected projection (negative = ahead of "
+                                 "the target by that much)"))
+    return {"goal_id": g.id, "name": g.name, "status": ctx.goal_status,
+            "status_meaning": STATUS_MEANING.get(ctx.goal_status or "", ""), "target_month": g.target_month,
+            "figures": figs}
+
+
 def call_tool(ctx: Context, name: str, args: dict, version: str = PROMPT_VERSION) -> dict:
     if name == "list_patterns":
         return list_patterns(ctx, args.get("type"), version)
@@ -253,6 +309,8 @@ def call_tool(ctx: Context, name: str, args: dict, version: str = PROMPT_VERSION
         return get_pattern(ctx, int(args["pattern_id"]), version)
     if name == "get_forecast":
         return get_forecast(ctx)
+    if name == "get_goal":
+        return get_goal(ctx)
     return {"error": f"unknown tool {name}"}
 
 
@@ -277,11 +335,14 @@ def run_session(ctx: Context, llm: LLM, user_msg: str,
     if version not in VERSIONS:
         raise ValueError(f"unknown advisor prompt version {version}")
     t0 = time.monotonic()
-    messages = [{"role": "system", "content": SYSTEMS[version].replace("{max_recs}", str(MAX_RECS))},
-                {"role": "user", "content": user_msg}]
+    system = SYSTEMS[version].replace("{max_recs}", str(MAX_RECS))
+    tools = TOOLS_BY_VERSION[version]
+    if ctx.goal is not None:
+        system, tools = system + GOAL_V1, [*tools, GOAL_TOOL]
+    messages = [{"role": "system", "content": system}, {"role": "user", "content": user_msg}]
     s = Session([])
     for _ in range(MAX_TOOL_ROUNDS):
-        c = llm(messages, tools=TOOLS_BY_VERSION[version], response_format=RESPONSE_FORMAT)
+        c = llm(messages, tools=tools, response_format=RESPONSE_FORMAT)
         s.model, s.prompt_tokens, s.completion_tokens = (c.model, s.prompt_tokens + c.prompt_tokens,
                                                          s.completion_tokens + c.completion_tokens)
         if c.tool_calls:
@@ -310,7 +371,8 @@ def run_session(ctx: Context, llm: LLM, user_msg: str,
 
 def first_draft(ctx: Context, llm: LLM, on_tool=None, version: str = PROMPT_VERSION) -> Session:
     msg = (f"Simulated today: end of {ctx.as_of_month}. This run's forecast is forecast:{ctx.forecast_id}. "
-           f"Draft the user's recommendations.")
+           + (f"This run tracks goal:{ctx.goal.id} (status {ctx.goal_status}). " if ctx.goal is not None else "")
+           + "Draft the user's recommendations.")
     return run_session(ctx, llm, msg, on_tool, version)
 
 

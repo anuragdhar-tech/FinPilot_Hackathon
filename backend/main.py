@@ -11,9 +11,11 @@ from backend.graph import create_run, execute_run, fail_stale_runs, ranked_recom
 from backend.ingest import CsvError, active_user_id, ingest_csv
 from backend.llm.client import LLMUnavailable
 from backend.agents.forecaster import MAX_HORIZON
-from backend.models import (AuditRecord, Category, EvalSummary, Forecast, Month, PatternList, RecommendationList,
-                            RunCreate, RunCreated, RunList, RunStatus, SimulateRequest, SimulateResponse,
-                            TransactionList, UploadResponse, User, UserDeleted, UserList)
+from backend.models import (AuditRecord, Category, EvalSummary, Forecast, GoalAdvance, GoalCreate, GoalDeleted,
+                            GoalList, GoalProgress, Month, PatternList, RecommendationList, RunCreate, RunCreated,
+                            RunList, RunStatus, SimulateRequest, SimulateResponse, TransactionList, UploadResponse,
+                            User, UserDeleted, UserList)
+from backend import goals
 from backend.users import delete_user
 
 EVAL_RESULTS = Path(__file__).resolve().parents[1] / "eval" / "results"
@@ -233,6 +235,62 @@ def simulate(body: SimulateRequest, user_id: int | None = None, conn: sqlite3.Co
         raise HTTPException(422, {"errors": [str(e)]})
     except LLMUnavailable as e:
         raise HTTPException(503, {"errors": [str(e)]})
+
+
+# ---- goals (one per profile; the goal owns the profile's clock while it exists) ----
+
+def _goal_call(fn, *args, **kw):
+    try:
+        return fn(*args, **kw)
+    except goals.GoalError as e:
+        raise HTTPException(e.status, {"errors": [str(e)]})
+
+
+def _goal_response(conn: sqlite3.Connection, background: BackgroundTasks, goal_id: int, run_id: str | None,
+                   advice_pending: bool) -> dict:
+    """Status is already computed (sync); the Advisor, when needed, continues the same run in the background."""
+    if advice_pending:
+        background.add_task(execute_run, run_id, entry="advise")
+    return {"run_id": run_id, "progress": goals.progress(conn, goal_id)}
+
+
+@app.post("/api/goals", response_model=GoalAdvance)
+def create_goal(body: GoalCreate, background: BackgroundTasks, user_id: int | None = None,
+                conn: sqlite3.Connection = Depends(get_conn)):
+    """Create the profile's goal and check it at start_month (an earlier start_month rewinds the clock for replay)."""
+    uid = resolve_user(conn, user_id)
+    goal_id, run_id, pending = _goal_call(goals.create_goal, conn, uid, body)
+    return _goal_response(conn, background, goal_id, run_id, pending)
+
+
+@app.get("/api/goals", response_model=GoalList)
+def list_goals(user_id: int | None = None, conn: sqlite3.Connection = Depends(get_conn)):
+    return {"items": goals.list_goals(conn, resolve_user(conn, user_id))}
+
+
+@app.get("/api/goals/{goal_id}/progress", response_model=GoalProgress)
+def goal_progress(goal_id: int, conn: sqlite3.Connection = Depends(get_conn)):
+    return _goal_call(goals.progress, conn, goal_id)
+
+
+@app.post("/api/goals/{goal_id}/advance", response_model=GoalAdvance)
+def advance_goal(goal_id: int, background: BackgroundTasks, conn: sqlite3.Connection = Depends(get_conn)):
+    """Replay the next month: move the clock one month, re-run analyze and forecast, compare to the plan."""
+    run_id, pending = _goal_call(goals.advance, conn, goal_id)
+    return _goal_response(conn, background, goal_id, run_id, pending)
+
+
+@app.post("/api/goals/{goal_id}/reset", response_model=GoalAdvance)
+def reset_goal_clock(goal_id: int, background: BackgroundTasks, conn: sqlite3.Connection = Depends(get_conn)):
+    """Reset to latest: jump the clock to the latest data month (one goal check there unless the goal is final)."""
+    run_id, pending = _goal_call(goals.reset_to_latest, conn, goal_id)
+    return _goal_response(conn, background, goal_id, run_id, pending)
+
+
+@app.delete("/api/goals/{goal_id}", response_model=GoalDeleted)
+def delete_goal(goal_id: int, conn: sqlite3.Connection = Depends(get_conn)):
+    """Remove the goal and its checks; the profile's clock goes back to the latest data month."""
+    return _goal_call(goals.delete_goal, conn, goal_id)
 
 
 @app.get("/api/eval/latest", response_model=EvalSummary)

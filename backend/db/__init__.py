@@ -29,12 +29,26 @@ ADDED_COLUMNS = {
     "recommendations": [("action", "TEXT NOT NULL DEFAULT ''"), ("target", "TEXT NOT NULL DEFAULT ''"),
                         ("impact_annual_cents", "INTEGER")],
     "audit_trail": [("rule_checks", "TEXT NOT NULL DEFAULT '[]'")],
+    "runs": [("goal_id", "INTEGER REFERENCES goals(id)")],
 }
+
+
+def _rebuild_unused_goal_tables(conn: sqlite3.Connection) -> None:
+    """goals/goal_snapshots shipped as placeholders (target_date, on_track) and no endpoint ever wrote them; an old,
+    empty pair is dropped and recreated in the goal-replay shape. Rows in them would be a surprise: refuse."""
+    if "target_date" not in {r["name"] for r in conn.execute("PRAGMA table_info(goals)")}:
+        return
+    if any(conn.execute(f"SELECT 1 FROM {t} LIMIT 1").fetchone() for t in ("goals", "goal_snapshots")):
+        raise RuntimeError("old-shape goals/goal_snapshots tables hold rows; migrate them by hand")
+    conn.execute("DROP TABLE goal_snapshots")
+    conn.execute("DROP TABLE goals")
+    conn.executescript(SCHEMA_PATH.read_text())
 
 
 def init_db(conn: sqlite3.Connection) -> None:
     """Create all tables and add any missing later columns. Idempotent."""
     conn.executescript(SCHEMA_PATH.read_text())
+    _rebuild_unused_goal_tables(conn)
     for table, cols in ADDED_COLUMNS.items():
         have = {r["name"] for r in conn.execute(f"PRAGMA table_info({table})")}
         for name, ddl in cols:

@@ -116,15 +116,20 @@ def test_ranked_by_recomputed_impact_and_one_per_trigger_action(db):
 
 def test_old_db_gets_new_columns(tmp_path):
     from backend.db import ADDED_COLUMNS, SCHEMA_PATH, init_db
-    added = {name for cols in ADDED_COLUMNS.values() for name, _ in cols}
-    old = "\n".join(line for line in SCHEMA_PATH.read_text().splitlines()
-                    if not (line.split() and line.split()[0] in added))  # the schema before Day 4
+    lines, table = [], None
+    for line in SCHEMA_PATH.read_text().splitlines():  # the schema without the added columns, table by table
+        if line.startswith("CREATE TABLE IF NOT EXISTS "):
+            table = line.split()[5]
+        if not (line.split() and line.split()[0] in {n for n, _ in ADDED_COLUMNS.get(table, [])}):
+            lines.append(line)
+    old = "\n".join(lines)
     conn = connect(tmp_path / "old.db")
     conn.executescript(old)
     assert "action" not in {r["name"] for r in conn.execute("PRAGMA table_info(recommendations)")}
     init_db(conn)
     assert {"action", "target", "impact_annual_cents"} <= {r["name"] for r in conn.execute("PRAGMA table_info(recommendations)")}
     assert "rule_checks" in {r["name"] for r in conn.execute("PRAGMA table_info(audit_trail)")}
+    assert "goal_id" in {r["name"] for r in conn.execute("PRAGMA table_info(runs)")}
     init_db(conn)  # idempotent
     assert verifier.MAX_ATTEMPTS == 3
 

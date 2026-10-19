@@ -35,17 +35,26 @@ def populate(conn, tag: str) -> int:
     conn.execute("INSERT INTO pattern_evidence (pattern_id, txn_id) VALUES (?, ?)", (pat, txns[0]))
     fc = conn.execute("INSERT INTO forecasts (run_id, user_id, as_of_month, horizon_months, method, params, output) "
                       "VALUES (?, ?, '2026-09', 3, 'm', '{}', '[]')", (run, uid)).lastrowid
-    goal = conn.execute("INSERT INTO goals (user_id, name, target_cents, target_date, monthly_contribution_cents, start_month) "
-                        "VALUES (?, 'g', 100000, '2027-01-01', 5000, '2026-09')", (uid,)).lastrowid
-    conn.execute("INSERT INTO goal_snapshots (goal_id, run_id, month, planned_cents, actual_cents, on_track, forecast_id) "
-                 "VALUES (?, ?, '2026-09', 1, 1, 1, ?)", (goal, run, fc))
-    conn.execute("INSERT INTO goal_snapshots (goal_id, month, planned_cents, actual_cents, on_track) "  # no run, no forecast
-                 "VALUES (?, '2026-10', 1, 1, 0)", (goal,))
-    rec = conn.execute("INSERT INTO recommendations (run_id, lineage_id, attempt, status, trigger_type, trigger_id, goal_id, "
-                       "title, body, claims, model, prompt_version) VALUES (?, ?, 1, 'accepted', 'goal', '1', ?, 't', 'b', '[]', 'm', 'v')",
-                       (run, f"lin-{tag}", goal)).lastrowid
-    conn.execute("INSERT INTO audit_trail (rec_id, lineage_id, run_id, trigger_type, trigger_id, attempt, verifier_verdict, "
-                 "reasons, checks, inputs) VALUES (?, ?, ?, 'goal', '1', 1, 'pass', '[]', '[]', '{}')", (rec, f"lin-{tag}", run))
+    goal = conn.execute("INSERT INTO goals (user_id, name, target_cents, start_month, target_month, restore_as_of_month) "
+                        "VALUES (?, 'g', 100000, '2026-06', '2026-12', '2026-09')", (uid,)).lastrowid
+    grun = f"g-{tag}"  # a goal check: its own run, events, forecast, snapshot and goal-linked advice
+    conn.execute("INSERT INTO runs (id, user_id, goal_id, kind, status, as_of_month) "
+                 "VALUES (?, ?, ?, 'goal_check', 'done', '2026-06')", (grun, uid, goal))
+    conn.execute("INSERT INTO agent_events (run_id, seq, node, status) VALUES (?, 1, 'compare_to_plan', 'ok')", (grun,))
+    gfc = conn.execute("INSERT INTO forecasts (run_id, user_id, as_of_month, horizon_months, method, params, output) "
+                       "VALUES (?, ?, '2026-06', 12, 'm', '{}', '[]')", (grun, uid)).lastrowid
+    for month, fid in (("2026-06", gfc), ("2026-07", None)):
+        conn.execute("INSERT INTO goal_snapshots (goal_id, run_id, month, status, saved_cents, planned_cents, gap_cents, "
+                     "forecast_id, signature, decision, reason, advice_run_id) "
+                     "VALUES (?, ?, ?, 'behind', 1, 1, 1, ?, '{}', 'advise', 'r', ?)", (goal, grun, month, fid, grun))
+    for r, trig in ((run, "pattern"), (grun, "pattern")):
+        rec = conn.execute("INSERT INTO recommendations (run_id, lineage_id, attempt, status, trigger_type, trigger_id, "
+                           "goal_id, title, body, claims, model, prompt_version) "
+                           "VALUES (?, ?, 1, 'accepted', ?, '1', ?, 't', 'b', '[]', 'm', 'v')",
+                           (r, f"lin-{tag}-{r}", trig, goal if r == grun else None)).lastrowid
+        conn.execute("INSERT INTO audit_trail (rec_id, lineage_id, run_id, trigger_type, trigger_id, attempt, "
+                     "verifier_verdict, reasons, checks, inputs) VALUES (?, ?, ?, ?, '1', 1, 'pass', '[]', '[]', '{}')",
+                     (rec, f"lin-{tag}-{r}", r, trig))
     conn.commit()
     return uid
 
@@ -76,6 +85,7 @@ def test_delete_removes_all_of_a_users_rows_and_nothing_else(conn):
 
     assert dump(conn) == only_b  # every table is exactly as it was before A existed
     assert deleted == {t: len(with_a[t]) - len(only_b[t]) for t in OWNED_TABLES}
+    assert (deleted["goals"], deleted["goal_snapshots"], deleted["runs"]) == (1, 2, 2)  # main + goal_check run
     assert conn.execute("SELECT COUNT(*) FROM users WHERE id = ?", (b,)).fetchone()[0] == 1
     assert len(only_b["merchant_cache"]) == 1  # the shared cache survives
 

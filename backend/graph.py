@@ -1,6 +1,10 @@
 """LangGraph coordinator: ingest -> categorize -> analyze -> forecast -> advise -> verify -> persist, where
 verify routes rejected drafts back to advise (at most MAX_ATTEMPTS drafts per recommendation lineage).
 
+Goal check (one per replayed month): analyze -> forecast -> compare_to_plan -> advise <-> verify -> persist, where
+compare_to_plan (code) stores the goal's status and ends the run without calling the Advisor when the status and
+the actionable patterns are unchanged since the last advised month, or once the goal is final.
+
 Agents are plain functions (backend/agents/*); nodes here are thin wrappers that read state, call
 the agent, persist results and write agent_events. Persistence is our own tables (runs, agent_events,
 recommendations, audit_trail); no LangGraph checkpointer: runs are short, need no pause/resume, and
@@ -16,7 +20,7 @@ from typing import Any, TypedDict
 
 from langgraph.graph import END, START, StateGraph
 
-from backend.agents import advisor, analyzer, categorizer, forecaster, verifier, whatif
+from backend.agents import advisor, analyzer, categorizer, forecaster, goal_tracker, verifier, whatif
 from backend.agents.analyzer import Detected, money
 from backend.agents.categorizer import LLM, BatchStat, MerchantCache, TxnIn
 from backend.db import connect
@@ -35,7 +39,8 @@ class FinPilotState(TypedDict, total=False):
     patterns: list[Detected]
     forecast: int  # forecasts.id
     insufficient_data: bool  # under MIN_HISTORY_MONTHS complete months: no projection, advice skipped
-    goal: Any
+    goal_decision: str  # goal_check: advise | carry | final (compare_to_plan)
+    defer_advice: bool  # goal_check: stop after compare_to_plan; the caller continues from advise in the background
     scenario: Any
     drafts: list[Any]
     verifier_reports: list[Any]
@@ -70,8 +75,9 @@ def default_advisor_llm(messages: list[dict], **kwargs):
 
 def build_graph(conn: sqlite3.Connection, categorizer_llm: LLM | None = None, use_cache: bool = True,
                 categorizer_version: str = categorizer.PROMPT_VERSION, advisor_llm: advisor.LLM | None = None,
-                entry: str = "ingest", advisor_version: str = advisor.PROMPT_VERSION):
-    """entry='analyze' starts from the stored categorizations (eval reuse; no Categorizer calls)."""
+                entry: str = "ingest", advisor_version: str = advisor.PROMPT_VERSION, kind: str = "main"):
+    """entry='analyze' starts from the stored categorizations (eval reuse; no Categorizer calls); entry='advise'
+    continues a run whose forecast (and goal snapshot) are already stored. kind='goal_check' adds compare_to_plan."""
     # late lookup of the defaults so tests can monkeypatch them
     llm = categorizer_llm or (lambda m, rf: default_categorizer_llm(m, rf))
     adv_llm = advisor_llm or (lambda m, **kw: default_advisor_llm(m, **kw))
@@ -206,7 +212,7 @@ def build_graph(conn: sqlite3.Connection, categorizer_llm: LLM | None = None, us
             return verifier.Draft(lineage, attempt, rec.get("action", ""), rec.get("target", ""),
                                   rec.get("title", ""), rec.get("body", ""), rec.get("trigger_type", ""),
                                   str(rec.get("trigger_id", "")), rec.get("claims", []), sess.model,
-                                  advisor_version, trigger)
+                                  advisor.prompt_version(ctx, advisor_version), trigger)
 
         drafts: list[verifier.Draft] = []
         if attempt == 1:
@@ -219,7 +225,7 @@ def build_graph(conn: sqlite3.Connection, categorizer_llm: LLM | None = None, us
                     continue
                 seen.add(key)
                 drafts.append(draft(rec, uuid.uuid4().hex, sess))
-            log(sess, f"{advisor_version} first draft: {len(drafts)} recommendation(s) after "
+            log(sess, f"{advisor.prompt_version(ctx, advisor_version)} first draft: {len(drafts)} recommendation(s) after "
                       f"{len(sess.tool_calls)} tool call(s)"
                       + (f"; ignored {len(extra)} repeated or over the cap of {advisor.MAX_RECS}" if extra else ""))
         else:
@@ -275,11 +281,52 @@ def build_graph(conn: sqlite3.Connection, categorizer_llm: LLM | None = None, us
                    output_ref=f"run:{run_id}/recommendations")
         return {"final_recs": [r["id"] for r in ranked], "audit_events": [*state.get("audit_events", []), seq]}
 
+    def compare_to_plan(state: FinPilotState) -> FinPilotState:
+        t0 = time.monotonic()
+        run_id, uid, as_of = state["run_id"], state["user_id"], state["as_of_month"]
+        if state.get("insufficient_data"):
+            raise ValueError(f"goal check at {as_of}: not enough history for a forecast")
+        g = conn.execute("SELECT g.* FROM goals g JOIN runs r ON r.goal_id = g.id WHERE r.id = ?", (run_id,)).fetchone()
+        goal = goal_tracker.Goal(g["id"], g["name"], g["target_cents"], g["start_month"], g["target_month"])
+        opening = conn.execute("SELECT opening_balance_cents FROM users WHERE id = ?", (uid,)).fetchone()[0]
+        points = json.loads(conn.execute("SELECT output FROM forecasts WHERE id = ?", (state["forecast"],)).fetchone()[0])
+        c = goal_tracker.check(goal, load_txns(conn, uid, as_of), opening, points, as_of)
+        sig = goal_tracker.signature(c.status, [(p.type, p.params) for p in state["patterns"]])
+        prev = conn.execute(
+            "SELECT s.month, s.signature, s.advice_run_id FROM goal_snapshots s JOIN runs r ON r.id = s.run_id "
+            "WHERE s.goal_id = ? AND s.decision = 'advise' AND r.status = 'done' ORDER BY s.month DESC LIMIT 1",
+            (goal.id,)).fetchone()
+        decision, reason = goal_tracker.decide(c, sig, json.loads(prev["signature"]) if prev else None,
+                                               prev["month"] if prev else None)
+        advice_run = run_id if decision == "advise" else prev["advice_run_id"] if decision == "carry" else None
+        conn.execute(
+            "INSERT INTO goal_snapshots (goal_id, run_id, month, status, saved_cents, planned_cents, projected_p50_cents, "
+            "projected_p10_cents, gap_cents, projected_completion, forecast_id, signature, decision, reason, advice_run_id) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            (goal.id, run_id, as_of, c.status, c.saved_cents, c.planned_cents, c.projected_p50_cents,
+             c.projected_p10_cents, c.gap_cents, c.projected_completion, state["forecast"], json.dumps(sig),
+             decision, reason, advice_run))
+        conn.commit()
+        gap = f"short {money(c.gap_cents)}" if c.gap_cents > 0 else f"ahead {money(c.gap_cents)}"
+        figures = (f"saved {money(c.saved_cents)} of {money(goal.target_cents)} by {goal.target_month}, {gap}"
+                   if c.final else
+                   f"saved {money(c.saved_cents)} (plan {money(c.planned_cents)}); projected by {goal.target_month}: "
+                   f"p50 {money(c.projected_p50_cents)}, p10 {money(c.projected_p10_cents)} of "
+                   f"{money(goal.target_cents)}, {gap}")
+        seq = emit(conn, run_id, "compare_to_plan",
+                   summary=f"goal {goal.id} at {as_of}: {c.status}; {figures}. {decision}: {reason}",
+                   input_ref=f"forecast:{state['forecast']}", output_ref=f"goal:{goal.id}/snapshot/{as_of}",
+                   duration_ms=int((time.monotonic() - t0) * 1000))
+        return {"goal_decision": decision, "audit_events": [*state.get("audit_events", []), seq]}
+
     def route(state: FinPilotState) -> str:
         return "advise" if state.get("verifier_reports") else "persist"
 
     def after_forecast(state: FinPilotState) -> str:
         return "persist" if state.get("insufficient_data") else "advise"
+
+    def after_compare(state: FinPilotState) -> str:
+        return "advise" if state["goal_decision"] == "advise" and not state.get("defer_advice") else END
 
     g = StateGraph(FinPilotState)
     g.add_node("ingest", ingest)
@@ -293,7 +340,12 @@ def build_graph(conn: sqlite3.Connection, categorizer_llm: LLM | None = None, us
     g.add_edge("ingest", "categorize")
     g.add_edge("categorize", "analyze")
     g.add_edge("analyze", "forecast")
-    g.add_conditional_edges("forecast", after_forecast, {"advise": "advise", "persist": "persist"})
+    if kind == "goal_check":
+        g.add_node("compare_to_plan", compare_to_plan)
+        g.add_edge("forecast", "compare_to_plan")
+        g.add_conditional_edges("compare_to_plan", after_compare, {"advise": "advise", END: END})
+    else:
+        g.add_conditional_edges("forecast", after_forecast, {"advise": "advise", "persist": "persist"})
     g.add_edge("advise", "verify")
     g.add_conditional_edges("verify", route, {"advise": "advise", "persist": "persist"})
     g.add_edge("persist", END)
@@ -304,10 +356,11 @@ def save_draft(conn: sqlite3.Connection, run_id: str, d: verifier.Draft, rep: ve
                ctx: verifier.Context) -> int:
     """Append-only: one recommendations row per draft (with its final status) and its audit_trail row."""
     cur = conn.execute(
-        "INSERT INTO recommendations (run_id, lineage_id, attempt, status, trigger_type, trigger_id, action, target, "
-        "impact_annual_cents, title, body, claims, model, prompt_version) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        "INSERT INTO recommendations (run_id, lineage_id, attempt, status, trigger_type, trigger_id, goal_id, action, "
+        "target, impact_annual_cents, title, body, claims, model, prompt_version) "
+        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         (run_id, d.lineage_id, d.attempt, status, d.trigger_type if d.trigger_type in TRIGGER_TYPES else "pattern",
-         d.trigger_id, d.action, d.target, rep.impact_annual_cents, d.title, d.body,
+         d.trigger_id, ctx.goal.id if ctx.goal else None, d.action, d.target, rep.impact_annual_cents, d.title, d.body,
          json.dumps([c.model_dump() for c in rep.claims]), d.model, d.prompt_version))
     rec_id = cur.lastrowid
     cited = sorted({int(c.source_ref.split(":")[1]) for c in rep.claims if c.source_ref.startswith("pattern:")}
@@ -317,7 +370,8 @@ def save_draft(conn: sqlite3.Connection, run_id: str, d: verifier.Draft, rep: ve
         "reasons, checks, rule_checks, inputs) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         (rec_id, d.lineage_id, run_id, d.trigger_type, d.trigger_id, d.attempt, rep.verdict, json.dumps(rep.reasons),
          json.dumps(rep.checks), json.dumps(rep.rule_checks),
-         json.dumps({"pattern_ids": cited, "forecast_id": ctx.forecast_id, "as_of_month": ctx.as_of_month})))
+         json.dumps({"pattern_ids": cited, "forecast_id": ctx.forecast_id, "as_of_month": ctx.as_of_month}
+                   | ({"goal_id": ctx.goal.id} if ctx.goal else {}))))
     conn.commit()
     return rec_id
 
@@ -371,7 +425,8 @@ def execute_run(run_id: str, *, db_path: str | None = None, categorizer_llm: LLM
                 use_cache: bool = True, categorizer_version: str = categorizer.PROMPT_VERSION,
                 advisor_llm: advisor.LLM | None = None, entry: str = "ingest",
                 advisor_version: str = advisor.PROMPT_VERSION) -> None:
-    """Run the graph for a pending run. Called as a background task; opens its own connection."""
+    """Run the graph for a pending run (or continue a goal_check run from entry='advise'). Called as a background
+    task; opens its own connection."""
     conn = connect(db_path)
     try:
         run = conn.execute("SELECT * FROM runs WHERE id = ?", (run_id,)).fetchone()
@@ -379,7 +434,7 @@ def execute_run(run_id: str, *, db_path: str | None = None, categorizer_llm: LLM
         conn.commit()
         try:
             build_graph(conn, categorizer_llm, use_cache, categorizer_version, advisor_llm, entry,
-                        advisor_version).invoke({
+                        advisor_version, run["kind"]).invoke({
                 "run_id": run_id, "user_id": run["user_id"], "batch_id": run["batch_id"],
                 "as_of_month": run["as_of_month"], "audit_events": []})
             conn.execute("UPDATE runs SET status = 'done', finished_at = datetime('now') WHERE id = ?", (run_id,))

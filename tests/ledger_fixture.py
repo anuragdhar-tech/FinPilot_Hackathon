@@ -108,7 +108,7 @@ def uber_rec(ctx: verifier.Context, *, cost: int | None = None, extra_text: str 
     """Cancel Uber One with figures from the tools; cost overrides the claimed monthly price (a bad draft)."""
     pid = pattern_id(ctx, "UBER")
     c = figure(ctx, pid, "recurring_cost", period="month")
-    m6 = verifier.add_months(AS_OF, 6)
+    m6 = verifier.add_months(ctx.as_of_month, 6)
     delta = figure(ctx, pid, "projected_balance_delta", month=m6)
     if cost is not None:
         c["value"] = cost

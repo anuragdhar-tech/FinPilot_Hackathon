@@ -114,9 +114,11 @@ def ingest_csv(conn: sqlite3.Connection, filename: str, text: str, *, user_id: i
         found = conn.execute("SELECT as_of_month FROM users WHERE id = ?", (user_id,)).fetchone()
         if found is None:
             raise LookupError(f"user {user_id} not found")
-        # Appending newer data moves the clock forward, never back.
-        conn.execute("UPDATE users SET as_of_month = ? WHERE id = ?",
-                     (max(found["as_of_month"], latest_month), user_id))
+        # Appending newer data moves the clock forward, never back. While a goal is active it owns the clock
+        # (backend/goals.py): the new months become replayable by advance instead of being skipped over.
+        if not conn.execute("SELECT 1 FROM goals WHERE user_id = ?", (user_id,)).fetchone():
+            conn.execute("UPDATE users SET as_of_month = ? WHERE id = ?",
+                         (max(found["as_of_month"], latest_month), user_id))
 
     existing = {r[0] for r in conn.execute(
         "SELECT external_id FROM transactions WHERE user_id = ?", (user_id,))}

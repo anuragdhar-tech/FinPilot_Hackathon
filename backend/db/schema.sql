@@ -39,6 +39,7 @@ CREATE TABLE IF NOT EXISTS runs (
     id          TEXT PRIMARY KEY,
     user_id     INTEGER NOT NULL REFERENCES users(id),
     batch_id    TEXT REFERENCES batches(id),
+    goal_id     INTEGER REFERENCES goals(id),          -- goal_check runs only
     kind        TEXT NOT NULL CHECK (kind IN ('main', 'whatif', 'goal_check')),
     status      TEXT NOT NULL CHECK (status IN ('pending', 'running', 'done', 'failed')),
     as_of_month TEXT NOT NULL,
@@ -119,27 +120,38 @@ CREATE TABLE IF NOT EXISTS forecasts (
     created_at     TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
+-- One active goal per user. Savings = growth of this account's balance since the end of start_month
+-- (recomputed from transactions, never stored). While a goal exists it owns users.as_of_month (replay clock).
 CREATE TABLE IF NOT EXISTS goals (
-    id                         INTEGER PRIMARY KEY,
-    user_id                    INTEGER NOT NULL REFERENCES users(id),
-    name                       TEXT NOT NULL,
-    target_cents               INTEGER NOT NULL CHECK (target_cents > 0),
-    target_date                TEXT NOT NULL,
-    monthly_contribution_cents INTEGER NOT NULL CHECK (monthly_contribution_cents >= 0),
-    start_month                TEXT NOT NULL,
-    created_at                 TEXT NOT NULL DEFAULT (datetime('now'))
+    id                  INTEGER PRIMARY KEY,
+    user_id             INTEGER NOT NULL REFERENCES users(id),
+    name                TEXT NOT NULL,
+    target_cents        INTEGER NOT NULL CHECK (target_cents > 0),
+    start_month         TEXT NOT NULL,
+    target_month        TEXT NOT NULL,
+    restore_as_of_month TEXT NOT NULL,                 -- the profile's clock before the goal rewound it
+    created_at          TEXT NOT NULL DEFAULT (datetime('now'))
 );
+CREATE UNIQUE INDEX IF NOT EXISTS ux_goal_user ON goals(user_id);
 
+-- One row per goal_check run (one per replayed month): status and figures computed in code from the forecast.
 CREATE TABLE IF NOT EXISTS goal_snapshots (
     id                   INTEGER PRIMARY KEY,
     goal_id              INTEGER NOT NULL REFERENCES goals(id),
-    run_id               TEXT REFERENCES runs(id),
-    month                TEXT NOT NULL,
-    planned_cents        INTEGER NOT NULL,
-    actual_cents         INTEGER NOT NULL,
-    projected_completion TEXT,
-    on_track             INTEGER NOT NULL CHECK (on_track IN (0, 1)),
+    run_id               TEXT NOT NULL REFERENCES runs(id),
+    month                TEXT NOT NULL,                -- the as_of month of the check
+    status               TEXT NOT NULL CHECK (status IN ('ahead', 'on_track', 'behind', 'achieved', 'missed')),
+    saved_cents          INTEGER NOT NULL,             -- balance growth since the end of start_month
+    planned_cents        INTEGER NOT NULL,             -- straight-line plan from start_month to target_month
+    projected_p50_cents  INTEGER,                      -- projected savings at target_month; NULL once final
+    projected_p10_cents  INTEGER,
+    gap_cents            INTEGER NOT NULL,             -- target - projected p50 savings (final: target - saved)
+    projected_completion TEXT,                         -- first month p50 savings reach the target; NULL if not in horizon
     forecast_id          INTEGER REFERENCES forecasts(id),
+    signature            TEXT NOT NULL,                -- JSON {status, actions}: what decides a redraft
+    decision             TEXT NOT NULL CHECK (decision IN ('advise', 'carry', 'final')),
+    reason               TEXT NOT NULL,                -- why the Advisor was or was not called
+    advice_run_id        TEXT REFERENCES runs(id),     -- run whose advice applies (this run, or the one carried)
     UNIQUE (goal_id, month)
 );
 

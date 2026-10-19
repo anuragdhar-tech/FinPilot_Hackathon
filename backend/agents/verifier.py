@@ -12,7 +12,9 @@ For each draft:
 
 Recurring and trend claims are recomputed from the raw transactions (pattern evidence and the latest
 categorization), not from the stored pattern params, so the check also catches Analyzer bugs. Forecast
-claims re-run the engine (project()) over the stored flows.
+claims re-run the engine (project()) over the stored flows. Goal claims (goal_check runs) come from the goals
+row, the transactions (savings = balance growth since the start month) and project(), with the draft's action
+applied for goal_gap_after.
 """
 from __future__ import annotations
 
@@ -24,6 +26,7 @@ from statistics import median
 
 from pydantic import ValidationError
 
+from backend.agents import goal_tracker
 from backend.agents.forecaster import MAX_HORIZON, ForecastInputs, inputs_from_params, project
 from backend.ledger import Txn, add_months, load_txns, month_end, months_between
 from backend.models import Claim
@@ -39,14 +42,16 @@ PRIMARY = {"cancel": "recurring_cost", "review_price_increase": "price_change", 
 RECURRING_KINDS = {"recurring_cost", "prev_recurring_cost", "price_change", "days_since_parent_spend"}
 TREND_KINDS = {"category_spend", "excess_spend", "percent_change"}
 FORECAST_KINDS = {"forecast_balance", "forecast_balance_p10", "projected_balance_delta"}
-UNIT = {k: "cents" for k in RECURRING_KINDS | TREND_KINDS | FORECAST_KINDS} | {
+GOAL_KINDS = {"goal_target", "goal_saved", "goal_gap", "goal_gap_after"}
+UNIT = {k: "cents" for k in RECURRING_KINDS | TREND_KINDS | FORECAST_KINDS | GOAL_KINDS} | {
     "days_since_parent_spend": "days", "percent_change": "percent"}
-NEEDS_MONTH = {"category_spend"} | FORECAST_KINDS
+NEEDS_MONTH = {"category_spend"} | FORECAST_KINDS | GOAL_KINDS
 YEARLY_OK = {"recurring_cost", "price_change", "excess_spend"}
 # rounding of a recomputed mean or median; engine re-runs and plain sums are exact
 TOL = {"recurring_cost": 1, "prev_recurring_cost": 1, "price_change": 1, "days_since_parent_spend": 0,
        "category_spend": 0, "excess_spend": 1, "percent_change": 1, "forecast_balance": 0,
-       "forecast_balance_p10": 0, "projected_balance_delta": 0}
+       "forecast_balance_p10": 0, "projected_balance_delta": 0, "goal_target": 0, "goal_saved": 0, "goal_gap": 0,
+       "goal_gap_after": 0}
 
 
 @dataclass
@@ -87,11 +92,15 @@ class Context:
     txns: list[Txn]
     forecast_id: int | None
     forecast_params: dict | None
+    goal: goal_tracker.Goal | None = None  # goal_check runs only
+    goal_status: str | None = None  # this run's goal_snapshots status (shown to the Advisor; not a claim)
+    opening_balance_cents: int = 0
     _base: list[dict] | None = field(default=None, repr=False)
 
     @classmethod
     def load(cls, conn: sqlite3.Connection, run_id: str) -> Context:
-        run = conn.execute("SELECT user_id, as_of_month FROM runs WHERE id = ?", (run_id,)).fetchone()
+        run = conn.execute("SELECT r.user_id, r.as_of_month, r.goal_id, u.opening_balance_cents FROM runs r "
+                           "JOIN users u ON u.id = r.user_id WHERE r.id = ?", (run_id,)).fetchone()
         ev: dict[int, list[int]] = {}
         for r in conn.execute("SELECT pe.pattern_id, pe.txn_id FROM pattern_evidence pe JOIN patterns p "
                               "ON p.id = pe.pattern_id WHERE p.run_id = ?", (run_id,)):
@@ -100,8 +109,15 @@ class Context:
                     for r in conn.execute("SELECT * FROM patterns WHERE run_id = ? ORDER BY id", (run_id,))}
         fc = conn.execute("SELECT id, params FROM forecasts WHERE run_id = ? AND scenario IS NULL ORDER BY id DESC "
                           "LIMIT 1", (run_id,)).fetchone()
+        goal, status = None, None
+        if run["goal_id"] is not None:
+            g = conn.execute("SELECT * FROM goals WHERE id = ?", (run["goal_id"],)).fetchone()
+            goal = goal_tracker.Goal(g["id"], g["name"], g["target_cents"], g["start_month"], g["target_month"])
+            snap = conn.execute("SELECT status FROM goal_snapshots WHERE run_id = ?", (run_id,)).fetchone()
+            status = snap["status"] if snap else None
         return cls(run_id, run["as_of_month"], patterns, load_txns(conn, run["user_id"], run["as_of_month"]),
-                   fc["id"] if fc else None, json.loads(fc["params"]) if fc else None)
+                   fc["id"] if fc else None, json.loads(fc["params"]) if fc else None, goal, status,
+                   run["opening_balance_cents"])
 
     @property
     def inputs(self) -> ForecastInputs | None:
@@ -182,6 +198,38 @@ def balance_delta(ctx: Context, trigger_id: str, action: str, month: str) -> int
     return after[month] - base[month] if month in base else None
 
 
+def goal_base(ctx: Context) -> int:
+    """Balance at the end of the goal's start month: savings are measured from here."""
+    return goal_tracker.balance_at(ctx.txns, ctx.opening_balance_cents, ctx.goal.start_month)
+
+
+def goal_gap(ctx: Context, inputs: ForecastInputs) -> int:
+    """target - projected p50 savings at the target month, on the given forecast inputs."""
+    return ctx.goal.target_cents - goal_tracker.projected_savings(ctx.goal, goal_base(ctx), project(inputs, MAX_HORIZON))
+
+
+def _recompute_goal(c: Claim, d: Draft, ctx: Context) -> tuple[int | None, str | None]:
+    g = ctx.goal
+    if g is None or c.source_ref != f"goal:{g.id}":
+        return None, "this run tracks no goal" if g is None else f"must cite this run's goal (goal:{g.id})"
+    if c.kind == "goal_saved":
+        if c.month != ctx.as_of_month:
+            return None, f"goal_saved is as of {ctx.as_of_month}"
+        return goal_tracker.balance_at(ctx.txns, ctx.opening_balance_cents, ctx.as_of_month) - goal_base(ctx), None
+    if c.month != g.target_month:
+        return None, f"month must be the goal's target month {g.target_month}"
+    if c.kind == "goal_target":
+        return g.target_cents, None
+    if ctx.inputs is None or g.target_month <= ctx.as_of_month:
+        return None, "no projection to the target month in this run"
+    if c.kind == "goal_gap":
+        return goal_gap(ctx, ctx.inputs), None
+    if d.action not in ("cancel", "reduce_spending"):
+        return None, "goal_gap_after only applies to cancel or reduce_spending"
+    acted = acted_inputs(ctx.inputs, d.trigger_id, d.action)
+    return (goal_gap(ctx, acted), None) if acted else (None, "the trigger has no matching flow in the forecast")
+
+
 def _recompute(c: Claim, d: Draft, ctx: Context) -> tuple[int | None, str | None]:
     """Recomputed value for one claim, or (None, why not)."""
     kind = c.kind
@@ -191,6 +239,8 @@ def _recompute(c: Claim, d: Draft, ctx: Context) -> tuple[int | None, str | None
         return None, "month is required for this kind"
     if c.period == "year" and kind not in YEARLY_OK:
         return None, "period 'year' is not allowed for this kind"
+    if kind in GOAL_KINDS:
+        return _recompute_goal(c, d, ctx)
     if kind in FORECAST_KINDS:
         if ctx.forecast_id is None or c.source_ref != f"forecast:{ctx.forecast_id}":
             return None, f"must cite this run's forecast (forecast:{ctx.forecast_id})"
