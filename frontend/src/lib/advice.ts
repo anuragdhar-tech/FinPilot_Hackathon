@@ -42,6 +42,10 @@ export const KIND_LABEL: Record<ClaimKind, string> = {
   forecast_balance: 'Forecast balance (p50)',
   forecast_balance_p10: 'Forecast balance (p10)',
   projected_balance_delta: 'Balance gain if you act (p50)',
+  goal_target: 'Goal target',
+  goal_saved: 'Saved toward the goal so far',
+  goal_gap: 'Goal gap at the target month (p50)',
+  goal_gap_after: 'Goal gap left if you act (p50)',
 }
 
 export function claimValue(unit: Claim['unit'], value: number | null | undefined): string {

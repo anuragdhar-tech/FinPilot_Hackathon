@@ -77,3 +77,26 @@ def test_one_off_allowance_is_trailing_mean_of_flagged_spend():
     assert v1.points[0]["spend_cents"] == v2.points[0]["spend_cents"] - 30000
     with pytest.raises(ValueError):
         forecast(b.txns, pats, 0, AS_OF, version="fc-v9")
+
+
+def test_first_charge_of_a_new_series_flagged_as_anomaly_is_not_in_the_one_off_allowance(tmp_path):
+    """A new rent's first charge is flagged new_merchant and is also the start of a recurring series: the recurring
+    flow already projects it, so the one-off allowance must not count it a second time (bug fix, no new version)."""
+    from backend.db import connect
+    from backend.ledger import load_txns
+    from tests.ledger_fixture import build_ledger
+    from tests.test_goals import add_rent
+
+    path = tmp_path / "t.db"
+    add_rent(path, uid := build_ledger(path))
+    conn = connect(path)
+    txns = load_txns(conn, uid, "2026-08")
+    conn.close()
+    res = analyze(txns, "2026-08")
+    rent = next(p for p in res.patterns if p.type == "recurring" and "ELM" in p.params["merchant"])
+    flagged = [p for p in res.patterns if p.type == "anomaly" and p.params["txn_id"] in rent.evidence]
+    assert flagged and flagged[0].params["kind"] == "new_merchant"  # the case this test is about
+    fc = forecast(txns, res.patterns, 100000, "2026-08")
+    allowance = next(f for f in fc.inputs.flows if f.kind == "one_off")
+    assert allowance.means[0] == 0 and allowance.sd_cents == 0  # no other anomalies in this ledger
+    assert next(f for f in fc.inputs.flows if f.source_ref == f"pattern:{res.patterns.index(rent)}").means[0] == -350000

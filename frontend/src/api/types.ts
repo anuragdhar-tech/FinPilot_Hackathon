@@ -167,6 +167,7 @@ export type ClaimKind =
   | 'recurring_cost' | 'prev_recurring_cost' | 'price_change' | 'days_since_parent_spend'
   | 'category_spend' | 'excess_spend' | 'percent_change'
   | 'forecast_balance' | 'forecast_balance_p10' | 'projected_balance_delta'
+  | 'goal_target' | 'goal_saved' | 'goal_gap' | 'goal_gap_after'
 export type Action = 'cancel' | 'review_price_increase' | 'reduce_spending'
 export type TriggerType = 'pattern' | 'forecast' | 'goal' | 'scenario'
 
@@ -309,4 +310,64 @@ export interface EvalSummary {
   forecast?: ForecastMetrics | null
   verifier?: VerifierMetrics | null
   grounded_number_rate?: number | null
+}
+
+// ---- goals (one per profile; the goal owns the profile's clock while it exists) ----
+
+export type GoalStatus = 'ahead' | 'on_track' | 'behind' | 'achieved' | 'missed'
+
+export interface Goal {
+  id: number
+  user_id: number
+  name: string
+  target_cents: number
+  start_month: string // savings = balance growth since the end of this month
+  target_month: string
+  created_at: string
+}
+
+export interface GoalCreate {
+  name: string
+  target_cents: number
+  target_month: string
+  start_month?: string | null // earlier than the profile's month = rewind the clock for replay
+}
+
+/** One goal check (one replayed month); every figure is computed in code from that month's forecast. */
+export interface GoalMonth {
+  month: string
+  status: GoalStatus
+  saved_cents: number
+  planned_cents: number
+  projected_p50_cents: number | null // projected savings at the target month; null once final
+  projected_p10_cents: number | null
+  gap_cents: number // target - projected p50 savings (final: target - saved); negative = ahead
+  projected_completion: string | null
+  run_id: string
+  run_status: RunState
+  decision: 'advise' | 'carry' | 'final'
+  reason: string
+  advice_from_month: string | null
+  recommendations: Recommendation[]
+}
+
+export interface GoalProgress {
+  goal: Goal
+  as_of_month: string
+  latest_data_month: string
+  next_month: string | null
+  advance_blocked: string | null
+  current: GoalMonth | null
+  months: GoalMonth[] // oldest first
+}
+
+export interface GoalAdvance {
+  run_id: string | null
+  progress: GoalProgress
+}
+
+export interface GoalDeleted {
+  goal_id: number
+  as_of_month: string
+  deleted_rows: Record<string, number>
 }

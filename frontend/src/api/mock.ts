@@ -8,6 +8,9 @@ import type {
 // Mock mode: everything below is invented sample data for working without the backend.
 // Nothing here is a real result.
 
+const goalsNeedBackend = () =>
+  new ApiError(501, 'Goals need the real backend: set VITE_USE_MOCKS=false and run uvicorn.')
+
 const delay = <T,>(value: T, ms = 150) =>
   new Promise<T>((resolve) => setTimeout(() => resolve(value), ms))
 
@@ -274,4 +277,11 @@ export const mockClient: ApiClient = {
   },
   getForecast: (_userId, horizonMonths = 6) =>
     delay({ ...mockForecast, horizon_months: horizonMonths, points: mockForecast.points.slice(0, horizonMonths) }),
+  // Goal replay is not mocked: its whole point is real month-by-month checks.
+  getGoals: () => Promise.reject(goalsNeedBackend()),
+  createGoal: () => Promise.reject(goalsNeedBackend()),
+  getGoalProgress: () => Promise.reject(goalsNeedBackend()),
+  advanceGoal: () => Promise.reject(goalsNeedBackend()),
+  resetGoal: () => Promise.reject(goalsNeedBackend()),
+  deleteGoal: () => Promise.reject(goalsNeedBackend()),
 }

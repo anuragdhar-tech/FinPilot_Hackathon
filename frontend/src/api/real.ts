@@ -4,6 +4,10 @@ import type {
   EvalSummary,
   Forecast,
   AuditRecord,
+  Goal,
+  GoalAdvance,
+  GoalDeleted,
+  GoalProgress,
   Health,
   RecommendationList,
   RunCreated,
@@ -89,4 +93,12 @@ export const realClient: ApiClient = {
   getAudit: (recId) => request<AuditRecord>(`/api/recommendations/${recId}/audit`),
   simulate: (body, userId) =>
     request<SimulateResponse>(`/api/simulate${userId != null ? `?user_id=${userId}` : ''}`, post(body)),
+  getGoals: async (userId) =>
+    (await request<{ items: Goal[] }>(`/api/goals${userId != null ? `?user_id=${userId}` : ''}`)).items,
+  createGoal: (body, userId) =>
+    request<GoalAdvance>(`/api/goals${userId != null ? `?user_id=${userId}` : ''}`, post(body)),
+  getGoalProgress: (goalId) => request<GoalProgress>(`/api/goals/${goalId}/progress`),
+  advanceGoal: (goalId) => request<GoalAdvance>(`/api/goals/${goalId}/advance`, post({})),
+  resetGoal: (goalId) => request<GoalAdvance>(`/api/goals/${goalId}/reset`, post({})),
+  deleteGoal: (goalId) => request<GoalDeleted>(`/api/goals/${goalId}`, { method: 'DELETE' }),
 }

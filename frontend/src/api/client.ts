@@ -4,6 +4,11 @@ import type {
   EvalSummary,
   Forecast,
   AuditRecord,
+  Goal,
+  GoalAdvance,
+  GoalCreate,
+  GoalDeleted,
+  GoalProgress,
   Health,
   RecommendationList,
   RunCreated,
@@ -42,6 +47,17 @@ export interface ApiClient {
   getAudit(recId: number): Promise<AuditRecord>
   /** Synchronous what-if (one parse call and up to two explanation calls). 422 = text is not a valid scenario. */
   simulate(body: SimulateRequest, userId?: number): Promise<SimulateResponse>
+  /** The profile's goal, if any (at most one). */
+  getGoals(userId?: number): Promise<Goal[]>
+  /** Create the goal and check it at its start month (an earlier start month rewinds the clock). 409: one exists. */
+  createGoal(body: GoalCreate, userId?: number): Promise<GoalAdvance>
+  getGoalProgress(goalId: number): Promise<GoalProgress>
+  /** Replay the next month. The status is in the response; advice arrives via the returned run. */
+  advanceGoal(goalId: number): Promise<GoalAdvance>
+  /** Jump the clock to the latest data month (one check there unless the goal is final). */
+  resetGoal(goalId: number): Promise<GoalAdvance>
+  /** Remove the goal and its checks; the clock goes back to the latest data month. */
+  deleteGoal(goalId: number): Promise<GoalDeleted>
 }
 
 // Real backend by default; set VITE_USE_MOCKS=true for the mocked API.

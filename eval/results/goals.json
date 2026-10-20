@@ -1,0 +1,955 @@
+{
+  "summary": {
+    "run_at": "2026-10-20T15:37:28+00:00",
+    "git_sha": "7546bb8-dirty",
+    "dataset": "synthetic",
+    "seed": 42,
+    "models": {
+      "advisor": "openai/gpt-4o"
+    },
+    "prompt_version": "adv-v3+goal-v1",
+    "repeats": 3,
+    "usage": {
+      "prompt_tokens": 197633,
+      "completion_tokens": 14489,
+      "estimated_cost": {
+        "usd": 0.63897,
+        "note": "Estimated at OpenAI list prices (USD per 1M tokens) for the configured model; Mesh BYOK fees, if any, are not included. Check the OpenAI pricing page before quoting.",
+        "prices_as_of": "2026-10-15"
+      }
+    }
+  },
+  "details": {
+    "threshold_checks": [
+      {
+        "persona": "maya_renter",
+        "check": "status flips at p50 $5,028.84 and p10 $2,179.66",
+        "ok": true,
+        "got": [
+          "on_track",
+          "behind",
+          "ahead",
+          "on_track"
+        ]
+      },
+      {
+        "persona": "ortiz_family",
+        "check": "status flips at p50 $8,625.42 and p10 $6,716.19",
+        "ok": true,
+        "got": [
+          "on_track",
+          "behind",
+          "ahead",
+          "on_track"
+        ]
+      },
+      {
+        "persona": "sam_freelancer",
+        "check": "status flips at p50 -$4,683.66 (p10 -$9,676.06 not positive: ahead not reachable)",
+        "ok": true,
+        "got": [
+          "on_track",
+          "behind"
+        ]
+      }
+    ],
+    "realized_checks": [
+      {
+        "id": "G1",
+        "realized_status": "missed",
+        "realized_saved": -4632,
+        "app_status": "missed",
+        "app_saved": -4632,
+        "ok": true
+      },
+      {
+        "id": "G2",
+        "realized_status": "achieved",
+        "realized_saved": 259608,
+        "app_status": "achieved",
+        "app_saved": 259608,
+        "ok": true
+      }
+    ],
+    "gap_after_consistency": [
+      {
+        "action": "cancel",
+        "target": "CLASSPASS*MONTHLY",
+        "gap_minus_gap_after": 14700,
+        "delta": 14700,
+        "ok": true
+      },
+      {
+        "action": "cancel",
+        "target": "COMCAST CABLE COMM",
+        "gap_minus_gap_after": 21000,
+        "delta": 21000,
+        "ok": true
+      },
+      {
+        "action": "cancel",
+        "target": "DOORDASH DASHPASS",
+        "gap_minus_gap_after": 2997,
+        "delta": 2997,
+        "ok": true
+      },
+      {
+        "action": "cancel",
+        "target": "ELM ST PROPERTY MGMT WEB PMTS",
+        "gap_minus_gap_after": 645000,
+        "delta": 645000,
+        "ok": true
+      },
+      {
+        "action": "cancel",
+        "target": "LEMONADE INSURANCE CO",
+        "gap_minus_gap_after": 3750,
+        "delta": 3750,
+        "ok": true
+      },
+      {
+        "action": "cancel",
+        "target": "NETFLIX.COM",
+        "gap_minus_gap_after": 4647,
+        "delta": 4647,
+        "ok": true
+      },
+      {
+        "action": "cancel",
+        "target": "PGANDE WEB ONLINE",
+        "gap_minus_gap_after": 18249,
+        "delta": 18249,
+        "ok": true
+      },
+      {
+        "action": "cancel",
+        "target": "SPOTIFY USA",
+        "gap_minus_gap_after": 3897,
+        "delta": 3897,
+        "ok": true
+      },
+      {
+        "action": "cancel",
+        "target": "ONLINE TRANSFER TO SAV XXXXXX",
+        "gap_minus_gap_after": 90000,
+        "delta": 90000,
+        "ok": true
+      },
+      {
+        "action": "cancel",
+        "target": "UBER*ONE MEMBERSHIP",
+        "gap_minus_gap_after": 2997,
+        "delta": 2997,
+        "ok": true
+      },
+      {
+        "action": "cancel",
+        "target": "VERIZON WRLS",
+        "gap_minus_gap_after": 19500,
+        "delta": 19500,
+        "ok": true
+      },
+      {
+        "action": "reduce_spending",
+        "target": "food_delivery",
+        "gap_minus_gap_after": 10631,
+        "delta": 10631,
+        "ok": true
+      }
+    ],
+    "scenarios": [
+      {
+        "id": "G1",
+        "persona": "maya_renter",
+        "target_cents": 240000,
+        "start": "2026-03",
+        "target": "2026-09",
+        "realized_status": "missed",
+        "realized_saved": -4632,
+        "months": [
+          {
+            "month": "2026-03",
+            "status": "on_track",
+            "saved_cents": 0,
+            "planned_cents": 0,
+            "projected_p50_cents": 502884,
+            "projected_p10_cents": 217966,
+            "gap_cents": -262884,
+            "projected_completion": "2026-06",
+            "run_id": "3dc3ccbb05c54ba4b5ca77cc8f4c4130",
+            "run_status": "done",
+            "decision": "advise",
+            "reason": "first check of this goal",
+            "advice_from_month": "2026-03",
+            "recommendations": [
+              {
+                "action": "cancel",
+                "target": "UBER*ONE MEMBERSHIP"
+              }
+            ],
+            "stats": {
+              "lineages": 1,
+              "first_rejected": 0,
+              "first_failed_checks": {},
+              "goal_claims_first": 3,
+              "goal_claims_first_ok": 3,
+              "accepted": [
+                {
+                  "action": "cancel",
+                  "target": "UBER*ONE MEMBERSHIP",
+                  "title": "Cancel UBER*ONE MEMBERSHIP to save $120 annually",
+                  "body": "Consider canceling your UBER*ONE MEMBERSHIP, which is possibly unused. This will save you $9.99 per month, totaling $119.88 annually. By canceling, your balance could increase by $29.97 by 2026-06, $59.94 by 2026-09, and $119.88 by 2027-03. Your savings goal is on track, and canceling this membership will leave you ahead of your target by $2,688.78 by 2026-09.",
+                  "goal_kinds": [
+                    "goal_gap",
+                    "goal_gap_after",
+                    "goal_target"
+                  ]
+                }
+              ],
+              "prompt_tokens": 8200,
+              "completion_tokens": 441
+            }
+          },
+          {
+            "month": "2026-04",
+            "status": "behind",
+            "saved_cents": -17562,
+            "planned_cents": 40000,
+            "projected_p50_cents": 115758,
+            "projected_p10_cents": 44767,
+            "gap_cents": 124242,
+            "projected_completion": "2027-02",
+            "run_id": "067fe9c219b14021adc2b20f8a6abc63",
+            "run_status": "done",
+            "decision": "advise",
+            "reason": "status changed: on_track -> behind",
+            "advice_from_month": "2026-04",
+            "recommendations": [
+              {
+                "action": "cancel",
+                "target": "UBER*ONE MEMBERSHIP"
+              },
+              {
+                "action": "review_price_increase",
+                "target": "SPOTIFY USA"
+              }
+            ],
+            "stats": {
+              "lineages": 2,
+              "first_rejected": 1,
+              "first_failed_checks": {
+                "numbers": 1
+              },
+              "goal_claims_first": 3,
+              "goal_claims_first_ok": 3,
+              "accepted": [
+                {
+                  "action": "cancel",
+                  "target": "UBER*ONE MEMBERSHIP",
+                  "title": "Cancel UBER*ONE MEMBERSHIP to save $120 annually",
+                  "body": "Consider canceling your UBER*ONE MEMBERSHIP, which is possibly unused. This will save you $9.99 per month, totaling $119.88 annually. By canceling, you can improve your balance by $29.97 by 2026-07 and $59.94 by 2026-10. This action will reduce your savings goal gap to $1,192.47 by 2026-09, helping you get closer to your target of saving $2,400.00.",
+                  "goal_kinds": [
+                    "goal_gap",
+                    "goal_gap_after",
+                    "goal_target"
+                  ]
+                },
+                {
+                  "action": "review_price_increase",
+                  "target": "SPOTIFY USA",
+                  "title": "Review the price increase for SPOTIFY USA",
+                  "body": "Your SPOTIFY USA subscription has increased by $1.00 per month, from $11.99 to $12.99. This change results in an additional $12.00 per year. Consider whether this service is worth the new cost.",
+                  "goal_kinds": []
+                }
+              ],
+              "prompt_tokens": 9797,
+              "completion_tokens": 905
+            }
+          },
+          {
+            "month": "2026-05",
+            "status": "on_track",
+            "saved_cents": 170961,
+            "planned_cents": 80000,
+            "projected_p50_cents": 315117,
+            "projected_p10_cents": 74229,
+            "gap_cents": -75117,
+            "projected_completion": "2026-07",
+            "run_id": "acb42b75a24f450ca76f5dcbb528ab42",
+            "run_status": "done",
+            "decision": "advise",
+            "reason": "status changed: behind -> on_track",
+            "advice_from_month": "2026-05",
+            "recommendations": [
+              {
+                "action": "cancel",
+                "target": "UBER*ONE MEMBERSHIP"
+              },
+              {
+                "action": "review_price_increase",
+                "target": "SPOTIFY USA"
+              }
+            ],
+            "stats": {
+              "lineages": 2,
+              "first_rejected": 1,
+              "first_failed_checks": {
+                "numbers": 1
+              },
+              "goal_claims_first": 1,
+              "goal_claims_first_ok": 1,
+              "accepted": [
+                {
+                  "action": "cancel",
+                  "target": "UBER*ONE MEMBERSHIP",
+                  "title": "Cancel UBER*ONE MEMBERSHIP to save $120 annually",
+                  "body": "Consider canceling your UBER*ONE MEMBERSHIP, which is possibly unused. This will save you $9.99 per month, totaling $119.88 annually. By canceling, your balance could increase by $119.88 by 2027-05. Your savings goal is on track, and canceling this membership would leave you ahead of your target by $791.13 by 2026-09.",
+                  "goal_kinds": [
+                    "goal_gap_after"
+                  ]
+                },
+                {
+                  "action": "review_price_increase",
+                  "target": "SPOTIFY USA",
+                  "title": "Review the price increase for SPOTIFY USA",
+                  "body": "Your SPOTIFY USA subscription has increased by $1.00 per month. This change results in an additional $12.00 annually. Consider reviewing this subscription to ensure it still fits your budget.",
+                  "goal_kinds": []
+                }
+              ],
+              "prompt_tokens": 11574,
+              "completion_tokens": 628
+            }
+          },
+          {
+            "month": "2026-06",
+            "status": "behind",
+            "saved_cents": 142306,
+            "planned_cents": 120000,
+            "projected_p50_cents": 211928,
+            "projected_p10_cents": 3597,
+            "gap_cents": 28072,
+            "projected_completion": "2026-11",
+            "run_id": "ce747e00b4b541bba8bdcf87224025ca",
+            "run_status": "done",
+            "decision": "advise",
+            "reason": "status changed: on_track -> behind",
+            "advice_from_month": "2026-06",
+            "recommendations": [
+              {
+                "action": "reduce_spending",
+                "target": "food delivery"
+              },
+              {
+                "action": "cancel",
+                "target": "UBER*ONE MEMBERSHIP"
+              },
+              {
+                "action": "review_price_increase",
+                "target": "SPOTIFY USA"
+              }
+            ],
+            "stats": {
+              "lineages": 3,
+              "first_rejected": 1,
+              "first_failed_checks": {
+                "numbers": 1
+              },
+              "goal_claims_first": 6,
+              "goal_claims_first_ok": 6,
+              "accepted": [
+                {
+                  "action": "reduce_spending",
+                  "target": "food delivery",
+                  "title": "Reduce Food Delivery Spending to Save $106.31 by 2026-09",
+                  "body": "Your food delivery spending has been rising, with the latest month exceeding your recent average by $51.42. If you stop this rise and maintain spending at next month's projected level, you could improve your balance by $106.31 by 2026-09. This would reduce your savings goal gap to $174.41 by the target month of 2026-09. Currently, you are $280.72 behind your goal of saving $2,400.00 by 2026-09.",
+                  "goal_kinds": [
+                    "goal_gap",
+                    "goal_gap_after",
+                    "goal_target"
+                  ]
+                },
+                {
+                  "action": "review_price_increase",
+                  "target": "SPOTIFY USA",
+                  "title": "Review Price Increase for SPOTIFY USA Subscription",
+                  "body": "Your SPOTIFY USA subscription has increased by $1.00 per month. Consider reviewing this price change to determine if the service still fits your budget.",
+                  "goal_kinds": []
+                },
+                {
+                  "action": "cancel",
+                  "target": "UBER*ONE MEMBERSHIP",
+                  "title": "Cancel UBER*ONE Membership to Save $29.97 by 2026-09",
+                  "body": "Consider canceling your UBER*ONE MEMBERSHIP. This could improve your balance by $29.97 by 2026-09, reducing your savings goal gap to $250.75 by the target month of 2026-09. You are currently $280.72 behind your goal of saving $2,400.00 by 2026-09.",
+                  "goal_kinds": [
+                    "goal_gap",
+                    "goal_gap_after",
+                    "goal_target"
+                  ]
+                }
+              ],
+              "prompt_tokens": 13236,
+              "completion_tokens": 1154
+            }
+          },
+          {
+            "month": "2026-07",
+            "status": "behind",
+            "saved_cents": 125893,
+            "planned_cents": 160000,
+            "projected_p50_cents": 160299,
+            "projected_p10_cents": -9968,
+            "gap_cents": 79701,
+            "projected_completion": null,
+            "run_id": "9abb55856d964eb999f77f8e77f81e35",
+            "run_status": "done",
+            "decision": "carry",
+            "reason": "status and actionable patterns unchanged since 2026-06; Advisor not called",
+            "advice_from_month": "2026-06",
+            "recommendations": [
+              {
+                "action": "reduce_spending",
+                "target": "food delivery"
+              },
+              {
+                "action": "cancel",
+                "target": "UBER*ONE MEMBERSHIP"
+              },
+              {
+                "action": "review_price_increase",
+                "target": "SPOTIFY USA"
+              }
+            ],
+            "stats": null
+          },
+          {
+            "month": "2026-08",
+            "status": "behind",
+            "saved_cents": -6654,
+            "planned_cents": 200000,
+            "projected_p50_cents": -21886,
+            "projected_p10_cents": -150466,
+            "gap_cents": 261886,
+            "projected_completion": null,
+            "run_id": "d81a5b0cd8434cd283bf13fb488af501",
+            "run_status": "done",
+            "decision": "advise",
+            "reason": "patterns changed: +reduce_spending shopping",
+            "advice_from_month": "2026-08",
+            "recommendations": [
+              {
+                "action": "reduce_spending",
+                "target": "food delivery"
+              },
+              {
+                "action": "cancel",
+                "target": "UBER*ONE MEMBERSHIP"
+              },
+              {
+                "action": "review_price_increase",
+                "target": "SPOTIFY USA"
+              }
+            ],
+            "stats": {
+              "lineages": 3,
+              "first_rejected": 0,
+              "first_failed_checks": {},
+              "goal_claims_first": 4,
+              "goal_claims_first_ok": 4,
+              "accepted": [
+                {
+                  "action": "cancel",
+                  "target": "UBER*ONE MEMBERSHIP",
+                  "title": "Cancel UBER*ONE MEMBERSHIP to save $120 annually",
+                  "body": "Cancel your UBER*ONE MEMBERSHIP, which is possibly unused, to save $9.99 per month. This will improve your balance by $119.88 by 2027-08. Your savings goal is behind by $2,618.86, and canceling this membership will reduce the gap to $2,608.87 by 2026-09.",
+                  "goal_kinds": [
+                    "goal_gap",
+                    "goal_gap_after"
+                  ]
+                },
+                {
+                  "action": "reduce_spending",
+                  "target": "food delivery",
+                  "title": "Reduce food delivery spending to improve balance by $2,607",
+                  "body": "Your food delivery spending is rising, with an excess of $41.72 this month. If you stop this rise and maintain spending at next month's projected level, your balance could improve by $2,607.42 by 2027-08. Your savings goal is behind by $2,618.86, and addressing this trend will not change the gap by 2026-09.",
+                  "goal_kinds": [
+                    "goal_gap",
+                    "goal_gap_after"
+                  ]
+                },
+                {
+                  "action": "review_price_increase",
+                  "target": "SPOTIFY USA",
+                  "title": "Review increased cost of SPOTIFY USA subscription",
+                  "body": "Your SPOTIFY USA subscription has increased by $1.00 per month, now costing $12.99 monthly. Consider reviewing this expense to manage your budget effectively.",
+                  "goal_kinds": []
+                }
+              ],
+              "prompt_tokens": 7733,
+              "completion_tokens": 804
+            }
+          },
+          {
+            "month": "2026-09",
+            "status": "missed",
+            "saved_cents": -4632,
+            "planned_cents": 240000,
+            "projected_p50_cents": null,
+            "projected_p10_cents": null,
+            "gap_cents": 244632,
+            "projected_completion": null,
+            "run_id": "f8898abf1d9a4ebe9440601ca3885515",
+            "run_status": "done",
+            "decision": "final",
+            "reason": "target month reached: goal missed; no advice",
+            "advice_from_month": null,
+            "recommendations": [],
+            "stats": null
+          }
+        ],
+        "first_behind": "2026-04",
+        "behind_months": 4
+      },
+      {
+        "id": "G2",
+        "persona": "ortiz_family",
+        "target_cents": 240000,
+        "start": "2026-03",
+        "target": "2026-09",
+        "realized_status": "achieved",
+        "realized_saved": 259608,
+        "months": [
+          {
+            "month": "2026-03",
+            "status": "ahead",
+            "saved_cents": 0,
+            "planned_cents": 0,
+            "projected_p50_cents": 862542,
+            "projected_p10_cents": 671619,
+            "gap_cents": -622542,
+            "projected_completion": "2026-05",
+            "run_id": "3fc703286730406b8f41708ffe143662",
+            "run_status": "done",
+            "decision": "advise",
+            "reason": "first check of this goal",
+            "advice_from_month": "2026-03",
+            "recommendations": [],
+            "stats": {
+              "lineages": 1,
+              "first_rejected": 1,
+              "first_failed_checks": {
+                "action": 1,
+                "required_claims": 1
+              },
+              "goal_claims_first": 3,
+              "goal_claims_first_ok": 3,
+              "accepted": [],
+              "prompt_tokens": 7080,
+              "completion_tokens": 250
+            }
+          },
+          {
+            "month": "2026-04",
+            "status": "ahead",
+            "saved_cents": 12537,
+            "planned_cents": 40000,
+            "projected_p50_cents": 575407,
+            "projected_p10_cents": 384895,
+            "gap_cents": -335407,
+            "projected_completion": "2026-07",
+            "run_id": "3494e9652b994cdc81bcf84eaf20ae09",
+            "run_status": "done",
+            "decision": "carry",
+            "reason": "status and actionable patterns unchanged since 2026-03; Advisor not called",
+            "advice_from_month": "2026-03",
+            "recommendations": [],
+            "stats": null
+          },
+          {
+            "month": "2026-05",
+            "status": "ahead",
+            "saved_cents": 125642,
+            "planned_cents": 80000,
+            "projected_p50_cents": 481734,
+            "projected_p10_cents": 308503,
+            "gap_cents": -241734,
+            "projected_completion": "2026-07",
+            "run_id": "b38f161b18de413c9965021997fb05e2",
+            "run_status": "done",
+            "decision": "advise",
+            "reason": "patterns changed: +cancel WALMART+ MEMBERSHIP; +review_price_increase NETFLIX.COM",
+            "advice_from_month": "2026-05",
+            "recommendations": [
+              {
+                "action": "review_price_increase",
+                "target": "NETFLIX.COM"
+              }
+            ],
+            "stats": {
+              "lineages": 1,
+              "first_rejected": 0,
+              "first_failed_checks": {},
+              "goal_claims_first": 3,
+              "goal_claims_first_ok": 3,
+              "accepted": [
+                {
+                  "action": "review_price_increase",
+                  "target": "NETFLIX.COM",
+                  "title": "Review the Price Increase for Netflix Subscription",
+                  "body": "Your Netflix subscription has increased by $2.50 per month, from $15.49 to $17.99. This change results in an additional $30.00 per year. Since your savings goal is ahead of schedule, you might consider whether this increased cost aligns with your current budget priorities.",
+                  "goal_kinds": [
+                    "goal_gap",
+                    "goal_saved",
+                    "goal_target"
+                  ]
+                }
+              ],
+              "prompt_tokens": 5902,
+              "completion_tokens": 390
+            }
+          },
+          {
+            "month": "2026-06",
+            "status": "behind",
+            "saved_cents": 73059,
+            "planned_cents": 120000,
+            "projected_p50_cents": 203088,
+            "projected_p10_cents": 37602,
+            "gap_cents": 36912,
+            "projected_completion": "2026-10",
+            "run_id": "01d62e3dcbca46e0bd5869376335d3ae",
+            "run_status": "done",
+            "decision": "advise",
+            "reason": "status changed: ahead -> behind",
+            "advice_from_month": "2026-06",
+            "recommendations": [
+              {
+                "action": "cancel",
+                "target": "WALMART+ MEMBERSHIP"
+              },
+              {
+                "action": "review_price_increase",
+                "target": "NETFLIX.COM"
+              },
+              {
+                "action": "reduce_spending",
+                "target": "health"
+              }
+            ],
+            "stats": {
+              "lineages": 3,
+              "first_rejected": 1,
+              "first_failed_checks": {
+                "numbers": 1
+              },
+              "goal_claims_first": 4,
+              "goal_claims_first_ok": 4,
+              "accepted": [
+                {
+                  "action": "reduce_spending",
+                  "target": "health",
+                  "title": "Reduce rising health spending to improve balance by $17.55",
+                  "body": "Your health spending is rising, with the latest month $0.75 above the recent average. If you stop this rise and maintain spending at the projected level, your balance could improve by $17.55 by 2026-09. This would leave a savings goal gap of $351.57 by the target month.",
+                  "goal_kinds": [
+                    "goal_gap_after"
+                  ]
+                },
+                {
+                  "action": "review_price_increase",
+                  "target": "NETFLIX.COM",
+                  "title": "Review price increase for NETFLIX.COM subscription",
+                  "body": "Your NETFLIX.COM subscription has increased by $2.50 per month. Consider reviewing this change to manage your expenses effectively.",
+                  "goal_kinds": []
+                },
+                {
+                  "action": "cancel",
+                  "target": "WALMART+ MEMBERSHIP",
+                  "title": "Cancel unused WALMART+ MEMBERSHIP to save $12.95/month",
+                  "body": "Cancel your WALMART+ MEMBERSHIP to save $12.95 per month. This will improve your balance by $38.85 by 2026-09, reducing your savings goal gap to $330.27 by the target month. You're currently $369.12 short of your $2,400.00 goal due by 2026-09.",
+                  "goal_kinds": [
+                    "goal_gap",
+                    "goal_gap_after",
+                    "goal_target"
+                  ]
+                }
+              ],
+              "prompt_tokens": 10826,
+              "completion_tokens": 1026
+            }
+          },
+          {
+            "month": "2026-07",
+            "status": "on_track",
+            "saved_cents": 184732,
+            "planned_cents": 160000,
+            "projected_p50_cents": 258290,
+            "projected_p10_cents": 129088,
+            "gap_cents": -18290,
+            "projected_completion": "2026-09",
+            "run_id": "62bc3063809e4bdf8113488edd118d0d",
+            "run_status": "done",
+            "decision": "advise",
+            "reason": "status changed: behind -> on_track",
+            "advice_from_month": "2026-07",
+            "recommendations": [
+              {
+                "action": "cancel",
+                "target": "WALMART+ MEMBERSHIP"
+              },
+              {
+                "action": "review_price_increase",
+                "target": "NETFLIX.COM"
+              }
+            ],
+            "stats": {
+              "lineages": 2,
+              "first_rejected": 1,
+              "first_failed_checks": {
+                "numbers": 1
+              },
+              "goal_claims_first": 1,
+              "goal_claims_first_ok": 1,
+              "accepted": [
+                {
+                  "action": "review_price_increase",
+                  "target": "NETFLIX.COM",
+                  "title": "Review Price Increase for NETFLIX.COM Subscription",
+                  "body": "Your NETFLIX.COM subscription has increased by $2.50 per month, now costing $17.99 monthly. Consider reviewing this expense to ensure it still fits your budget. Your savings goal is on track, so this is not urgent for your goal.",
+                  "goal_kinds": []
+                },
+                {
+                  "action": "cancel",
+                  "target": "WALMART+ MEMBERSHIP",
+                  "title": "Cancel Unused WALMART+ MEMBERSHIP to Save $155.40 Annually",
+                  "body": "Your WALMART+ MEMBERSHIP, costing $12.95 per month, hasn't been used recently. Canceling it could improve your balance by $155.40 by 2027-07. Your savings goal is on track, and canceling this membership will leave you $208.80 ahead of your target by 2026-09.",
+                  "goal_kinds": [
+                    "goal_gap_after"
+                  ]
+                }
+              ],
+              "prompt_tokens": 11949,
+              "completion_tokens": 750
+            }
+          },
+          {
+            "month": "2026-08",
+            "status": "behind",
+            "saved_cents": 129439,
+            "planned_cents": 200000,
+            "projected_p50_cents": 131377,
+            "projected_p10_cents": 34080,
+            "gap_cents": 108623,
+            "projected_completion": null,
+            "run_id": "810bbd6cb5914d55b329370d6537b7bf",
+            "run_status": "done",
+            "decision": "advise",
+            "reason": "status changed: on_track -> behind",
+            "advice_from_month": "2026-08",
+            "recommendations": [
+              {
+                "action": "reduce_spending",
+                "target": "health"
+              },
+              {
+                "action": "cancel",
+                "target": "WALMART+ MEMBERSHIP"
+              },
+              {
+                "action": "review_price_increase",
+                "target": "NETFLIX.COM"
+              }
+            ],
+            "stats": {
+              "lineages": 3,
+              "first_rejected": 2,
+              "first_failed_checks": {
+                "numbers": 2
+              },
+              "goal_claims_first": 5,
+              "goal_claims_first_ok": 5,
+              "accepted": [
+                {
+                  "action": "cancel",
+                  "target": "WALMART+ MEMBERSHIP",
+                  "title": "Cancel Unused Walmart+ Membership to Save $155.40 Annually",
+                  "body": "Consider canceling your Walmart+ Membership, which appears to be unused. This will save you $12.95 per month, totaling $155.40 annually. By canceling, you can improve your balance by $38.85 by 2026-11 and $77.70 by 2027-02. This action will reduce your savings goal gap to $1,073.28 by 2026-09, helping you get closer to your target of $2,400.00. Currently, you have saved $1,294.39, leaving a gap of $1,086.23.",
+                  "goal_kinds": [
+                    "goal_gap",
+                    "goal_gap_after",
+                    "goal_saved",
+                    "goal_target"
+                  ]
+                },
+                {
+                  "action": "review_price_increase",
+                  "target": "NETFLIX.COM",
+                  "title": "Review Netflix Subscription Price Increase of $2.50 Monthly",
+                  "body": "Your Netflix subscription has increased by $2.50 per month, now costing $17.99 monthly. This change results in an additional $30.00 annually. Consider reviewing this expense to ensure it aligns with your budget and entertainment needs.",
+                  "goal_kinds": []
+                },
+                {
+                  "action": "reduce_spending",
+                  "target": "health",
+                  "title": "Reduce Rising Health Spending to Improve Balance by $376.68",
+                  "body": "Your health spending has risen significantly, with the latest month exceeding your recent average by $48.62. If you stop this rise and maintain spending at the projected level for next month, you can improve your balance by $376.68 by 2027-08. However, this will not affect your savings goal gap, which remains at $1,086.23 by 2026-09.",
+                  "goal_kinds": [
+                    "goal_gap_after"
+                  ]
+                }
+              ],
+              "prompt_tokens": 14165,
+              "completion_tokens": 1451
+            }
+          },
+          {
+            "month": "2026-09",
+            "status": "achieved",
+            "saved_cents": 259608,
+            "planned_cents": 240000,
+            "projected_p50_cents": null,
+            "projected_p10_cents": null,
+            "gap_cents": -19608,
+            "projected_completion": null,
+            "run_id": "86a71da13d37443b8abaca405f64fac6",
+            "run_status": "done",
+            "decision": "final",
+            "reason": "target month reached: goal achieved; no advice",
+            "advice_from_month": null,
+            "recommendations": [],
+            "stats": null
+          }
+        ],
+        "first_behind": "2026-06",
+        "behind_months": 2
+      }
+    ],
+    "pair": {
+      "targets": {
+        "p50_projected_savings": 69622,
+        "p10_projected_savings": -138709,
+        "modest": 34811,
+        "ambitious": 104433,
+        "expected_status": {
+          "modest": "on_track",
+          "ambitious": "behind"
+        }
+      },
+      "arms": {
+        "modest": {
+          "target_cents": 34811,
+          "statuses": [
+            "on_track",
+            "on_track",
+            "on_track"
+          ],
+          "accepted": 8,
+          "accepted_with_goal_claim": 5,
+          "saving_recs": 5,
+          "saving_recs_with_goal_gap_after": 5,
+          "runs_stating_goal_gap": 1,
+          "action_sets": [
+            [
+              "cancel UBER*ONE MEMBERSHIP",
+              "review_price_increase SPOTIFY USA"
+            ],
+            [
+              "cancel UBER*ONE MEMBERSHIP",
+              "reduce_spending food delivery",
+              "review_price_increase SPOTIFY USA"
+            ],
+            [
+              "cancel UBER*ONE MEMBERSHIP",
+              "reduce_spending food delivery",
+              "review_price_increase SPOTIFY USA"
+            ]
+          ],
+          "lineages": 8,
+          "first_rejected": 7,
+          "first_failed_checks": {
+            "numbers": 7
+          },
+          "goal_claims_first": 5,
+          "goal_claims_first_ok": 5,
+          "prompt_tokens": 50219,
+          "completion_tokens": 3636,
+          "example": [
+            {
+              "title": "Cancel Unused UBER*ONE MEMBERSHIP to Save $120 Annually",
+              "body": "Your UBER*ONE MEMBERSHIP, which costs $9.99 per month, hasn't been used in 196 days. Canceling it could improve your balance by $29.97 by 2026-09, $59.94 by 2026-12, and $119.88 by 2027-06. This cancellation will leave you ahead of your savings goal by $378.08 by 2026-09.",
+              "goal_kinds": [
+                "goal_gap_after"
+              ]
+            },
+            {
+              "title": "Review Price Increase for SPOTIFY USA Subscription",
+              "body": "Your SPOTIFY USA subscription has increased by $1.00 per month, from $11.99 to $12.99. Consider whether this service is still worth the new annual cost of $155.88.",
+              "goal_kinds": []
+            }
+          ]
+        },
+        "ambitious": {
+          "target_cents": 104433,
+          "statuses": [
+            "behind",
+            "behind",
+            "behind"
+          ],
+          "accepted": 9,
+          "accepted_with_goal_claim": 6,
+          "saving_recs": 6,
+          "saving_recs_with_goal_gap_after": 6,
+          "runs_stating_goal_gap": 3,
+          "action_sets": [
+            [
+              "cancel UBER*ONE MEMBERSHIP",
+              "reduce_spending food delivery",
+              "review_price_increase SPOTIFY USA"
+            ],
+            [
+              "cancel UBER*ONE MEMBERSHIP",
+              "reduce_spending food delivery",
+              "review_price_increase SPOTIFY USA"
+            ],
+            [
+              "cancel UBER*ONE MEMBERSHIP",
+              "reduce_spending food delivery",
+              "review_price_increase SPOTIFY USA"
+            ]
+          ],
+          "lineages": 9,
+          "first_rejected": 3,
+          "first_failed_checks": {
+            "numbers": 3
+          },
+          "goal_claims_first": 12,
+          "goal_claims_first_ok": 12,
+          "prompt_tokens": 46952,
+          "completion_tokens": 3054,
+          "example": [
+            {
+              "title": "Reduce Food Delivery Spending to Close Goal Gap",
+              "body": "Your food delivery spending has been rising, with the latest month exceeding your recent average by $51.42. If you stop this rise and maintain spending at the projected level for next month, you could improve your balance by $106.31 by 2026-09. This would reduce your savings goal gap to $241.80 by the target month of 2026-09. Currently, you are behind on your savings goal by $348.11.",
+              "goal_kinds": [
+                "goal_gap",
+                "goal_gap_after"
+              ]
+            },
+            {
+              "title": "Review Price Increase for SPOTIFY USA Subscription",
+              "body": "Your SPOTIFY USA subscription has increased by $1.00 per month. Consider reviewing this price change to determine if the service still fits your budget.",
+              "goal_kinds": []
+            },
+            {
+              "title": "Cancel Unused UBER*ONE Membership to Save $29.97",
+              "body": "Consider canceling your UBER*ONE MEMBERSHIP. Canceling could improve your balance by $29.97 by 2026-09, reducing your savings goal gap to $318.14 by the target month of 2026-09. You are currently behind on your savings goal by $348.11.",
+              "goal_kinds": [
+                "goal_gap",
+                "goal_gap_after"
+              ]
+            }
+          ]
+        }
+      },
+      "action_set_jaccard": 1.0
+    }
+  }
+}

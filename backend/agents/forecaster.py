@@ -147,10 +147,14 @@ def build_inputs(txns: list[Txn], patterns: list[Detected], opening_balance_cent
 
     excluded: set[int] = set()
     one_off_ids: set[int] = set()
+    # an anomaly that is part of a recurring series (e.g. a new series' first charge flagged new_merchant) is not a
+    # one-off: the series is already projected by its recurring flow, so the allowance must not count it again
+    in_series = {t for p in patterns if p.type == "recurring" for t in p.evidence}
     for i, p in enumerate(patterns):
         if p.type == "anomaly":
             excluded.add(p.params["txn_id"])
-            one_off_ids.add(p.params["txn_id"])
+            if p.params["txn_id"] not in in_series:
+                one_off_ids.add(p.params["txn_id"])
         if p.type != "recurring":
             continue
         excluded.update(p.evidence)
