@@ -31,7 +31,7 @@ def get_client() -> OpenAI:
 
 
 def get_model(agent: str) -> str:
-    """Model for an agent, from env: CATEGORIZER_MODEL, ANALYZER_MODEL, ADVISOR_MODEL, PARSER_MODEL."""
+    """Model for an agent, from env: CATEGORIZER_MODEL, ADVISOR_MODEL, PARSER_MODEL."""
     var = f"{agent.upper()}_MODEL"
     model = os.environ.get(var)
     if not model:
