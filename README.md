@@ -402,4 +402,4 @@ python -m eval.synthetic.generate            # --seed 42 --out data/synthetic by
 
 ## Built with
 
-Python, FastAPI, LangGraph, SQLite, the OpenAI SDK through Mesh API; React, Vite, Tailwind and Recharts on the frontend. Built with AI-assisted coding (Claude Code).
+Python, FastAPI, LangGraph, SQLite, the OpenAI SDK through Mesh API; React, Vite, Tailwind and Recharts on the frontend.
