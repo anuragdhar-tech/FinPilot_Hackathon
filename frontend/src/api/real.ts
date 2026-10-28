@@ -72,12 +72,14 @@ export const realClient: ApiClient = {
   health: () => request<Health>('/api/health'),
   getUsers: async () => (await request<{ items: User[] }>('/api/users')).items,
   deleteUser: (userId) => request<UserDeleted>(`/api/users/${userId}`, { method: 'DELETE' }),
-  uploadTransactions: ({ file, userId, name, openingBalanceCents }) => {
+  uploadTransactions: ({ file, userId, name, openingBalanceCents, positiveIsSpend, dateOrder }) => {
     const form = new FormData()
     form.append('file', file)
     if (userId != null) form.append('user_id', String(userId))
     if (name) form.append('name', name)
     if (openingBalanceCents != null) form.append('opening_balance_cents', String(openingBalanceCents))
+    if (positiveIsSpend) form.append('positive_is_spend', 'true')
+    if (dateOrder) form.append('date_order', dateOrder)
     return request<UploadResult>('/api/transactions/upload', { method: 'POST', body: form })
   },
   createRun: (batchId) => request<RunCreated>('/api/runs', post({ batch_id: batchId })),

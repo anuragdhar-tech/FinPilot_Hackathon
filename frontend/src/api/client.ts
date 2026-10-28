@@ -27,6 +27,10 @@ export interface UploadInput {
   userId?: number
   name?: string
   openingBalanceCents?: number
+  /** Single amount column: positive = purchases (default: negative = money out). */
+  positiveIsSpend?: boolean
+  /** Order of D/M/YYYY dates; omit to infer it from the file. */
+  dateOrder?: 'mdy' | 'dmy'
 }
 
 // Add one method per backend endpoint as its screen is built.

@@ -26,11 +26,27 @@ TriggerType = Literal["pattern", "forecast", "goal", "scenario"]
 
 # ---- ingest / runs ----
 
+class CsvMapping(BaseModel):
+    """How the uploaded columns were read. Column names are as written in the file."""
+    date: str
+    description: str
+    amount: str | None  # single signed amount column, or null with debit + credit
+    debit: str | None
+    credit: str | None
+    external_id: str | None  # null = ids were generated
+    ignored_matches: list[str]  # extra columns that matched a field already taken
+    date_format: str
+    sign_rule: str
+    ids_generated: bool
+    warnings: list[str]
+
+
 class UploadResponse(BaseModel):
     batch_id: str
     user_id: int
     count: int  # rows stored (new)
     duplicates_skipped: int  # same external_id already stored for this user, or repeated in the file
+    mapping: CsvMapping
 
 
 class User(BaseModel):

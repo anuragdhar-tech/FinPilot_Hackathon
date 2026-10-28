@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
-import { api, ApiError, type UploadResult } from '../api'
+import { api, ApiError, type CsvMapping, type UploadResult } from '../api'
 import { useRunPolling } from '../hooks/useRunPolling'
 import { useUsers } from '../context/user-context'
 import { errorMessage } from '../lib/format'
@@ -15,12 +15,30 @@ const card = 'rounded-lg border border-slate-200 bg-white p-5'
 const input =
   'w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-emerald-600 focus:outline-none focus:ring-1 focus:ring-emerald-600 disabled:bg-slate-100'
 
+function MappingSummary({ mapping: m }: { mapping: CsvMapping }) {
+  const amount = m.amount ? `amount ← ${m.amount}` : `debit ← ${m.debit}, credit ← ${m.credit}`
+  return (
+    <div className="mt-4 rounded-md bg-slate-50 p-3 text-xs text-slate-700" aria-label="Detected columns">
+      <div className="font-medium">Columns detected</div>
+      <p className="mt-1 break-words">
+        date ← {m.date} · description ← {m.description} · {amount} · id ←{' '}
+        {m.external_id ?? 'generated from date, description, amount'}
+      </p>
+      <p className="mt-1">dates: {m.date_format} · {m.sign_rule}</p>
+      {m.ignored_matches.map((line) => <p key={line} className="mt-1 text-slate-500">ignored: {line}</p>)}
+      {m.warnings.map((line) => <p key={line} className="mt-1 text-amber-700">{line}</p>)}
+    </div>
+  )
+}
+
 export function UploadPage() {
   const { selected, refresh } = useUsers()
   const [file, setFile] = useState<File | null>(null)
   const [mode, setMode] = useState<Mode>('new')
   const [name, setName] = useState('')
   const [opening, setOpening] = useState('')
+  const [positiveIsSpend, setPositiveIsSpend] = useState(false)
+  const [dateOrder, setDateOrder] = useState<'' | 'mdy' | 'dmy'>('')
   const [uploading, setUploading] = useState(false)
   const [uploadError, setUploadError] = useState<unknown>(null)
   const [result, setResult] = useState<UploadResult | null>(null)
@@ -42,13 +60,15 @@ export function UploadPage() {
     setRunId(null)
     setRunError(null)
     try {
+      const options = { positiveIsSpend, dateOrder: dateOrder || undefined }
       const res = await api.uploadTransactions(
         effectiveMode === 'append' && selected
-          ? { file, userId: selected.id }
+          ? { file, userId: selected.id, ...options }
           : {
               file,
               name: name.trim() || undefined,
               openingBalanceCents: openingNumber == null ? undefined : Math.round(openingNumber * 100),
+              ...options,
             },
       )
       setResult(res)
@@ -81,7 +101,7 @@ export function UploadPage() {
 
   return (
     <div className="max-w-3xl">
-      <PageTitle title="Upload" subtitle="Load a bank CSV (external_id, date, description, amount), then run the pipeline: categorize, analyze, forecast, advise and verify." />
+      <PageTitle title="Upload" subtitle="Load a bank CSV (date, description and amount, or debit and credit columns), then run the pipeline: categorize, analyze, forecast, advise and verify." />
 
       <form onSubmit={onUpload} className="space-y-4">
         <div className={card}>
@@ -94,6 +114,36 @@ export function UploadPage() {
             className="mt-2 block w-full text-sm file:mr-3 file:rounded-md file:border-0 file:bg-emerald-50 file:px-3 file:py-2 file:text-sm file:font-medium file:text-emerald-700 hover:file:bg-emerald-100"
           />
           {file && <p className="mt-2 text-xs text-slate-500">{file.name} · {(file.size / 1024).toFixed(1)} KB</p>}
+          <div className="mt-4 space-y-3 border-t border-slate-100 pt-4">
+            <label className="flex items-start gap-3 text-sm">
+              <input
+                type="checkbox"
+                checked={positiveIsSpend}
+                onChange={(e) => setPositiveIsSpend(e.target.checked)}
+                className="mt-1 accent-emerald-600"
+              />
+              <span>
+                <span className="font-medium">Positive amounts are purchases</span>
+                <span className="block text-xs text-slate-500">
+                  Tick if your bank shows spending as positive numbers. Default: negative = money out. Not used with separate debit and credit columns.
+                </span>
+              </span>
+            </label>
+            <label className="flex flex-wrap items-center gap-3 text-sm">
+              <span className="font-medium">Date order</span>
+              <select
+                className={`${input} !w-auto`}
+                value={dateOrder}
+                onChange={(e) => setDateOrder(e.target.value as '' | 'mdy' | 'dmy')}
+                aria-label="Date order"
+              >
+                <option value="">Detect from the file</option>
+                <option value="mdy">MM/DD/YYYY</option>
+                <option value="dmy">DD/MM/YYYY</option>
+              </select>
+              <span className="text-xs text-slate-500">Only needed if the upload says the order is ambiguous.</span>
+            </label>
+          </div>
         </div>
 
         <div className={card}>
@@ -173,6 +223,7 @@ export function UploadPage() {
             <b className="text-lg">{result.duplicates_skipped.toLocaleString()}</b> duplicates skipped
           </p>
           <p className="mt-1 text-xs text-slate-500">batch {result.batch_id.slice(0, 8)}… · profile #{result.user_id}</p>
+          <MappingSummary mapping={result.mapping} />
 
           {result.count === 0 ? (
             <p className="mt-4 text-sm text-slate-500">Nothing new in this file, so there is nothing to categorize.</p>

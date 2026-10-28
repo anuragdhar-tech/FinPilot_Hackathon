@@ -2,6 +2,7 @@ import json
 import sqlite3
 from contextlib import asynccontextmanager
 from pathlib import Path
+from typing import Literal
 
 from fastapi import BackgroundTasks, Depends, FastAPI, File, Form, HTTPException, Query, UploadFile
 
@@ -60,6 +61,8 @@ async def upload_transactions(
     user_id: int | None = Form(None),
     name: str | None = Form(None),
     opening_balance_cents: int = Form(0),
+    positive_is_spend: bool = Form(False),
+    date_order: Literal["mdy", "dmy"] | None = Form(None),
     conn: sqlite3.Connection = Depends(get_conn),
 ):
     try:
@@ -68,7 +71,8 @@ async def upload_transactions(
         raise HTTPException(422, {"errors": ["file is not UTF-8 text"]})
     try:
         return ingest_csv(conn, file.filename or "upload.csv", text, user_id=user_id, name=name,
-                          opening_balance_cents=opening_balance_cents)
+                          opening_balance_cents=opening_balance_cents, positive_is_spend=positive_is_spend,
+                          date_order=date_order)
     except CsvError as e:
         raise HTTPException(422, {"errors": e.errors})
     except LookupError as e:

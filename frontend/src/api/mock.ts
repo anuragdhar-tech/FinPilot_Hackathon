@@ -234,7 +234,14 @@ export const mockClient: ApiClient = {
     syncCounts()
     const batch_id = `mock-batch-${++counter}`
     batches.set(batch_id, id)
-    return delay({ batch_id, user_id: id, count: added.length, duplicates_skipped: rows - added.length })
+    return delay({
+      batch_id, user_id: id, count: added.length, duplicates_skipped: rows - added.length,
+      mapping: {
+        date: 'date', description: 'description', amount: 'amount', debit: null, credit: null,
+        external_id: 'external_id', ignored_matches: [], date_format: 'YYYY-MM-DD',
+        sign_rule: 'negative amounts are money out', ids_generated: false, warnings: [],
+      },
+    })
   },
   createRun: async (batchId) => {
     if (!batches.has(batchId)) throw new ApiError(404, `batch ${batchId} not found`)

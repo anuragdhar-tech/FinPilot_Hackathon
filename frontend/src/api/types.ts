@@ -28,11 +28,28 @@ export interface UserDeleted {
   deleted_rows: Record<string, number>
 }
 
+/** How the uploaded columns were read. Column names are as written in the file. */
+export interface CsvMapping {
+  date: string
+  description: string
+  amount: string | null
+  debit: string | null
+  credit: string | null
+  /** null = ids were generated from the row contents */
+  external_id: string | null
+  ignored_matches: string[]
+  date_format: string
+  sign_rule: string
+  ids_generated: boolean
+  warnings: string[]
+}
+
 export interface UploadResult {
   batch_id: string
   user_id: number
   count: number
   duplicates_skipped: number
+  mapping: CsvMapping
 }
 
 // ---- runs ----
